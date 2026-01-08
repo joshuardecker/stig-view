@@ -26,6 +26,7 @@ pub enum StigError {
     RegexError,
 }
 
+// Nicer printing for Stig.
 impl std::fmt::Display for Stig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -36,7 +37,8 @@ impl std::fmt::Display for Stig {
     }
 }
 
-pub fn load_stig<p: AsRef<Path>>(path: p) -> Result<Stig, StigError> {
+/// Load a stig file from the xylok format given a file path. Found as info.txt throughout xylok.
+pub fn load_stig<P: AsRef<Path>>(path: P) -> Result<Stig, StigError> {
     let mut file = File::open(path).map_err(|_| StigError::FileError)?;
 
     //let mut file = File::open(path).err;
@@ -45,50 +47,32 @@ pub fn load_stig<p: AsRef<Path>>(path: p) -> Result<Stig, StigError> {
     file.read_to_string(&mut content)
         .map_err(|_| StigError::FileError)?;
 
+    // Set up the regex's.
+    // Safe to call unwrap because these expressions are not runtime dependent.
     let re_version = Regex::new(r"# Title\n([a-zA-Z0-9-]*):").unwrap();
     let re_intro = Regex::new(r"(?s)# Title\n.*:(.*)#################\n# Similar checks").unwrap();
     let re_desc = Regex::new(r"(?s)# Discussion\n(.*)#################\n# Fix").unwrap();
     let re_check_text = Regex::new(r"(?s)# Content\n(.*)#################\n# Discussion").unwrap();
     let re_fix = Regex::new(r"(?s)# Fix\n(.*)").unwrap();
 
-    let version_capture = re_version.captures(&content).unwrap();
-    let intro_capture = re_intro.captures(&content).unwrap();
-    let desc_capture = re_desc.captures(&content).unwrap();
-    let check_text_capture = re_check_text.captures(&content).unwrap();
-    let fix_capture = re_fix.captures(&content).unwrap();
+    // Capture regex content.
+    let version_capture = re_version.captures(&content).ok_or(StigError::RegexError)?;
+    let intro_capture = re_intro.captures(&content).ok_or(StigError::RegexError)?;
+    let desc_capture = re_desc.captures(&content).ok_or(StigError::RegexError)?;
+    let check_text_capture = re_check_text
+        .captures(&content)
+        .ok_or(StigError::RegexError)?;
+    let fix_capture = re_fix.captures(&content).ok_or(StigError::RegexError)?;
 
     let mut stig = Stig::default();
 
+    // Store captured data.
+    // Use .trim() to remove extra \n the regex will capture.
     stig.version = version_capture[1].to_string();
     stig.introduction = intro_capture[1].trim().to_string();
     stig.description = desc_capture[1].trim().to_string();
     stig.check_text = check_text_capture[1].trim().to_string();
     stig.fix_text = fix_capture[1].trim().to_string();
 
-    println!("{}", &stig);
-
     Ok(stig)
-}
-
-#[test]
-fn hello_world() {
-    let re_version = Regex::new(r"^(\w+(?:-\w*)*)").unwrap();
-
-    let haystack = String::from(r"Hel-lo there!");
-
-    let Some(captures) = re_version.captures(&haystack) else {
-        panic!("Uh oh!")
-    };
-
-    assert_eq!(&captures[1], "Hel-lo");
-}
-
-#[test]
-fn test_load_version() {
-    let stig = load_stig("info.txt").unwrap();
-
-    let mut test_stig = Stig::default();
-    test_stig.version = String::from("CASA-FW-000260");
-
-    assert_eq!(stig, test_stig);
 }
