@@ -1,6 +1,8 @@
 mod window;
 mod xylok_stig;
 
+use window::*;
+
 fn main() -> iced::Result {
-    iced::run(window::update, window::view)
+    iced::application(new, update, view).run()
 }
