@@ -1,10 +1,15 @@
-use iced::{Element, Subscription, event, keyboard, window};
+use iced::{
+    Element, Event, Subscription, event,
+    keyboard::{self, key},
+    window,
+};
 
-use crate::app::{MainScreen, Message};
+use crate::app::{FilePickScreen, MainScreen, Message};
 
 // Current Screen the application is displaying.
 enum Screen {
     MainScreen(MainScreen),
+    FilePickScreen(FilePickScreen),
 }
 
 // Current state of the application.
@@ -20,17 +25,46 @@ pub fn update(state: &mut State, message: Message) {
                 main_screen.switch_displayed(stig);
             }
         }
+        Message::ChangedFilePathStr(content) => {
+            if let Screen::FilePickScreen(ref mut screen) = state.screen {
+                screen.path_string = content;
+            }
+        }
+        Message::Event(event) => match event {
+            // Handle pressing the enter key when in the file pick menu.
+            Event::Keyboard(keyboard::Event::KeyPressed {
+                key: keyboard::Key::Named(key::Named::Enter),
+                modifiers,
+                ..
+            }) => {
+                if let Screen::FilePickScreen(ref mut screen) = state.screen {
+                    // todo: add functionality and error handling.
+                    let _ = screen.change_filepath();
+
+                    screen.path_string = "Hi there!".to_string();
+                }
+            }
+            // Don't care otherwise.
+            _ => {
+                return;
+            }
+        },
     }
 }
 
 pub fn view(state: &State) -> Element<'_, Message> {
     match &state.screen {
         Screen::MainScreen(main_screen) => return main_screen.get_container().into(),
+        Screen::FilePickScreen(file_pick_screen) => return file_pick_screen.get_container().into(),
     }
 }
 
 pub fn new() -> State {
     return State {
-        screen: Screen::MainScreen(MainScreen::new()),
+        screen: Screen::FilePickScreen(FilePickScreen::new()),
     };
+}
+
+pub fn subscription(state: &State) -> Subscription<Message> {
+    event::listen().map(Message::Event)
 }

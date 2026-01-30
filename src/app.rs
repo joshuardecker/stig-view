@@ -2,7 +2,8 @@ use crate::stig::Stig;
 use iced::Element;
 use iced::Event;
 use iced::Length::{Fill, FillPortion};
-use iced::widget::{Button, Container, button, column, container, row, text};
+use iced::widget::{Button, Container, button, column, container, row, text, text_input};
+use std::path::{Path, PathBuf};
 
 #[derive(Clone)]
 pub enum Message {
@@ -10,10 +11,14 @@ pub enum Message {
     DisplayMainScreen(MainScreen),
     // Changing state.
     ChangeDisplayedStig(Stig),
+    // Change the home file path currently being viewed.
+    ChangedFilePathStr(String),
+
+    Event(Event),
 }
 
-// The main displayed screen of the application.
-// Displays a list of stigs on the left, and the currently being viewed stig on the right.
+/// The main displayed screen of the application.
+/// Displays a list of stigs on the left, and the currently being viewed stig on the right.
 #[derive(Clone)]
 pub struct MainScreen {
     stig_list: Vec<Stig>,
@@ -90,5 +95,55 @@ impl MainScreen {
     // This container is what will be displayed.
     fn get_no_stig_displayed(&self) -> Container<'_, Message> {
         return container(text("Nothing to display!"));
+    }
+}
+
+/// The screen where the user chooses a base directory to load stigs from.
+/// A local home directory where any child stig file is loaded.
+#[derive(Clone)]
+pub struct FilePickScreen {
+    pub path_string: String,
+
+    path: Option<PathBuf>,
+}
+
+pub enum FilePickError {
+    FileToStrError,
+}
+
+impl FilePickScreen {
+    pub const fn new() -> Self {
+        FilePickScreen {
+            path: None,
+            path_string: String::new(),
+        }
+    }
+
+    /// Change the filepath saved internally to the path string buffer.
+    /// Will return an error if the path does not exist.
+    /// Will set the internal path to None when an error occurs, discarding
+    /// any path saved there.
+    pub fn change_filepath(&mut self) -> Result<(), FilePickError> {
+        let path = Path::new(&self.path_string);
+
+        if path.exists() {
+            self.path = Some(path.to_owned());
+
+            return Ok(());
+        } else {
+            self.path = None;
+
+            return Err(FilePickError::FileToStrError);
+        }
+    }
+
+    /// Return the container of this screen that should be drawn to the users screen.
+    pub fn get_container(&self) -> Container<'_, Message> {
+        container(
+            text_input("Type path here...", &self.path_string)
+                .on_input(Message::ChangedFilePathStr),
+        )
+        .center(Fill)
+        .padding(100)
     }
 }
