@@ -1,7 +1,8 @@
-mod window;
-mod xylok_stig;
+mod app;
+mod stig;
+mod ui;
 
-use window::*;
+use ui::{new, update, view};
 
 fn main() -> iced::Result {
     iced::application(new, update, view).run()
