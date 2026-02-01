@@ -1,7 +1,6 @@
 use iced::{
     Element, Event, Subscription, event,
     keyboard::{self, key},
-    window,
 };
 
 use crate::app::{FilePickScreen, MainScreen, Message};
@@ -34,14 +33,19 @@ pub fn update(state: &mut State, message: Message) {
             // Handle pressing the enter key when in the file pick menu.
             Event::Keyboard(keyboard::Event::KeyPressed {
                 key: keyboard::Key::Named(key::Named::Enter),
-                modifiers,
                 ..
             }) => {
                 if let Screen::FilePickScreen(ref mut screen) = state.screen {
-                    // todo: add functionality and error handling.
-                    let _ = screen.change_filepath();
+                    if let Ok(_) = screen.change_filepath() {
+                        if let Ok(stigs) = screen.get_stigs() {
+                            state.screen = Screen::MainScreen(MainScreen::new());
 
-                    screen.path_string = "Hi there!".to_string();
+                            if let Screen::MainScreen(ref mut screen) = state.screen {
+                                screen.stig_list = stigs;
+                                screen.switch_displayed(screen.stig_list[0].clone());
+                            }
+                        }
+                    }
                 }
             }
             // Don't care otherwise.
@@ -65,6 +69,6 @@ pub fn new() -> State {
     };
 }
 
-pub fn subscription(state: &State) -> Subscription<Message> {
+pub fn subscription(_state: &State) -> Subscription<Message> {
     event::listen().map(Message::Event)
 }

@@ -1,8 +1,9 @@
 use crate::stig::Stig;
-use iced::Element;
 use iced::Event;
 use iced::Length::{Fill, FillPortion};
-use iced::widget::{Button, Container, button, column, container, row, text, text_input};
+use iced::widget::{
+    Button, Container, button, column, container, row, scrollable, text, text_input,
+};
 use std::path::{Path, PathBuf};
 
 #[derive(Clone)]
@@ -21,7 +22,7 @@ pub enum Message {
 /// Displays a list of stigs on the left, and the currently being viewed stig on the right.
 #[derive(Clone)]
 pub struct MainScreen {
-    stig_list: Vec<Stig>,
+    pub stig_list: Vec<Stig>,
     displayed_stig: Option<Stig>,
 }
 
@@ -36,7 +37,7 @@ impl MainScreen {
     // Return a container of the main screen widgets to be drawn to the screen.
     pub fn get_container(&self) -> Container<'_, Message> {
         let mut buttons_vec = Vec::new();
-        let mut displayed: Container<'_, Message>;
+        let displayed: Container<'_, Message>;
 
         for stig in &self.stig_list {
             buttons_vec.push(Box::new(self.get_stig_button(stig)));
@@ -82,7 +83,7 @@ impl MainScreen {
             text(stig.fix_text.clone())
         ];
 
-        return container(col);
+        return container(scrollable(col));
     }
 
     // Get a nice button with the stigs version on it.
@@ -107,8 +108,10 @@ pub struct FilePickScreen {
     path: Option<PathBuf>,
 }
 
+#[derive(Debug)]
 pub enum FilePickError {
     FileToStrError,
+    NoStigsError,
 }
 
 impl FilePickScreen {
@@ -126,15 +129,24 @@ impl FilePickScreen {
     pub fn change_filepath(&mut self) -> Result<(), FilePickError> {
         let path = Path::new(&self.path_string);
 
-        if path.exists() {
-            self.path = Some(path.to_owned());
-
-            return Ok(());
-        } else {
+        if !path.exists() {
             self.path = None;
-
             return Err(FilePickError::FileToStrError);
         }
+
+        self.path = Some(path.to_owned());
+
+        return Ok(());
+    }
+
+    pub fn get_stigs(&self) -> Result<Vec<Stig>, FilePickError> {
+        let path = self.path.clone().ok_or(FilePickError::NoStigsError)?;
+
+        if path.ends_with("info.txt") {
+            return Ok(vec![Stig::from_xylok(path).unwrap()]);
+        }
+
+        Err(FilePickError::NoStigsError)
     }
 
     /// Return the container of this screen that should be drawn to the users screen.
