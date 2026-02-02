@@ -1,29 +1,33 @@
 use crate::stig::Stig;
-use iced::Event;
+use iced::Element;
 use iced::Length::{Fill, FillPortion};
 use iced::widget::{
     Button, Container, button, column, container, row, scrollable, text, text_input,
 };
 use std::path::{Path, PathBuf};
 
+// Current Screen the application is displaying.
+#[derive(Clone)]
+pub enum Screen {
+    MainScreen(MainScreen),
+    FilePickScreen(FilePickScreen),
+}
+
 #[derive(Clone)]
 pub enum Message {
-    // Changing screens.
-    DisplayMainScreen(MainScreen),
-    // Changing state.
-    ChangeDisplayedStig(Stig),
-    // Change the home file path currently being viewed.
-    ChangedFilePathStr(String),
-
-    Event(Event),
+    ChangeScreen(Screen),
+    LoadStigs(Vec<Box<Stig>>),
+    SwitchStig(Box<Stig>),
+    PressEnter,
+    TextInput(String),
 }
 
 /// The main displayed screen of the application.
 /// Displays a list of stigs on the left, and the currently being viewed stig on the right.
 #[derive(Clone)]
 pub struct MainScreen {
-    pub stig_list: Vec<Stig>,
-    displayed_stig: Option<Stig>,
+    pub stig_list: Vec<Box<Stig>>,
+    displayed_stig: Option<Box<Stig>>,
 }
 
 impl MainScreen {
@@ -35,12 +39,12 @@ impl MainScreen {
     }
 
     // Return a container of the main screen widgets to be drawn to the screen.
-    pub fn get_container(&self) -> Container<'_, Message> {
+    pub fn get_view(&self) -> Element<'_, Message> {
         let mut buttons_vec = Vec::new();
         let displayed: Container<'_, Message>;
 
         for stig in &self.stig_list {
-            buttons_vec.push(Box::new(self.get_stig_button(stig)));
+            buttons_vec.push(Box::new(self.get_stig_button(stig.clone())));
         }
 
         let mut button_col = column![];
@@ -50,20 +54,21 @@ impl MainScreen {
         }
 
         if let Some(displayed_stig) = &self.displayed_stig {
-            displayed = self.get_displayed_stig(displayed_stig);
+            displayed = self.get_displayed_stig(displayed_stig.clone());
         } else {
             displayed = self.get_no_stig_displayed();
         }
 
-        return container(row![
+        container(row![
             button_col.width(FillPortion(1)),
             displayed.width(FillPortion(5))
         ])
-        .height(Fill);
+        .height(Fill)
+        .into()
     }
 
     // Switch the main sting being displayed.
-    pub fn switch_displayed(&mut self, new_stig: Stig) {
+    pub fn switch_displayed(&mut self, new_stig: Box<Stig>) {
         self.displayed_stig = Some(new_stig);
     }
 
@@ -74,7 +79,7 @@ impl MainScreen {
 
     // Get a nice container displaying all the information of a stig.
     // Use to display the selected stig.
-    fn get_displayed_stig(&self, stig: &Stig) -> Container<'_, Message> {
+    fn get_displayed_stig(&self, stig: Box<Stig>) -> Container<'_, Message> {
         let col = column![
             text(stig.version.clone()),
             text(stig.intro.clone()),
@@ -88,7 +93,7 @@ impl MainScreen {
 
     // Get a nice button with the stigs version on it.
     // Used to display selectable stigs in the application.
-    fn get_stig_button(&self, stig: &Stig) -> Button<'_, Message> {
+    fn get_stig_button(&self, stig: Box<Stig>) -> Button<'_, Message> {
         return button(text(stig.version.clone()));
     }
 
@@ -104,8 +109,9 @@ impl MainScreen {
 #[derive(Clone)]
 pub struct FilePickScreen {
     pub path_string: String,
-
     path: Option<PathBuf>,
+
+    pub stig_list: Vec<Box<Stig>>,
 }
 
 #[derive(Debug)]
@@ -119,6 +125,7 @@ impl FilePickScreen {
         FilePickScreen {
             path: None,
             path_string: String::new(),
+            stig_list: Vec::new(),
         }
     }
 
@@ -139,23 +146,22 @@ impl FilePickScreen {
         return Ok(());
     }
 
-    pub fn get_stigs(&self) -> Result<Vec<Stig>, FilePickError> {
+    pub fn get_stigs(&self) -> Result<Vec<Box<Stig>>, FilePickError> {
         let path = self.path.clone().ok_or(FilePickError::NoStigsError)?;
 
         if path.ends_with("info.txt") {
-            return Ok(vec![Stig::from_xylok(path).unwrap()]);
+            // todo: make return more than one stig.
+            return Ok(vec![Box::new(Stig::from_xylok(path).unwrap())]);
         }
 
         Err(FilePickError::NoStigsError)
     }
 
     /// Return the container of this screen that should be drawn to the users screen.
-    pub fn get_container(&self) -> Container<'_, Message> {
-        container(
-            text_input("Type path here...", &self.path_string)
-                .on_input(Message::ChangedFilePathStr),
-        )
-        .center(Fill)
-        .padding(100)
+    pub fn get_view(&self) -> Element<'_, Message> {
+        container(text_input("Type path here...", &self.path_string).on_input(Message::TextInput))
+            .center(Fill)
+            .padding(100)
+            .into()
     }
 }

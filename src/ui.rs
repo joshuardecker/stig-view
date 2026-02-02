@@ -1,65 +1,74 @@
 use iced::{
-    Element, Event, Subscription, event,
+    Element, Subscription, Task,
     keyboard::{self, key},
 };
 
-use crate::app::{FilePickScreen, MainScreen, Message};
-
-// Current Screen the application is displaying.
-enum Screen {
-    MainScreen(MainScreen),
-    FilePickScreen(FilePickScreen),
-}
+use crate::app::{FilePickScreen, MainScreen, Message, Screen};
 
 // Current state of the application.
 pub struct State {
     screen: Screen,
 }
 
-pub fn update(state: &mut State, message: Message) {
+pub fn update(state: &mut State, message: Message) -> Task<Message> {
     match message {
-        Message::DisplayMainScreen(main_screen) => state.screen = Screen::MainScreen(main_screen),
-        Message::ChangeDisplayedStig(stig) => {
-            if let Screen::MainScreen(ref mut main_screen) = state.screen {
-                main_screen.switch_displayed(stig);
-            }
+        Message::ChangeScreen(screen) => {
+            state.screen = screen;
+            Task::none()
         }
-        Message::ChangedFilePathStr(content) => {
-            if let Screen::FilePickScreen(ref mut screen) = state.screen {
-                screen.path_string = content;
-            }
-        }
-        Message::Event(event) => match event {
-            // Handle pressing the enter key when in the file pick menu.
-            Event::Keyboard(keyboard::Event::KeyPressed {
-                key: keyboard::Key::Named(key::Named::Enter),
-                ..
-            }) => {
-                if let Screen::FilePickScreen(ref mut screen) = state.screen {
-                    if let Ok(_) = screen.change_filepath() {
-                        if let Ok(stigs) = screen.get_stigs() {
-                            state.screen = Screen::MainScreen(MainScreen::new());
 
-                            if let Screen::MainScreen(ref mut screen) = state.screen {
-                                screen.stig_list = stigs;
-                                screen.switch_displayed(screen.stig_list[0].clone());
-                            }
+        Message::SwitchStig(new_stig) => {
+            if let Screen::MainScreen(ref mut current_screen) = state.screen {
+                current_screen.switch_displayed(new_stig);
+            }
+
+            Task::none()
+        }
+
+        Message::LoadStigs(stigs) => {
+            match state.screen {
+                Screen::MainScreen(ref mut screen) => screen.stig_list = stigs,
+                Screen::FilePickScreen(ref mut screen) => screen.stig_list = stigs,
+            }
+
+            Task::none()
+        }
+
+        Message::PressEnter => {
+            if let Screen::FilePickScreen(ref mut current_screen) = state.screen {
+                match current_screen.change_filepath() {
+                    Ok(_) => {
+                        if let Ok(stigs) = current_screen.get_stigs() {
+                            return Task::batch(vec![
+                                Task::done(Message::ChangeScreen(Screen::MainScreen(
+                                    MainScreen::new(),
+                                ))),
+                                Task::done(Message::SwitchStig(stigs[0].clone())),
+                                Task::done(Message::LoadStigs(stigs)),
+                            ]);
                         }
                     }
+                    Err(_) => (),
                 }
             }
-            // Don't care otherwise.
-            _ => {
-                return;
+
+            Task::none()
+        }
+
+        Message::TextInput(input) => {
+            if let Screen::FilePickScreen(ref mut screen) = state.screen {
+                screen.path_string = input;
             }
-        },
+
+            Task::none()
+        }
     }
 }
 
 pub fn view(state: &State) -> Element<'_, Message> {
     match &state.screen {
-        Screen::MainScreen(main_screen) => return main_screen.get_container().into(),
-        Screen::FilePickScreen(file_pick_screen) => return file_pick_screen.get_container().into(),
+        Screen::MainScreen(main_screen) => return main_screen.get_view(),
+        Screen::FilePickScreen(file_pick_screen) => return file_pick_screen.get_view(),
     }
 }
 
@@ -70,5 +79,11 @@ pub fn new() -> State {
 }
 
 pub fn subscription(_state: &State) -> Subscription<Message> {
-    event::listen().map(Message::Event)
+    keyboard::listen().filter_map(|event| match event {
+        keyboard::Event::KeyPressed {
+            key: keyboard::Key::Named(key::Named::Enter),
+            ..
+        } => Some(Message::PressEnter),
+        _ => None,
+    })
 }
