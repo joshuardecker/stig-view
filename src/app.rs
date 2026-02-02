@@ -126,8 +126,9 @@ pub struct FilePickScreen {
 
 #[derive(Debug)]
 pub enum FilePickError {
-    FileToStrError,
-    NoStigsError,
+    DoesntExist,
+    NoStigs,
+    BadTxtFile,
 }
 
 impl FilePickScreen {
@@ -148,7 +149,7 @@ impl FilePickScreen {
 
         if !path.exists() {
             self.path = None;
-            return Err(FilePickError::FileToStrError);
+            return Err(FilePickError::DoesntExist);
         }
 
         self.path = Some(path.to_owned());
@@ -157,14 +158,15 @@ impl FilePickScreen {
     }
 
     pub fn get_stigs(&self) -> Result<Vec<Box<Stig>>, FilePickError> {
-        let path = self.path.clone().ok_or(FilePickError::NoStigsError)?;
+        let path = self.path.clone().ok_or(FilePickError::NoStigs)?;
 
-        if path.ends_with("info.txt") {
-            // todo: make return more than one stig.
-            return Ok(vec![Box::new(Stig::from_xylok(path).unwrap())]);
+        if path.extension().ok_or(FilePickError::DoesntExist)? == "txt" {
+            let stig = Stig::from_xylok(path).map_err(|_| FilePickError::BadTxtFile)?;
+
+            return Ok(vec![Box::new(stig)]);
         }
 
-        Err(FilePickError::NoStigsError)
+        Err(FilePickError::NoStigs)
     }
 
     pub fn get_view(&self) -> Element<'_, Message> {
