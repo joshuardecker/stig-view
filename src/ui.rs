@@ -1,9 +1,8 @@
+use crate::app::{FilePickScreen, MainScreen, Message, Screen};
 use iced::{
     Element, Subscription, Task,
     keyboard::{self, key},
 };
-
-use crate::app::{FilePickScreen, MainScreen, Message, Screen};
 
 // Current state of the application.
 pub struct State {
@@ -35,6 +34,7 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         }
 
         Message::PressEnter => {
+            // If the file pick screen is the current screen.
             if let Screen::FilePickScreen(ref mut current_screen) = state.screen {
                 match current_screen.change_filepath() {
                     Ok(_) => {
@@ -48,6 +48,7 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
                             ]);
                         }
                     }
+                    // todo: Handle Error differently later.
                     Err(_) => (),
                 }
             }

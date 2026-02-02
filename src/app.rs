@@ -1,8 +1,9 @@
 use crate::stig::Stig;
 use iced::Element;
 use iced::Length::{Fill, FillPortion};
+use iced::widget::text::Alignment::Center;
 use iced::widget::{
-    Button, Container, button, column, container, row, scrollable, text, text_input,
+    Button, Container, button, column, container, row, scrollable, space, text, text_input,
 };
 use std::path::{Path, PathBuf};
 
@@ -38,7 +39,6 @@ impl MainScreen {
         };
     }
 
-    // Return a container of the main screen widgets to be drawn to the screen.
     pub fn get_view(&self) -> Element<'_, Message> {
         let mut buttons_vec = Vec::new();
         let displayed: Container<'_, Message>;
@@ -47,7 +47,7 @@ impl MainScreen {
             buttons_vec.push(Box::new(self.get_stig_button(stig.clone())));
         }
 
-        let mut button_col = column![];
+        let mut button_col = column![text("Versions:")].align_x(Center);
 
         for button in buttons_vec {
             button_col = button_col.push(*button);
@@ -60,8 +60,8 @@ impl MainScreen {
         }
 
         container(row![
-            button_col.width(FillPortion(1)),
-            displayed.width(FillPortion(5))
+            scrollable(button_col).spacing(10).width(FillPortion(1)),
+            displayed.width(FillPortion(5)) // Already a scrollable.
         ])
         .height(Fill)
         .into()
@@ -81,20 +81,30 @@ impl MainScreen {
     // Use to display the selected stig.
     fn get_displayed_stig(&self, stig: Box<Stig>) -> Container<'_, Message> {
         let col = column![
+            text("Version:").size(32),
             text(stig.version.clone()),
+            space().height(20),
+            text("Introduction:").size(32),
             text(stig.intro.clone()),
+            space().height(20),
+            text("Description:").size(32),
             text(stig.desc.clone()),
+            space().height(20),
+            text("Check Text / Commands:").size(32),
             text(stig.check_text.clone()),
-            text(stig.fix_text.clone())
+            space().height(20),
+            text("Fix Text / Commands:").size(32),
+            text(stig.fix_text.clone()),
+            space().height(20),
         ];
 
-        return container(scrollable(col));
+        return container(scrollable(col).spacing(100));
     }
 
     // Get a nice button with the stigs version on it.
     // Used to display selectable stigs in the application.
     fn get_stig_button(&self, stig: Box<Stig>) -> Button<'_, Message> {
-        return button(text(stig.version.clone()));
+        return button(text(stig.version.clone())).on_press(Message::SwitchStig(stig));
     }
 
     // What should be displayed when no stig is selected or found to be displayed.
@@ -157,7 +167,6 @@ impl FilePickScreen {
         Err(FilePickError::NoStigsError)
     }
 
-    /// Return the container of this screen that should be drawn to the users screen.
     pub fn get_view(&self) -> Element<'_, Message> {
         container(text_input("Type path here...", &self.path_string).on_input(Message::TextInput))
             .center(Fill)
