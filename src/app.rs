@@ -1,17 +1,21 @@
 use crate::stig::Stig;
+use directories::UserDirs;
 use iced::Element;
 use iced::Length::{Fill, FillPortion};
 use iced::widget::text::Alignment::Center;
 use iced::widget::{
-    Button, Container, button, column, container, row, scrollable, space, text, text_input,
+    Button, Container, Row, button, column, container, row, scrollable, space, text, text_input,
 };
+use std::fs::{DirEntry, ReadDir};
 use std::path::{Path, PathBuf};
+use std::ptr::read;
 
 // Current Screen the application is displaying.
 #[derive(Clone)]
 pub enum Screen {
     MainScreen(MainScreen),
     FilePickScreen(FilePickScreen),
+    FileSelectScreen(FileSelectScreen),
 }
 
 #[derive(Clone)]
@@ -114,8 +118,8 @@ impl MainScreen {
     }
 }
 
-/// The screen where the user chooses a base directory to load stigs from.
-/// A local home directory where any child stig file is loaded.
+/// Depricated for FileSelectScreen.
+/// todo: remove depricated code.
 #[derive(Clone)]
 pub struct FilePickScreen {
     pub path_string: String,
@@ -174,5 +178,105 @@ impl FilePickScreen {
             .center(Fill)
             .padding(100)
             .into()
+    }
+}
+
+#[derive(Clone)]
+pub struct FileSelectScreen {
+    pub user_input_dir: String,
+
+    dir: PathBuf,
+}
+
+#[derive(Debug)]
+pub enum FileSelectError {
+    CantGetHome, // Cant get the users home dir.
+    CantGetDirItems,
+    InvalidDir, // User gave an invalid dir.
+}
+
+impl FileSelectScreen {
+    /// By default, points to the users home dir.
+    /// Returns an error if it cannot determine this.
+    pub fn new() -> Result<Self, FileSelectError> {
+        if let Some(user_dir) = UserDirs::new() {
+            let home_dir = user_dir.home_dir().to_owned();
+
+            // todo: better error handling.
+            let home_dir_string = home_dir
+                .clone()
+                .into_os_string()
+                .into_string()
+                .unwrap_or(String::from("Error occured!"));
+
+            return Ok(Self {
+                user_input_dir: home_dir_string,
+                dir: home_dir,
+            });
+        }
+
+        Err(FileSelectError::CantGetHome)
+    }
+
+    pub fn get_view(&self) -> Element<'_, Message> {
+        let top_row = row![
+            space().width(20),
+            button(text("↑")),
+            space().width(50),
+            text_input("Path here...", &self.user_input_dir).on_input(Message::TextInput),
+            space().width(20),
+        ];
+
+        ///
+        let mut col = column![top_row];
+
+        match self.get_dir_items() {
+            Ok(read_dir) => {
+                for item in read_dir {
+                    if let Ok(ok_item) = item {
+                        col = col.push(self.dir_item_to_button(ok_item));
+                    }
+                }
+            }
+            Err(_) => {}
+        }
+
+        scrollable(col).spacing(10).into()
+    }
+
+    fn get_dir_items(&self) -> Result<ReadDir, FileSelectError> {
+        if !self.dir.is_dir() {
+            return Err(FileSelectError::CantGetDirItems);
+        }
+
+        let read_dir = self
+            .dir
+            .read_dir()
+            .map_err(|_| FileSelectError::CantGetDirItems)?;
+
+        Ok(read_dir)
+    }
+
+    fn dir_item_to_button(&self, item: DirEntry) -> Button<'_, Message> {
+        button(text(
+            // todo: better error handling.
+            item.file_name()
+                .into_string()
+                .unwrap_or(String::from("Error Occured!")),
+        ))
+    }
+
+    /// Attempt to switch the dir given the internal user provided dir string.
+    pub fn switch_dir(&mut self) -> Result<(), FileSelectError> {
+        let path = PathBuf::from(self.user_input_dir.clone());
+
+        match &path.try_exists() {
+            Ok(true) => {
+                self.dir = path;
+                return Ok(());
+            }
+            Ok(false) => return Err(FileSelectError::InvalidDir),
+            Err(_) => return Err(FileSelectError::CantGetDirItems),
+        }
     }
 }

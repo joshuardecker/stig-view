@@ -1,4 +1,4 @@
-use crate::app::{FilePickScreen, MainScreen, Message, Screen};
+use crate::app::{FilePickScreen, FileSelectScreen, MainScreen, Message, Screen};
 use iced::{
     Element, Subscription, Task,
     keyboard::{self, key},
@@ -28,6 +28,7 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
             match state.screen {
                 Screen::MainScreen(ref mut screen) => screen.stig_list = stigs,
                 Screen::FilePickScreen(ref mut screen) => screen.stig_list = stigs,
+                Screen::FileSelectScreen(_) => (),
             }
 
             Task::none()
@@ -53,12 +54,21 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
                 }
             }
 
+            if let Screen::FileSelectScreen(ref mut screen) = state.screen {
+                // todo: care about Ok() or Err() from this function.
+                let _ = screen.switch_dir();
+            }
+
             Task::none()
         }
 
         Message::TextInput(input) => {
             if let Screen::FilePickScreen(ref mut screen) = state.screen {
-                screen.path_string = input;
+                screen.path_string = input.clone();
+            }
+
+            if let Screen::FileSelectScreen(ref mut screen) = state.screen {
+                screen.user_input_dir = input.clone();
             }
 
             Task::none()
@@ -70,12 +80,13 @@ pub fn view(state: &State) -> Element<'_, Message> {
     match &state.screen {
         Screen::MainScreen(main_screen) => return main_screen.get_view(),
         Screen::FilePickScreen(file_pick_screen) => return file_pick_screen.get_view(),
+        Screen::FileSelectScreen(file_select_screen) => return file_select_screen.get_view(),
     }
 }
 
 pub fn new() -> State {
     return State {
-        screen: Screen::FilePickScreen(FilePickScreen::new()),
+        screen: Screen::FileSelectScreen(FileSelectScreen::new().unwrap()),
     };
 }
 
