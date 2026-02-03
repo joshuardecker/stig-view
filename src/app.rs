@@ -6,6 +6,7 @@ use iced::widget::text::Alignment::Center;
 use iced::widget::{
     Button, Container, Row, button, column, container, row, scrollable, space, text, text_input,
 };
+use std::ffi::OsString;
 use std::fs::{DirEntry, ReadDir};
 use std::path::{Path, PathBuf};
 use std::ptr::read;
@@ -25,6 +26,7 @@ pub enum Message {
     SwitchStig(Box<Stig>),
     PressEnter,
     TextInput(String),
+    DisplayNewFiles(PathBuf),
 }
 
 /// The main displayed screen of the application.
@@ -221,19 +223,40 @@ impl FileSelectScreen {
     pub fn get_view(&self) -> Element<'_, Message> {
         let top_row = row![
             space().width(20),
-            button(text("↑")),
+            button(text("↑")).on_press(Message::DisplayNewFiles(
+                self.dir.parent().unwrap_or(&self.dir).to_owned()
+            )),
             space().width(50),
             text_input("Path here...", &self.user_input_dir).on_input(Message::TextInput),
             space().width(20),
         ];
 
         ///
-        let mut col = column![top_row];
+        let mut col = column![top_row, space().height(50)];
 
         match self.get_dir_items() {
             Ok(read_dir) => {
                 for item in read_dir {
                     if let Ok(ok_item) = item {
+                        let ok_item_path = ok_item.path();
+
+                        if ok_item_path.is_file()
+                            && (ok_item_path.extension().unwrap_or(&OsString::from("magic"))
+                                != "txt")
+                        {
+                            continue;
+                        }
+
+                        if ok_item_path
+                            .file_name()
+                            .unwrap_or(&OsString::from("magic"))
+                            .to_str()
+                            .unwrap_or("magic")
+                            .starts_with(".")
+                        {
+                            continue;
+                        }
+
                         col = col.push(self.dir_item_to_button(ok_item));
                     }
                 }
@@ -258,12 +281,27 @@ impl FileSelectScreen {
     }
 
     fn dir_item_to_button(&self, item: DirEntry) -> Button<'_, Message> {
+        if item.path().is_dir() {
+            return button(text(
+                "🗀  ".to_string() +
+                // todo: better error handling.
+                &item.file_name()
+                    .into_string()
+                    .unwrap_or(String::from("Error Occured!")),
+            ))
+            .on_press(Message::DisplayNewFiles(item.path()));
+        }
+
         button(text(
+            "🗎  ".to_string() +
             // todo: better error handling.
-            item.file_name()
+            &item.file_name()
                 .into_string()
                 .unwrap_or(String::from("Error Occured!")),
         ))
+        .on_press(Message::LoadStigs(vec![Box::new(
+            Stig::from_xylok(&item.path()).unwrap(), // todo: better error handling.
+        )]))
     }
 
     /// Attempt to switch the dir given the internal user provided dir string.
@@ -272,6 +310,11 @@ impl FileSelectScreen {
 
         match &path.try_exists() {
             Ok(true) => {
+                // Cant switch dir if the given path is to a file, not a dir.
+                if path.is_file() {
+                    return Err(FileSelectError::InvalidDir);
+                }
+
                 self.dir = path;
                 return Ok(());
             }

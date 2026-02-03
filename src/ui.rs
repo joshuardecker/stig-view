@@ -1,4 +1,5 @@
 use crate::app::{FilePickScreen, FileSelectScreen, MainScreen, Message, Screen};
+use crate::stig::Stig;
 use iced::{
     Element, Subscription, Task,
     keyboard::{self, key},
@@ -25,10 +26,13 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         }
 
         Message::LoadStigs(stigs) => {
-            match state.screen {
-                Screen::MainScreen(ref mut screen) => screen.stig_list = stigs,
-                Screen::FilePickScreen(ref mut screen) => screen.stig_list = stigs,
-                Screen::FileSelectScreen(_) => (),
+            if let Screen::FileSelectScreen(ref screen) = state.screen {
+                let mut main_screen = MainScreen::new();
+
+                main_screen.stig_list = stigs;
+                main_screen.switch_displayed(main_screen.stig_list[0].clone());
+
+                return Task::done(Message::ChangeScreen(Screen::MainScreen(main_screen)));
             }
 
             Task::none()
@@ -72,6 +76,18 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
             }
 
             Task::none()
+        }
+
+        Message::DisplayNewFiles(new_path) => {
+            if let Screen::FileSelectScreen(ref mut screen) = state.screen {
+                screen.user_input_dir = new_path
+                    .into_os_string()
+                    .into_string()
+                    .unwrap_or(String::from("oops!")); // todo: better error handling.
+            }
+
+            // Send the press enter signal to update what is displayed in the file selector.
+            Task::done(Message::PressEnter)
         }
     }
 }
