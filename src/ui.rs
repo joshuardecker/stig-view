@@ -1,6 +1,7 @@
-use iced::Element;
 use iced::Length::{Fill, FillPortion};
 use iced::widget::{Button, button, column, container, row, scrollable, space, text, text_editor};
+use iced::{Background, Border};
+use iced::{Element, Theme, color};
 
 use crate::app::{App, Message};
 
@@ -11,9 +12,13 @@ impl App {
                 space().width(5),
                 column![
                     row![
-                        button(text("File")).on_press(Message::OpenFileSelect),
+                        button(text("File").center())
+                            .width(65)
+                            .on_press(Message::OpenFileSelect),
                         space::horizontal(),
-                        button(text("Folder")).on_press(Message::OpenFolderSelect)
+                        button(text("Folder").center())
+                            .width(65)
+                            .on_press(Message::OpenFolderSelect)
                     ],
                     space().height(5),
                     container(space::vertical())
@@ -35,12 +40,14 @@ impl App {
         let buttons_vec: Vec<Box<Button<Message>>> = self
             .list
             .iter()
-            .map(|stig| {
+            .enumerate()
+            .map(|(index, stig)| {
                 Box::new(
                     button(text(stig.version.clone()).height(Fill).width(Fill).center())
                         .height(50)
                         .width(Fill)
-                        .style(button::primary),
+                        .style(button::primary)
+                        .on_press(Message::SwitchDisplayed(index)),
                 )
             })
             .collect();
@@ -49,22 +56,35 @@ impl App {
 
         for button in buttons_vec {
             button_col = button_col.push(*button);
+            button_col = button_col.push(space().height(1)) // Add a tiny seperation between each button.
         }
 
         if let Some(stig) = &self.displayed {
             let stig_col = column![
                 text("Version"),
-                text_editor(&self.content[0]).on_action(|action| Message::SelectContent(action, 0)),
+                text_editor(&self.content[0])
+                    .style(text_editor_no_style)
+                    .on_action(|action| Message::SelectContent(action, 0)),
                 text("Introduction"),
-                text_editor(&self.content[1]).on_action(|action| Message::SelectContent(action, 1)),
+                text_editor(&self.content[1])
+                    .style(text_editor_no_style)
+                    .on_action(|action| Message::SelectContent(action, 1)),
                 text("Description"),
-                text_editor(&self.content[2]).on_action(|action| Message::SelectContent(action, 2)),
+                text_editor(&self.content[2])
+                    .style(text_editor_no_style)
+                    .on_action(|action| Message::SelectContent(action, 2)),
                 text("Check"),
-                text_editor(&self.content[3]).on_action(|action| Message::SelectContent(action, 3)),
+                text_editor(&self.content[3])
+                    .style(text_editor_no_style)
+                    .on_action(|action| Message::SelectContent(action, 3)),
                 text("Fix"),
-                text_editor(&self.content[4]).on_action(|action| Message::SelectContent(action, 4)),
+                text_editor(&self.content[4])
+                    .style(text_editor_no_style)
+                    .on_action(|action| Message::SelectContent(action, 4)),
                 text("Similar Checks"),
-                text_editor(&self.content[5]).on_action(|action| Message::SelectContent(action, 5)),
+                text_editor(&self.content[5])
+                    .style(text_editor_no_style)
+                    .on_action(|action| Message::SelectContent(action, 5)),
             ];
 
             column![
@@ -72,9 +92,13 @@ impl App {
                     space().width(5),
                     column![
                         row![
-                            button(text("File")).on_press(Message::OpenFileSelect),
+                            button(text("File").center())
+                                .width(65)
+                                .on_press(Message::OpenFileSelect),
                             space::horizontal(),
-                            button(text("Folder")).on_press(Message::OpenFolderSelect)
+                            button(text("Folder").center())
+                                .width(65)
+                                .on_press(Message::OpenFolderSelect)
                         ],
                         space().height(5),
                         container(column![
@@ -96,5 +120,21 @@ impl App {
         } else {
             unreachable!();
         }
+    }
+}
+
+/// Get a style for a text editor that is transparent when possible.
+fn text_editor_no_style(theme: &Theme, _status: text_editor::Status) -> text_editor::Style {
+    let palette = theme.extended_palette();
+
+    text_editor::Style {
+        background: Background::Color(color!(0, 0, 0, 0.0)),
+        border: Border {
+            color: color!(0, 0, 0, 0.0),
+            ..Border::default()
+        },
+        placeholder: color!(0, 0, 0, 0.0),
+        value: palette.background.base.text,
+        selection: palette.primary.weak.color,
     }
 }
