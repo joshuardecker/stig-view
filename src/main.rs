@@ -2,10 +2,10 @@ mod app;
 mod stig;
 mod ui;
 
-use ui::{new, subscription, update, view};
+use crate::app::App;
 
 fn main() -> iced::Result {
-    iced::application(new, update, view)
-        .subscription(subscription)
+    iced::application(App::new, App::update, App::get_view)
+        .subscription(App::subscription)
         .run()
 }
