@@ -122,10 +122,6 @@ impl App {
                     return Task::none();
                 }
 
-                if let text_editor::Action::Click(_) = action {
-                    return Task::none();
-                }
-
                 self.content[index.to_owned()].perform(action.clone());
 
                 Task::none()
