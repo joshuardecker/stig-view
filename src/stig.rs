@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Stig {
     pub version: String,
     pub intro: String,
@@ -21,7 +21,7 @@ impl Stig {
         if let Ok(mut file) = file {
             let err = file.read_to_string(&mut buf);
 
-            if let Err(e) = err {
+            if let Err(_) = err {
                 return false;
             }
 

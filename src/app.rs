@@ -1,8 +1,5 @@
-use iced::{
-    Element, Subscription, Task, keyboard,
-    widget::{text, text_editor},
-};
-use rfd::{AsyncFileDialog, FileDialog, FileHandle};
+use iced::{Element, Subscription, Task, keyboard, widget::text_editor};
+use rfd::AsyncFileDialog;
 use std::{path::PathBuf, str::FromStr};
 
 use crate::stig::Stig;
@@ -105,7 +102,7 @@ impl App {
                 Task::none()
             }
             Message::OpenFolder(folder) => {
-                println!("{:?}", folder);
+                unimplemented!();
 
                 Task::none()
             }
@@ -122,6 +119,10 @@ impl App {
             }
             Message::SelectContent(action, index) => {
                 if let text_editor::Action::Edit(_) = action {
+                    return Task::none();
+                }
+
+                if let text_editor::Action::Click(_) = action {
                     return Task::none();
                 }
 

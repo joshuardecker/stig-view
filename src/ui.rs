@@ -1,12 +1,8 @@
-use iced::Alignment::Center;
 use iced::Element;
 use iced::Length::{Fill, FillPortion};
-use iced::widget::{
-    Button, button, column, container, row, scrollable, space, text, text_editor, text_input,
-};
+use iced::widget::{Button, button, column, container, row, scrollable, space, text, text_editor};
 
 use crate::app::{App, Message};
-use crate::stig;
 
 impl App {
     pub fn get_view_none_displayed(&self) -> Element<'_, Message> {
@@ -36,7 +32,7 @@ impl App {
     }
 
     pub fn get_view_displayed(&self) -> Element<'_, Message> {
-        let mut buttons_vec: Vec<Box<Button<Message>>> = self
+        let buttons_vec: Vec<Box<Button<Message>>> = self
             .list
             .iter()
             .map(|stig| {
@@ -81,12 +77,15 @@ impl App {
                             button(text("Folder")).on_press(Message::OpenFolderSelect)
                         ],
                         space().height(5),
-                        container(column![scrollable(button_col), space::vertical()])
-                            .style(container::rounded_box)
-                            .width(FillPortion(1))
+                        container(column![
+                            scrollable(button_col).spacing(5),
+                            space::vertical()
+                        ])
+                        .style(container::rounded_box)
+                        .width(FillPortion(1))
                     ],
                     space().width(10),
-                    container(column![scrollable(stig_col), space::vertical()])
+                    container(column![scrollable(stig_col).spacing(5), space::vertical()])
                         .style(container::rounded_box)
                         .width(FillPortion(5))
                         .height(Fill),
