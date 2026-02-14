@@ -1,13 +1,16 @@
 use iced::Length::{Fill, FillPortion};
-use iced::widget::{Button, button, column, container, row, scrollable, space, text, text_editor};
+use iced::widget::{
+    Button, Container, button, column, container, row, scrollable, space, stack, text, text_editor,
+    text_input,
+};
 use iced::{Background, Border};
 use iced::{Element, Theme, color};
 
-use crate::app::{App, Message};
+use crate::app::{App, Message, Popup};
 
 impl App {
     pub fn get_view_none_displayed(&self) -> Element<'_, Message> {
-        column![
+        let final_gui = column![
             row![
                 space().width(5),
                 column![
@@ -32,13 +35,23 @@ impl App {
                     .height(Fill),
             ],
             space().height(5),
-        ]
-        .into()
+        ];
+
+        if let Some(popup) = &self.popup {
+            match popup {
+                Popup::CommandPrompt => stack!(final_gui, self.command_prompt_popup()).into(),
+                Popup::Error => stack!(final_gui, self.error_popup()).into(),
+            }
+        } else {
+            final_gui.into()
+        }
     }
 
     pub fn get_view_displayed(&self) -> Element<'_, Message> {
         let buttons_vec: Vec<Box<Button<Message>>> = self
             .list
+            .read()
+            .unwrap()
             .iter()
             .enumerate()
             .map(|(index, stig)| {
@@ -47,7 +60,7 @@ impl App {
                         .height(50)
                         .width(Fill)
                         .style(button::primary)
-                        .on_press(Message::SwitchDisplayed(index)),
+                        .on_press(Message::SwitchDisplayed(stig.uuid.clone())),
                 )
             })
             .collect();
@@ -59,7 +72,7 @@ impl App {
             button_col = button_col.push(space().height(1)) // Add a tiny seperation between each button.
         }
 
-        if let Some(stig) = &self.displayed {
+        if let Some(_stig) = &*self.displayed.read().unwrap() {
             let stig_col = column![
                 text("Version"),
                 text_editor(&self.content[0])
@@ -87,7 +100,7 @@ impl App {
                     .on_action(|action| Message::SelectContent(action, 5)),
             ];
 
-            column![
+            let final_gui = column![
                 row![
                     space().width(5),
                     column![
@@ -115,11 +128,51 @@ impl App {
                         .height(Fill),
                 ],
                 space().height(5),
-            ]
-            .into()
+            ];
+
+            if let Some(popup) = &self.popup {
+                match popup {
+                    Popup::CommandPrompt => stack!(final_gui, self.command_prompt_popup()).into(),
+                    Popup::Error => stack!(final_gui, self.error_popup()).into(),
+                }
+            } else {
+                final_gui.into()
+            }
         } else {
             unreachable!();
         }
+    }
+
+    fn command_prompt_popup(&self) -> Container<'_, Message> {
+        container(
+            container(column![
+                text("Command Prompt:").width(Fill).center(),
+                space().height(30),
+                text_input("Type commands here...", &self.cmd_input)
+                    .on_input(Message::ChangeCmdInput)
+            ])
+            .width(500)
+            .height(150)
+            .padding(5)
+            .style(container::dark),
+        )
+        .center(Fill)
+    }
+
+    fn error_popup(&self) -> Container<'_, Message> {
+        container(
+            container(column![
+                text("An Error has Occured.")
+                    .width(Fill)
+                    .height(Fill)
+                    .center(),
+            ])
+            .width(500)
+            .height(150)
+            .padding(5)
+            .style(container::danger),
+        )
+        .center(Fill)
     }
 }
 

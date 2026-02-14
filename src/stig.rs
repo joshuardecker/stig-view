@@ -2,6 +2,7 @@ use regex::Regex;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
+use uuid::Uuid;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Stig {
@@ -11,30 +12,11 @@ pub struct Stig {
     pub check_text: String,
     pub desc: String,
     pub fix_text: String,
+
+    pub uuid: Uuid,
 }
 
 impl Stig {
-    pub fn check_if_xylok_txt<P: AsRef<Path>>(path: P) -> bool {
-        let file = File::open(path);
-        let mut buf = String::new();
-
-        if let Ok(mut file) = file {
-            let err = file.read_to_string(&mut buf);
-
-            if let Err(_) = err {
-                return false;
-            }
-
-            let re_check =
-                Regex::new(r"(?s)# Title.*# Similar checks.*# Content.*# Discussion.*# Fix.*")
-                    .unwrap();
-
-            re_check.is_match(&buf)
-        } else {
-            return false;
-        }
-    }
-
     pub fn from_xylok_txt<P: AsRef<Path>>(path: P) -> Option<Stig> {
         let mut file = File::open(path).ok()?;
         let mut buf = String::new();
@@ -55,33 +37,39 @@ impl Stig {
             check_text: captures.get(4).unwrap().as_str().trim().to_string(),
             desc: captures.get(5).unwrap().as_str().trim().to_string(),
             fix_text: captures.get(6).unwrap().as_str().trim().to_string(),
+            uuid: Uuid::new_v4(),
         })
     }
 }
 
 #[test]
-fn test_check_if_xylok() {
-    assert!(Stig::check_if_xylok_txt("info.txt"));
-    assert!(Stig::check_if_xylok_txt("info.txt"));
-
-    assert!(!Stig::check_if_xylok_txt("not-a-real-path.txt"));
-}
-
-#[test]
 fn test_from_xylok_txt() {
-    let stig = Stig {
+    let mut stig = Stig {
         version: String::from("SOME-NUMBER2077"),
         intro: String::from("Hello!"),
         similar_checks: String::from("This is a similar check: Similar check."),
         check_text: String::from("Content!"),
         desc: String::from("Discussion!"),
         fix_text: String::from("Fix!"),
+        uuid: Uuid::new_v4(),
     };
 
     let loaded_stig = Stig::from_xylok_txt("test_stig.txt");
 
     match loaded_stig {
-        Some(loaded_stig) => assert_eq!(loaded_stig, stig),
+        Some(loaded_stig) => {
+            // Ensure uuid's are the same for this test.
+            stig.uuid = loaded_stig.uuid.clone();
+
+            assert_eq!(loaded_stig, stig);
+        }
         None => panic!("Was not able to load test_sig.txt!"),
+    }
+
+    let not_real = Stig::from_xylok_txt("not-a-real-path.txt");
+
+    match not_real {
+        None => println!("Good!"),
+        Some(_) => panic!("How did we get here?"),
     }
 }

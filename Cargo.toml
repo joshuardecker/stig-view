@@ -8,3 +8,4 @@ directories = "6.0.0"
 iced = { version = "0.14.0", features = ["svg"] }
 regex = "1.12.2"
 rfd = "0.17.2"
+uuid = { version = "1.20.0", features = ["v4"] }
