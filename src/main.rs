@@ -1,4 +1,5 @@
 mod app;
+mod sgroup;
 mod stig;
 mod ui;
 

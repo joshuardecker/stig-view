@@ -1,7 +1,7 @@
 use iced::Length::{Fill, FillPortion};
 use iced::widget::{
-    Button, Container, button, column, container, row, scrollable, space, stack, text, text_editor,
-    text_input,
+    Button, Container, Id, button, column, container, row, scrollable, sensor, space, stack, text,
+    text_editor, text_input,
 };
 use iced::{Background, Border};
 use iced::{Element, Theme, color};
@@ -53,8 +53,7 @@ impl App {
             .read()
             .unwrap()
             .iter()
-            .enumerate()
-            .map(|(index, stig)| {
+            .map(|stig| {
                 Box::new(
                     button(text(stig.version.clone()).height(Fill).width(Fill).center())
                         .height(50)
@@ -144,17 +143,24 @@ impl App {
     }
 
     fn command_prompt_popup(&self) -> Container<'_, Message> {
+        let id = Id::new("cmd_text_input");
+
         container(
-            container(column![
-                text("Command Prompt:").width(Fill).center(),
-                space().height(30),
-                text_input("Type commands here...", &self.cmd_input)
-                    .on_input(Message::ChangeCmdInput)
-            ])
-            .width(500)
-            .height(150)
-            .padding(5)
-            .style(container::dark),
+            sensor(
+                container(column![
+                    text("Command Prompt:").width(Fill).center(),
+                    space().height(30),
+                    text_input("Type commands here...", &self.cmd_input)
+                        .on_input(Message::ChangeCmdInput)
+                        .on_submit(Message::SubmitCmdInput)
+                        .id(id.clone())
+                ])
+                .width(500)
+                .height(150)
+                .padding(5)
+                .style(container::dark),
+            )
+            .on_show(move |_| Message::FocusCmdInput(id.clone())),
         )
         .center(Fill)
     }

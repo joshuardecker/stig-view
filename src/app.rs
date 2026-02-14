@@ -2,21 +2,24 @@ use iced::keyboard;
 use iced::keyboard::key;
 use iced::theme;
 use iced::theme::Custom;
+use iced::widget::Id;
 use iced::widget::text_editor;
 use iced::{Color, color};
 use iced::{Element, Subscription, Task, Theme};
+use regex::Regex;
 use rfd::AsyncFileDialog;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use uuid::Uuid;
 
+use crate::sgroup::SGroup;
 use crate::stig::Stig;
 
 /// This applications state.
 #[derive(Debug, Clone)]
 pub struct App {
-    pub list: Arc<RwLock<Vec<Box<Stig>>>>,
-    pub displayed: Arc<RwLock<Option<Box<Stig>>>>,
+    pub list: Arc<RwLock<SGroup>>,
+    pub displayed: Arc<RwLock<Option<Box<(Uuid, Stig)>>>>,
     pub content: [text_editor::Content; 6],
     pub popup: Option<Popup>,
     pub cmd_input: String,
@@ -25,17 +28,26 @@ pub struct App {
 #[derive(Debug, Clone)]
 pub enum Message {
     KeyPressed(keyboard::Event),
+
     OpenFileSelect,
     OpenFolderSelect,
     OpenFile(Option<PathBuf>),
     OpenFolder(Option<PathBuf>),
-    LoadStigVec(Vec<Box<Stig>>),
+    SetStigVec(Vec<Box<Stig>>),
     PushStigToContent,
+
     SelectContent(text_editor::Action, usize),
+
     SwitchDisplayed(Uuid),
     SwitchNext,
+
+    FocusCmdInput(Id),
     ChangeCmdInput(String),
+    SubmitCmdInput,
+
     ChangePopup(Option<Popup>),
+
+    None,
 }
 
 #[derive(Debug, Clone)]
@@ -44,10 +56,15 @@ pub enum Popup {
     Error,
 }
 
+#[derive(Debug, Clone)]
+pub enum UserCommand {
+    SearchForKeyword(String),
+}
+
 impl App {
     pub fn new() -> Self {
         App {
-            list: Arc::new(RwLock::new(vec![])),
+            list: Arc::new(RwLock::new(SGroup::new())),
             displayed: Arc::new(RwLock::new(None)),
             content: [
                 text_editor::Content::new(),
@@ -138,8 +155,8 @@ impl App {
 
                     if let Some(stig) = stig {
                         let stig = Box::new(stig);
-                        *self.list.write().unwrap() = vec![stig.clone()];
-                        *self.displayed.write().unwrap() = Some(stig);
+                        self.list.write().unwrap().add(stig.clone());
+                        *self.displayed.write().unwrap() = Some(self.list.read().unwrap().first());
                     }
 
                     Task::done(Message::PushStigToContent)
@@ -151,28 +168,31 @@ impl App {
                 if let Some(path) = path {
                     Task::perform(
                         async move { load_dir(path.clone()).await },
-                        Message::LoadStigVec,
+                        Message::SetStigVec,
                     )
                 } else {
                     Task::none()
                 }
             }
-            Message::LoadStigVec(stigs) => {
-                *self.list.write().unwrap() = stigs.clone();
-
-                if self.list.read().unwrap().len() != 0 {
-                    *self.displayed.write().unwrap() = Some(self.list.read().unwrap()[0].clone());
+            Message::SetStigVec(stigs) => {
+                if stigs.len() == 0 {
+                    return Task::none();
                 }
+
+                self.list.write().unwrap().set_group(stigs);
+
+                *self.displayed.write().unwrap() = Some(self.list.read().unwrap().first());
 
                 Task::done(Message::PushStigToContent)
             }
             Message::PushStigToContent => {
                 if let Some(stig) = &*self.displayed.read().unwrap() {
-                    self.content[0] = text_editor::Content::with_text(&stig.version);
-                    self.content[1] = text_editor::Content::with_text(&stig.intro);
-                    self.content[2] = text_editor::Content::with_text(&stig.desc);
-                    self.content[3] = text_editor::Content::with_text(&stig.check_text);
-                    self.content[4] = text_editor::Content::with_text(&stig.fix_text);
+                    self.content[0] = text_editor::Content::with_text(&stig.1.version);
+                    self.content[1] = text_editor::Content::with_text(&stig.1.intro);
+                    self.content[2] = text_editor::Content::with_text(&stig.1.desc);
+                    self.content[3] = text_editor::Content::with_text(&stig.1.check_text);
+                    self.content[4] = text_editor::Content::with_text(&stig.1.fix_text);
+                    self.content[5] = text_editor::Content::with_text(&stig.1.similar_checks);
                 }
 
                 Task::none()
@@ -187,10 +207,10 @@ impl App {
                 Task::none()
             }
             Message::SwitchDisplayed(uuid) => {
-                for stig in self.list.read().unwrap().iter() {
-                    if stig.uuid == uuid {
-                        *self.displayed.write().unwrap() = Some(stig.clone());
-                    }
+                let new_displayed_stig = self.list.read().unwrap().get_by_uuid(uuid);
+
+                if let Some(new_displayed_stig) = new_displayed_stig {
+                    *self.displayed.write().unwrap() = Some(new_displayed_stig);
                 }
 
                 Task::done(Message::PushStigToContent)
@@ -216,12 +236,30 @@ impl App {
 
                 Task::none()
             }
+            Message::FocusCmdInput(id) => iced::widget::operation::focus(id),
             Message::ChangeCmdInput(input) => {
                 self.cmd_input = input;
                 Task::none()
             }
+            Message::SubmitCmdInput => {
+                let user_command = parse_command(&self.cmd_input);
+
+                if let Some(user_command) = user_command {
+                    let list_clone = self.list.clone();
+                    Task::perform(
+                        async move { run_search_cmd(user_command, list_clone) },
+                        |_| Message::None,
+                    )
+                } else {
+                    Task::none()
+                }
+            }
             Message::ChangePopup(new_popup) => {
                 self.popup = new_popup;
+                Task::none()
+            }
+            Message::None => {
+                println!("Gamer nation!");
                 Task::none()
             }
         }
@@ -299,4 +337,34 @@ async fn load_dir(path: PathBuf) -> Vec<Box<Stig>> {
     }
 
     stigs
+}
+
+fn parse_command(input: &str) -> Option<UserCommand> {
+    let keyword_search_regex = Regex::new(r"search|find (.*)").unwrap();
+
+    let captures = keyword_search_regex.captures(input)?;
+
+    Some(UserCommand::SearchForKeyword(captures[1].to_string()))
+}
+
+async fn run_search_cmd(cmd: UserCommand, stigs: Arc<RwLock<SGroup>>) {
+    if let UserCommand::SearchForKeyword(keyword) = &cmd {
+        let mut stigs = stigs.write().unwrap().get_all();
+        let re = Regex::new(keyword).unwrap();
+
+        for stig in stigs.iter_mut() {
+            let mut is_match = false;
+
+            is_match |= re.is_match(&stig.1.version);
+            is_match |= re.is_match(&stig.1.intro);
+            is_match |= re.is_match(&stig.1.desc);
+            is_match |= re.is_match(&stig.1.check_text);
+            is_match |= re.is_match(&stig.1.fix_text);
+            is_match |= re.is_match(&stig.1.similar_checks);
+
+            /*if is_match {
+                stig.pinned = true;
+            }*/
+        }
+    }
 }
