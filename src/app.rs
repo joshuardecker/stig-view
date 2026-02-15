@@ -57,7 +57,9 @@ pub enum Popup {
 
 #[derive(Debug, Clone)]
 pub enum UserCommand {
+    SearchForName(String),
     SearchForKeyword(String),
+    Reset,
 }
 
 impl App {
@@ -339,40 +341,73 @@ async fn load_dir(path: PathBuf) -> Vec<Box<Stig>> {
 }
 
 fn parse_command(input: &str) -> Option<UserCommand> {
-    let keyword_search_regex = Regex::new(r"search|find (.*)").unwrap();
+    let cmd_regex = Regex::new(r"(\w+)\s*(.*)").unwrap();
+    let captures = cmd_regex.captures(input)?;
 
-    let captures = keyword_search_regex.captures(input)?;
-
-    Some(UserCommand::SearchForKeyword(captures[1].to_string()))
+    match captures[1].to_string().as_str() {
+        "find" => Some(UserCommand::SearchForKeyword(captures[2].to_string())),
+        "search" => Some(UserCommand::SearchForKeyword(captures[2].to_string())),
+        "name" => Some(UserCommand::SearchForName(captures[2].to_string())),
+        "title" => Some(UserCommand::SearchForName(captures[2].to_string())),
+        "reset" => Some(UserCommand::Reset),
+        _ => None,
+    }
 }
 
 async fn run_search_cmd(cmd: UserCommand, stigs: Arc<RwLock<SGroup>>) -> Option<SGroup> {
-    if let UserCommand::SearchForKeyword(keyword) = &cmd {
-        let mut stig_wrappers_lock = stigs.read().unwrap();
-        let mut stig_wrappers_clone = stig_wrappers_lock.clone();
-        let re = Regex::new(keyword).ok()?;
+    match cmd {
+        UserCommand::SearchForKeyword(keyword) => {
+            let mut stig_wrappers_lock = stigs.read().unwrap();
+            let mut stig_wrappers_clone = stig_wrappers_lock.clone();
+            let re = Regex::new(&keyword).ok()?;
 
-        stig_wrappers_clone.unpin_all_from_cmd();
+            stig_wrappers_clone.unpin_all_from_cmd();
 
-        for stig_wrapper in stig_wrappers_clone.get_all().iter_mut() {
-            let mut is_match = false;
+            for stig_wrapper in stig_wrappers_clone.get_all().iter_mut() {
+                let mut is_match = false;
 
-            is_match |= re.is_match(&stig_wrapper.stig.version);
-            is_match |= re.is_match(&stig_wrapper.stig.intro);
-            is_match |= re.is_match(&stig_wrapper.stig.desc);
-            is_match |= re.is_match(&stig_wrapper.stig.check_text);
-            is_match |= re.is_match(&stig_wrapper.stig.fix_text);
-            is_match |= re.is_match(&stig_wrapper.stig.similar_checks);
+                is_match |= re.is_match(&stig_wrapper.stig.version);
+                is_match |= re.is_match(&stig_wrapper.stig.intro);
+                is_match |= re.is_match(&stig_wrapper.stig.desc);
+                is_match |= re.is_match(&stig_wrapper.stig.check_text);
+                is_match |= re.is_match(&stig_wrapper.stig.fix_text);
+                is_match |= re.is_match(&stig_wrapper.stig.similar_checks);
 
-            if is_match {
-                stig_wrappers_clone.pin(stig_wrapper.uuid, Pinned::ByCmd);
+                if is_match {
+                    stig_wrappers_clone.pin(stig_wrapper.uuid, Pinned::ByCmd);
+                }
             }
+
+            stig_wrappers_clone.sort_by_version();
+
+            Some(stig_wrappers_clone)
         }
+        UserCommand::SearchForName(name) => {
+            let mut stig_wrappers_lock = stigs.read().unwrap();
+            let mut stig_wrappers_clone = stig_wrappers_lock.clone();
+            let re = Regex::new(&name).ok()?;
 
-        stig_wrappers_clone.sort_by_version();
+            stig_wrappers_clone.unpin_all_from_cmd();
 
-        return Some(stig_wrappers_clone);
+            for stig_wrapper in stig_wrappers_clone.get_all().iter_mut() {
+                if re.is_match(&stig_wrapper.stig.version) {
+                    stig_wrappers_clone.pin(stig_wrapper.uuid, Pinned::ByCmd);
+                }
+            }
+
+            stig_wrappers_clone.sort_by_version();
+
+            Some(stig_wrappers_clone)
+        }
+        UserCommand::Reset => {
+            let mut stig_wrappers_lock = stigs.read().unwrap();
+            let mut stig_wrappers_clone = stig_wrappers_lock.clone();
+
+            stig_wrappers_clone.unpin_all_from_cmd();
+
+            stig_wrappers_clone.sort_by_version();
+
+            Some(stig_wrappers_clone)
+        }
     }
-
-    None
 }
