@@ -13,6 +13,7 @@ pub struct Stig {
     pub desc: String,
     pub fix_text: String,
 
+    // todo: remove
     pub uuid: Uuid,
 }
 
@@ -37,6 +38,7 @@ impl Stig {
             check_text: captures.get(4).unwrap().as_str().trim().to_string(),
             desc: captures.get(5).unwrap().as_str().trim().to_string(),
             fix_text: captures.get(6).unwrap().as_str().trim().to_string(),
+            // todo: remove
             uuid: Uuid::new_v4(),
         })
     }
@@ -51,6 +53,7 @@ fn test_from_xylok_txt() {
         check_text: String::from("Content!"),
         desc: String::from("Discussion!"),
         fix_text: String::from("Fix!"),
+        // todo: remove
         uuid: Uuid::new_v4(),
     };
 

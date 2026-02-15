@@ -2,21 +2,24 @@ use iced::keyboard;
 use iced::keyboard::key;
 use iced::theme;
 use iced::theme::Custom;
+use iced::widget::Id;
 use iced::widget::text_editor;
 use iced::{Color, color};
 use iced::{Element, Subscription, Task, Theme};
+use regex::Regex;
 use rfd::AsyncFileDialog;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use uuid::Uuid;
 
+use crate::sgroup::{Pinned, SGroup, StigWrapper};
 use crate::stig::Stig;
 
 /// This applications state.
 #[derive(Debug, Clone)]
 pub struct App {
-    pub list: Arc<RwLock<Vec<Box<Stig>>>>,
-    pub displayed: Arc<RwLock<Option<Box<Stig>>>>,
+    pub list: Arc<RwLock<SGroup>>,
+    pub displayed: Arc<RwLock<Option<Box<StigWrapper>>>>,
     pub content: [text_editor::Content; 6],
     pub popup: Option<Popup>,
     pub cmd_input: String,
@@ -25,16 +28,24 @@ pub struct App {
 #[derive(Debug, Clone)]
 pub enum Message {
     KeyPressed(keyboard::Event),
+
     OpenFileSelect,
     OpenFolderSelect,
     OpenFile(Option<PathBuf>),
     OpenFolder(Option<PathBuf>),
-    LoadStigVec(Vec<Box<Stig>>),
+    SetStigVec(Vec<Box<Stig>>),
     PushStigToContent,
+    StigsSorted(Option<SGroup>),
+
     SelectContent(text_editor::Action, usize),
+
     SwitchDisplayed(Uuid),
     SwitchNext,
+
+    FocusCmdInput(Id),
     ChangeCmdInput(String),
+    SubmitCmdInput,
+
     ChangePopup(Option<Popup>),
 }
 
@@ -44,10 +55,17 @@ pub enum Popup {
     Error,
 }
 
+#[derive(Debug, Clone)]
+pub enum UserCommand {
+    SearchForName(String),
+    SearchForKeyword(String),
+    Reset,
+}
+
 impl App {
     pub fn new() -> Self {
         App {
-            list: Arc::new(RwLock::new(vec![])),
+            list: Arc::new(RwLock::new(SGroup::new())),
             displayed: Arc::new(RwLock::new(None)),
             content: [
                 text_editor::Content::new(),
@@ -138,8 +156,8 @@ impl App {
 
                     if let Some(stig) = stig {
                         let stig = Box::new(stig);
-                        *self.list.write().unwrap() = vec![stig.clone()];
-                        *self.displayed.write().unwrap() = Some(stig);
+                        self.list.write().unwrap().add(stig.clone());
+                        *self.displayed.write().unwrap() = Some(self.list.read().unwrap().first());
                     }
 
                     Task::done(Message::PushStigToContent)
@@ -151,28 +169,33 @@ impl App {
                 if let Some(path) = path {
                     Task::perform(
                         async move { load_dir(path.clone()).await },
-                        Message::LoadStigVec,
+                        Message::SetStigVec,
                     )
                 } else {
                     Task::none()
                 }
             }
-            Message::LoadStigVec(stigs) => {
-                *self.list.write().unwrap() = stigs.clone();
-
-                if self.list.read().unwrap().len() != 0 {
-                    *self.displayed.write().unwrap() = Some(self.list.read().unwrap()[0].clone());
+            Message::SetStigVec(stigs) => {
+                if stigs.len() == 0 {
+                    return Task::none();
                 }
+
+                self.list.write().unwrap().set_group(stigs);
+
+                *self.displayed.write().unwrap() = Some(self.list.read().unwrap().first());
 
                 Task::done(Message::PushStigToContent)
             }
             Message::PushStigToContent => {
-                if let Some(stig) = &*self.displayed.read().unwrap() {
-                    self.content[0] = text_editor::Content::with_text(&stig.version);
-                    self.content[1] = text_editor::Content::with_text(&stig.intro);
-                    self.content[2] = text_editor::Content::with_text(&stig.desc);
-                    self.content[3] = text_editor::Content::with_text(&stig.check_text);
-                    self.content[4] = text_editor::Content::with_text(&stig.fix_text);
+                if let Some(stig_wrapper) = &*self.displayed.read().unwrap() {
+                    self.content[0] = text_editor::Content::with_text(&stig_wrapper.stig.version);
+                    self.content[1] = text_editor::Content::with_text(&stig_wrapper.stig.intro);
+                    self.content[2] = text_editor::Content::with_text(&stig_wrapper.stig.desc);
+                    self.content[3] =
+                        text_editor::Content::with_text(&stig_wrapper.stig.check_text);
+                    self.content[4] = text_editor::Content::with_text(&stig_wrapper.stig.fix_text);
+                    self.content[5] =
+                        text_editor::Content::with_text(&stig_wrapper.stig.similar_checks);
                 }
 
                 Task::none()
@@ -187,41 +210,57 @@ impl App {
                 Task::none()
             }
             Message::SwitchDisplayed(uuid) => {
-                for stig in self.list.read().unwrap().iter() {
-                    if stig.uuid == uuid {
-                        *self.displayed.write().unwrap() = Some(stig.clone());
-                    }
+                let new_displayed_stig = self.list.read().unwrap().get_by_uuid(uuid);
+
+                if let Some(new_displayed_stig) = new_displayed_stig {
+                    *self.displayed.write().unwrap() = Some(new_displayed_stig);
                 }
 
                 Task::done(Message::PushStigToContent)
             }
             Message::SwitchNext => {
-                if let Some(displayed_stig) = self.displayed.read().unwrap().clone() {
-                    for (mut index, stig) in self.list.read().unwrap().iter().enumerate() {
-                        if stig.uuid != displayed_stig.uuid {
-                            continue;
-                        }
+                let mut displayed_stig = self.displayed.write().unwrap();
 
-                        if index == (self.list.read().unwrap().len() - 1) {
-                            index = 0;
-                        } else {
-                            index += 1;
-                        }
+                if let Some(stig) = displayed_stig.clone() {
+                    let next_stig = self
+                        .list
+                        .read()
+                        .unwrap()
+                        .get_next_wrapping(stig.uuid.clone());
 
-                        return Task::done(Message::SwitchDisplayed(
-                            self.list.read().unwrap()[index].uuid,
-                        ));
-                    }
+                    *displayed_stig = next_stig;
+
+                    Task::done(Message::PushStigToContent)
+                } else {
+                    Task::none()
                 }
-
-                Task::none()
             }
+            Message::FocusCmdInput(id) => iced::widget::operation::focus(id),
             Message::ChangeCmdInput(input) => {
                 self.cmd_input = input;
                 Task::none()
             }
+            Message::SubmitCmdInput => {
+                let user_command = parse_command(&self.cmd_input);
+
+                if let Some(user_command) = user_command {
+                    let list_clone = self.list.clone();
+                    Task::perform(
+                        async move { run_search_cmd(user_command, list_clone).await },
+                        Message::StigsSorted,
+                    )
+                } else {
+                    Task::none()
+                }
+            }
             Message::ChangePopup(new_popup) => {
                 self.popup = new_popup;
+                Task::none()
+            }
+            Message::StigsSorted(sorted_stigs) => {
+                if let Some(sorted_stigs) = sorted_stigs {
+                    *self.list.write().unwrap() = sorted_stigs;
+                }
                 Task::none()
             }
         }
@@ -299,4 +338,76 @@ async fn load_dir(path: PathBuf) -> Vec<Box<Stig>> {
     }
 
     stigs
+}
+
+fn parse_command(input: &str) -> Option<UserCommand> {
+    let cmd_regex = Regex::new(r"(\w+)\s*(.*)").unwrap();
+    let captures = cmd_regex.captures(input)?;
+
+    match captures[1].to_string().as_str() {
+        "find" => Some(UserCommand::SearchForKeyword(captures[2].to_string())),
+        "search" => Some(UserCommand::SearchForKeyword(captures[2].to_string())),
+        "name" => Some(UserCommand::SearchForName(captures[2].to_string())),
+        "title" => Some(UserCommand::SearchForName(captures[2].to_string())),
+        "reset" => Some(UserCommand::Reset),
+        _ => None,
+    }
+}
+
+async fn run_search_cmd(cmd: UserCommand, stigs: Arc<RwLock<SGroup>>) -> Option<SGroup> {
+    match cmd {
+        UserCommand::SearchForKeyword(keyword) => {
+            let mut stig_wrappers_lock = stigs.read().unwrap();
+            let mut stig_wrappers_clone = stig_wrappers_lock.clone();
+            let re = Regex::new(&keyword).ok()?;
+
+            stig_wrappers_clone.unpin_all_from_cmd();
+
+            for stig_wrapper in stig_wrappers_clone.get_all().iter_mut() {
+                let mut is_match = false;
+
+                is_match |= re.is_match(&stig_wrapper.stig.version);
+                is_match |= re.is_match(&stig_wrapper.stig.intro);
+                is_match |= re.is_match(&stig_wrapper.stig.desc);
+                is_match |= re.is_match(&stig_wrapper.stig.check_text);
+                is_match |= re.is_match(&stig_wrapper.stig.fix_text);
+                is_match |= re.is_match(&stig_wrapper.stig.similar_checks);
+
+                if is_match {
+                    stig_wrappers_clone.pin(stig_wrapper.uuid, Pinned::ByCmd);
+                }
+            }
+
+            stig_wrappers_clone.sort_by_version();
+
+            Some(stig_wrappers_clone)
+        }
+        UserCommand::SearchForName(name) => {
+            let mut stig_wrappers_lock = stigs.read().unwrap();
+            let mut stig_wrappers_clone = stig_wrappers_lock.clone();
+            let re = Regex::new(&name).ok()?;
+
+            stig_wrappers_clone.unpin_all_from_cmd();
+
+            for stig_wrapper in stig_wrappers_clone.get_all().iter_mut() {
+                if re.is_match(&stig_wrapper.stig.version) {
+                    stig_wrappers_clone.pin(stig_wrapper.uuid, Pinned::ByCmd);
+                }
+            }
+
+            stig_wrappers_clone.sort_by_version();
+
+            Some(stig_wrappers_clone)
+        }
+        UserCommand::Reset => {
+            let mut stig_wrappers_lock = stigs.read().unwrap();
+            let mut stig_wrappers_clone = stig_wrappers_lock.clone();
+
+            stig_wrappers_clone.unpin_all_from_cmd();
+
+            stig_wrappers_clone.sort_by_version();
+
+            Some(stig_wrappers_clone)
+        }
+    }
 }
