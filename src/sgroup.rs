@@ -24,7 +24,10 @@ pub enum Pinned {
 
 impl SGroup {
     pub fn new() -> Self {
-        unimplemented!()
+        Self {
+            pinned: Vec::new(),
+            not_pinned: Vec::new(),
+        }
     }
 
     pub fn get_all(&self) -> Vec<Box<StigWrapper>> {
@@ -93,7 +96,7 @@ impl SGroup {
         let mut index = None;
 
         for (i, stig_wrapper) in self.not_pinned.iter().enumerate() {
-            if stig.stig_wrapper == id {
+            if stig_wrapper.uuid == id {
                 index = Some(i);
                 break;
             }
@@ -111,7 +114,7 @@ impl SGroup {
         let mut index = None;
 
         for (i, stig_wrapper) in self.pinned.iter().enumerate() {
-            if stig.stig_wrapper == id {
+            if stig_wrapper.uuid == id {
                 index = Some(i);
                 break;
             }
@@ -125,6 +128,38 @@ impl SGroup {
         }
     }
 
+    pub fn unpin_all_from_cmd(&mut self) {
+        if self.pinned.len() == 0 {
+            return;
+        }
+
+        for stig_wrapper in self.pinned.iter_mut() {
+            if let Pinned::ByCmd = stig_wrapper.pinned {
+                stig_wrapper.pinned = Pinned::Not;
+                self.not_pinned.push(stig_wrapper.clone());
+            }
+        }
+
+        let mut i: usize = 0;
+        while i < self.pinned.len() {
+            if i == self.pinned.len() {
+                println!("{:?}", &self.pinned);
+                println!("{}", i);
+                panic!("What?");
+            }
+
+            if let Pinned::Not = self.pinned[0].pinned {
+                self.pinned.swap_remove(i);
+
+                if i == 0 {
+                    continue;
+                } else {
+                    i -= 1;
+                }
+            }
+        }
+    }
+
     pub fn first(&self) -> Box<StigWrapper> {
         if self.pinned.len() != 0 {
             self.pinned[0].clone()
@@ -133,11 +168,11 @@ impl SGroup {
         }
     }
 
-    pub fn get_next_wrapping(&self, uuid: Uuid) -> Option<Box<StigWrapper>> {
+    pub fn get_next_wrapping(&self, id: Uuid) -> Option<Box<StigWrapper>> {
         let mut index = None;
 
         for (i, stig_wrapper) in self.pinned.iter().enumerate() {
-            if stig.stig_wrapper == id {
+            if stig_wrapper.uuid == id {
                 index = Some(i);
                 break;
             }
@@ -153,7 +188,7 @@ impl SGroup {
         }
 
         for (i, stig_wrapper) in self.not_pinned.iter().enumerate() {
-            if stig.stig_wrapper == id {
+            if stig_wrapper.uuid == id {
                 index = Some(i);
                 break;
             }

@@ -7,6 +7,7 @@ use iced::{Background, Border};
 use iced::{Element, Theme, color};
 
 use crate::app::{App, Message, Popup};
+use crate::sgroup::{SGroup, StigWrapper};
 
 impl App {
     pub fn get_view_none_displayed(&self) -> Element<'_, Message> {
@@ -52,14 +53,20 @@ impl App {
             .list
             .read()
             .unwrap()
+            .get_all()
             .iter()
-            .map(|stig| {
+            .map(|stig_wrapper| {
                 Box::new(
-                    button(text(stig.version.clone()).height(Fill).width(Fill).center())
-                        .height(50)
-                        .width(Fill)
-                        .style(button::primary)
-                        .on_press(Message::SwitchDisplayed(stig.uuid.clone())),
+                    button(
+                        text(stig_wrapper.stig.version.clone())
+                            .height(Fill)
+                            .width(Fill)
+                            .center(),
+                    )
+                    .height(50)
+                    .width(Fill)
+                    .style(button::primary)
+                    .on_press(Message::SwitchDisplayed(stig_wrapper.uuid.clone())),
                 )
             })
             .collect();
