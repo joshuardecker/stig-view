@@ -42,6 +42,7 @@ pub enum Message {
     SwitchDisplayed(Uuid),
     SwitchNext,
 
+    OpenCmdInput,
     FocusCmdInput(Id),
     ChangeCmdInput(String),
     SubmitCmdInput,
@@ -91,15 +92,7 @@ impl App {
                     "q" if modifiers.control() => return iced::exit(),
                     "i" if modifiers.control() => return Task::done(Message::OpenFileSelect),
                     "o" if modifiers.control() => return Task::done(Message::OpenFolderSelect),
-                    "p" if modifiers.control() => match &self.popup {
-                        Some(Popup::CommandPrompt) => {
-                            return Task::done(Message::ChangePopup(None));
-                        }
-                        None => {
-                            return Task::done(Message::ChangePopup(Some(Popup::CommandPrompt)));
-                        }
-                        _ => return Task::none(),
-                    },
+                    "p" if modifiers.control() => return Task::done(Message::OpenCmdInput),
                     _ => Task::none(),
                 },
                 keyboard::Event::KeyPressed {
@@ -111,6 +104,15 @@ impl App {
                     _ => Task::none(),
                 },
                 _ => Task::none(),
+            },
+            Message::OpenCmdInput => match &self.popup {
+                Some(Popup::CommandPrompt) => {
+                    return Task::done(Message::ChangePopup(None));
+                }
+                None => {
+                    return Task::done(Message::ChangePopup(Some(Popup::CommandPrompt)));
+                }
+                _ => return Task::none(),
             },
             Message::OpenFileSelect => Task::perform(
                 async {

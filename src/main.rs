@@ -10,5 +10,6 @@ fn main() -> iced::Result {
         .subscription(App::subscription)
         .theme(App::theme)
         .title("Stig View")
+        .default_font(iced::font::Font::MONOSPACE)
         .run()
 }

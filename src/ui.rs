@@ -1,9 +1,10 @@
-use iced::Length::{Fill, FillPortion};
+use iced::Length::{Fill, FillPortion, Shrink};
+use iced::alignment::Horizontal::Left;
 use iced::widget::{
-    Button, Container, Id, button, column, container, row, scrollable, sensor, space, stack, text,
-    text_editor, text_input,
+    Button, Container, Id, button, column, container, row, scrollable, sensor, space, stack, svg,
+    text, text_editor, text_input,
 };
-use iced::{Background, Border};
+use iced::{Background, Border, Shadow, border};
 use iced::{Element, Theme, color};
 
 use crate::app::{App, Message, Popup};
@@ -11,27 +12,41 @@ use crate::sgroup::{SGroup, StigWrapper};
 
 impl App {
     pub fn get_view_none_displayed(&self) -> Element<'_, Message> {
+        let assets_dir = std::env::current_dir()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string()
+            + "/assets/";
+
         let final_gui = column![
             row![
                 space().width(5),
                 column![
                     row![
-                        button(text("File").center())
-                            .width(65)
+                        button(svg(assets_dir.clone() + "file.svg"))
+                            .padding(1)
+                            .width(40)
                             .on_press(Message::OpenFileSelect),
                         space::horizontal(),
-                        button(text("Folder").center())
-                            .width(65)
-                            .on_press(Message::OpenFolderSelect)
+                        button(svg(assets_dir.clone() + "folder.svg"))
+                            .padding(1)
+                            .width(40)
+                            .on_press(Message::OpenFolderSelect),
+                        space::horizontal(),
+                        button(svg(assets_dir + "terminal.svg"))
+                            .padding(1)
+                            .width(40)
+                            .on_press(Message::OpenCmdInput),
                     ],
                     space().height(5),
                     container(space::vertical())
-                        .style(container::rounded_box)
+                        .style(stig_list_container_style)
                         .width(FillPortion(1))
                 ],
                 space().width(10),
                 container(space::vertical())
-                    .style(container::rounded_box)
+                    .style(stig_container_initial_style)
                     .width(FillPortion(5))
                     .height(Fill),
             ],
@@ -49,6 +64,13 @@ impl App {
     }
 
     pub fn get_view_displayed(&self) -> Element<'_, Message> {
+        let assets_dir = std::env::current_dir()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string()
+            + "/assets/";
+
         let buttons_vec: Vec<Box<Button<Message>>> = self
             .list
             .read()
@@ -75,35 +97,58 @@ impl App {
 
         for button in buttons_vec {
             button_col = button_col.push(*button);
-            button_col = button_col.push(space().height(1)) // Add a tiny seperation between each button.
+            button_col = button_col.push(space().height(3)) // Add a tiny seperation between each button.
         }
 
         if let Some(_stig) = &*self.displayed.read().unwrap() {
             let stig_col = column![
-                text("Version"),
-                text_editor(&self.content[0])
-                    .style(text_editor_no_style)
-                    .on_action(|action| Message::SelectContent(action, 0)),
-                text("Introduction"),
-                text_editor(&self.content[1])
-                    .style(text_editor_no_style)
-                    .on_action(|action| Message::SelectContent(action, 1)),
-                text("Description"),
-                text_editor(&self.content[2])
-                    .style(text_editor_no_style)
-                    .on_action(|action| Message::SelectContent(action, 2)),
-                text("Check"),
-                text_editor(&self.content[3])
-                    .style(text_editor_no_style)
-                    .on_action(|action| Message::SelectContent(action, 3)),
-                text("Fix"),
-                text_editor(&self.content[4])
-                    .style(text_editor_no_style)
-                    .on_action(|action| Message::SelectContent(action, 4)),
-                text("Similar Checks"),
-                text_editor(&self.content[5])
-                    .style(text_editor_no_style)
-                    .on_action(|action| Message::SelectContent(action, 5)),
+                text("Version").size(32),
+                row![
+                    space().width(10),
+                    text_editor(&self.content[0])
+                        .style(text_editor_no_style)
+                        .on_action(|action| Message::SelectContent(action, 0))
+                ],
+                space().height(10),
+                text("Introduction").size(32),
+                row![
+                    space().width(10),
+                    text_editor(&self.content[1])
+                        .style(text_editor_no_style)
+                        .on_action(|action| Message::SelectContent(action, 1))
+                ],
+                space().height(10),
+                text("Description").size(32),
+                row![
+                    space().width(10),
+                    text_editor(&self.content[2])
+                        .style(text_editor_no_style)
+                        .on_action(|action| Message::SelectContent(action, 2))
+                ],
+                space().height(10),
+                text("Check").size(32),
+                row![
+                    space().width(10),
+                    text_editor(&self.content[3])
+                        .style(text_editor_no_style)
+                        .on_action(|action| Message::SelectContent(action, 3))
+                ],
+                space().height(10),
+                text("Fix").size(32),
+                row![
+                    space().width(10),
+                    text_editor(&self.content[4])
+                        .style(text_editor_no_style)
+                        .on_action(|action| Message::SelectContent(action, 4))
+                ],
+                space().height(10),
+                text("Similar Checks").size(32),
+                row![
+                    space().width(10),
+                    text_editor(&self.content[5])
+                        .style(text_editor_no_style)
+                        .on_action(|action| Message::SelectContent(action, 5))
+                ],
             ];
 
             let final_gui = column![
@@ -111,25 +156,34 @@ impl App {
                     space().width(5),
                     column![
                         row![
-                            button(text("File").center())
-                                .width(65)
+                            button(svg(assets_dir.clone() + "file.svg"))
+                                .padding(1)
+                                .width(40)
                                 .on_press(Message::OpenFileSelect),
                             space::horizontal(),
-                            button(text("Folder").center())
-                                .width(65)
-                                .on_press(Message::OpenFolderSelect)
+                            button(svg(assets_dir.clone() + "folder.svg"))
+                                .padding(1)
+                                .width(40)
+                                .on_press(Message::OpenFolderSelect),
+                            space::horizontal(),
+                            button(svg(assets_dir + "terminal.svg"))
+                                .padding(1)
+                                .width(40)
+                                .on_press(Message::OpenCmdInput),
                         ],
                         space().height(5),
                         container(column![
                             scrollable(button_col).spacing(5),
                             space::vertical()
                         ])
-                        .style(container::rounded_box)
+                        .style(stig_list_container_style)
+                        .padding(5)
                         .width(FillPortion(1))
                     ],
                     space().width(10),
                     container(column![scrollable(stig_col).spacing(5), space::vertical()])
-                        .style(container::rounded_box)
+                        .style(stig_container_style)
+                        .padding(10)
                         .width(FillPortion(5))
                         .height(Fill),
                 ],
@@ -152,20 +206,54 @@ impl App {
     fn command_prompt_popup(&self) -> Container<'_, Message> {
         let id = Id::new("cmd_text_input");
 
+        let assets_dir = std::env::current_dir()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string()
+            + "/assets/";
+
         container(
             sensor(
-                container(column![
-                    text("Command Prompt:").width(Fill).center(),
-                    space().height(30),
-                    text_input("Type commands here...", &self.cmd_input)
-                        .on_input(Message::ChangeCmdInput)
-                        .on_submit(Message::SubmitCmdInput)
-                        .id(id.clone())
-                ])
+                container(
+                    column![
+                        text_input("Type commands here, then press enter...", &self.cmd_input)
+                            .on_input(Message::ChangeCmdInput)
+                            .on_submit(Message::SubmitCmdInput)
+                            .id(id.clone()),
+                        space().height(20),
+                        row![
+                            svg(assets_dir.clone() + "right-tick.svg")
+                                .style(right_tick_svg_style)
+                                .width(Shrink),
+                            space().width(10),
+                            text("(name|title) to filter by title keywords."),
+                        ]
+                        .height(24),
+                        row![
+                            svg(assets_dir.clone() + "right-tick.svg")
+                                .style(right_tick_svg_style)
+                                .width(Shrink),
+                            space().width(10),
+                            text("(search|find) to filter by any keywords."),
+                        ]
+                        .height(24),
+                        row![
+                            svg(assets_dir + "right-tick.svg")
+                                .style(right_tick_svg_style)
+                                .width(Shrink),
+                            space().width(10),
+                            text("(reset) to undo applied filters."),
+                        ]
+                        .height(24),
+                        space::vertical()
+                    ]
+                    .align_x(Left),
+                )
                 .width(500)
-                .height(150)
-                .padding(5)
-                .style(container::dark),
+                .height(Shrink)
+                .padding(15)
+                .style(cmd_prompt_container_style),
             )
             .on_show(move |_| Message::FocusCmdInput(id.clone())),
         )
@@ -202,5 +290,74 @@ fn text_editor_no_style(theme: &Theme, _status: text_editor::Status) -> text_edi
         placeholder: color!(0, 0, 0, 0.0),
         value: palette.background.base.text,
         selection: palette.primary.weak.color,
+    }
+}
+
+fn stig_container_initial_style(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
+    container::Style {
+        text_color: Some(palette.background.weak.text),
+        background: Some(palette.background.weakest.color.into()),
+        border: Border {
+            color: palette.primary.base.color,
+            width: 2.0,
+            ..border::rounded(4)
+        },
+        ..container::Style::default()
+    }
+}
+
+fn stig_container_style(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
+    container::Style {
+        text_color: Some(palette.background.weak.text),
+        background: Some(palette.background.weaker.color.into()),
+        border: Border {
+            color: palette.primary.base.color,
+            width: 2.0,
+            ..border::rounded(4)
+        },
+        ..container::Style::default()
+    }
+}
+
+fn stig_list_container_style(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
+    container::Style {
+        text_color: Some(palette.background.weak.text),
+        background: Some(palette.background.weakest.color.into()),
+        border: Border {
+            ..border::rounded(4)
+        },
+        ..container::Style::default()
+    }
+}
+
+fn cmd_prompt_container_style(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
+    container::Style {
+        text_color: Some(palette.background.weak.text),
+        background: Some(color!(0x111111).into()),
+        border: Border {
+            ..border::rounded(4)
+        },
+        shadow: Shadow {
+            color: color!(0x000000),
+            blur_radius: 4.0,
+            ..Shadow::default()
+        },
+        ..container::Style::default()
+    }
+}
+
+fn right_tick_svg_style(theme: &Theme, _status: svg::Status) -> svg::Style {
+    let palette = theme.extended_palette();
+
+    svg::Style {
+        color: Some(palette.background.weak.text),
     }
 }
