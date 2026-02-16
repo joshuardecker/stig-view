@@ -1,3 +1,4 @@
+use iced::Alignment::Center;
 use iced::Length::{Fill, FillPortion, Shrink};
 use iced::alignment::Horizontal::Left;
 use iced::widget::{
@@ -8,7 +9,7 @@ use iced::{Background, Border, Shadow, border};
 use iced::{Element, Theme, color};
 
 use crate::app::{App, Message, Popup};
-use crate::sgroup::{SGroup, StigWrapper};
+use crate::sgroup::{Pinned, SGroup, StigWrapper};
 
 impl App {
     pub fn get_view_none_displayed(&self) -> Element<'_, Message> {
@@ -78,14 +79,32 @@ impl App {
             .get_all()
             .iter()
             .map(|stig_wrapper| {
+                let icon_path: String;
+
+                match stig_wrapper.pinned {
+                    Pinned::Not => icon_path = assets_dir.clone() + "lightbulb.svg",
+                    Pinned::ByUser => icon_path = assets_dir.clone() + "lightbulb-filled.svg",
+                    Pinned::ByCmd => icon_path = assets_dir.clone() + "terminal.svg",
+                }
+
                 Box::new(
                     button(
-                        text(stig_wrapper.stig.version.clone())
-                            .height(Fill)
-                            .width(Fill)
-                            .center(),
+                        row![
+                            space().width(32),
+                            text(stig_wrapper.stig.version.clone())
+                                .height(Fill)
+                                .width(Fill)
+                                .center(),
+                            space::horizontal(),
+                            button(svg(icon_path).height(32))
+                                .padding(1)
+                                .style(button_no_style)
+                                .on_press(Message::UserPin(stig_wrapper.uuid))
+                        ]
+                        .align_y(Center),
                     )
                     .height(50)
+                    .padding(8)
                     .width(Fill)
                     .style(button::primary)
                     .on_press(Message::SwitchDisplayed(stig_wrapper.uuid.clone())),
@@ -97,7 +116,7 @@ impl App {
 
         for button in buttons_vec {
             button_col = button_col.push(*button);
-            button_col = button_col.push(space().height(3)) // Add a tiny seperation between each button.
+            button_col = button_col.push(space().height(8)) // Add a tiny seperation between each button.
         }
 
         if let Some(_stig) = &*self.displayed.read().unwrap() {
@@ -359,5 +378,12 @@ fn right_tick_svg_style(theme: &Theme, _status: svg::Status) -> svg::Style {
 
     svg::Style {
         color: Some(palette.background.weak.text),
+    }
+}
+
+fn button_no_style(_theme: &Theme, _status: button::Status) -> button::Style {
+    button::Style {
+        background: Some(color!(0, 0, 0, 0.0).into()),
+        ..button::Style::default()
     }
 }
