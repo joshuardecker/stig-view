@@ -42,11 +42,16 @@ pub enum Message {
     SwitchDisplayed(Uuid),
     SwitchNext,
 
+    OpenCmdInput,
     FocusCmdInput(Id),
     ChangeCmdInput(String),
     SubmitCmdInput,
 
     ChangePopup(Option<Popup>),
+
+    UserPin(Uuid),
+
+    Done(()),
 }
 
 #[derive(Debug, Clone)]
@@ -91,15 +96,7 @@ impl App {
                     "q" if modifiers.control() => return iced::exit(),
                     "i" if modifiers.control() => return Task::done(Message::OpenFileSelect),
                     "o" if modifiers.control() => return Task::done(Message::OpenFolderSelect),
-                    "p" if modifiers.control() => match &self.popup {
-                        Some(Popup::CommandPrompt) => {
-                            return Task::done(Message::ChangePopup(None));
-                        }
-                        None => {
-                            return Task::done(Message::ChangePopup(Some(Popup::CommandPrompt)));
-                        }
-                        _ => return Task::none(),
-                    },
+                    "p" if modifiers.control() => return Task::done(Message::OpenCmdInput),
                     _ => Task::none(),
                 },
                 keyboard::Event::KeyPressed {
@@ -111,6 +108,15 @@ impl App {
                     _ => Task::none(),
                 },
                 _ => Task::none(),
+            },
+            Message::OpenCmdInput => match &self.popup {
+                Some(Popup::CommandPrompt) => {
+                    return Task::done(Message::ChangePopup(None));
+                }
+                None => {
+                    return Task::done(Message::ChangePopup(Some(Popup::CommandPrompt)));
+                }
+                _ => return Task::none(),
             },
             Message::OpenFileSelect => Task::perform(
                 async {
@@ -258,11 +264,46 @@ impl App {
                 Task::none()
             }
             Message::StigsSorted(sorted_stigs) => {
-                if let Some(sorted_stigs) = sorted_stigs {
-                    *self.list.write().unwrap() = sorted_stigs;
-                }
-                Task::none()
+                let sgroup_lock = self.list.clone();
+
+                Task::perform(
+                    async move {
+                        if let Some(sorted_stigs) = sorted_stigs {
+                            *sgroup_lock.write().unwrap() = sorted_stigs;
+                        }
+                    },
+                    Message::Done,
+                )
             }
+            Message::UserPin(uuid) => {
+                let sgroup_lock = self.list.clone();
+
+                Task::perform(
+                    async move {
+                        let mut sgroup = sgroup_lock.read().unwrap().clone();
+                        let stig_wrapper = sgroup.get_by_uuid(uuid);
+
+                        if let Some(stig_wrapper) = stig_wrapper {
+                            match stig_wrapper.pinned {
+                                Pinned::ByUser => {
+                                    sgroup.unpin(uuid);
+                                    sgroup.sort_by_version();
+                                    return Some(sgroup);
+                                }
+                                Pinned::Not => {
+                                    sgroup.pin(uuid, Pinned::ByUser);
+                                    sgroup.sort_by_version();
+                                    return Some(sgroup);
+                                }
+                                Pinned::ByCmd => (),
+                            }
+                        }
+                        Some(sgroup)
+                    },
+                    Message::StigsSorted,
+                )
+            }
+            Message::Done(()) => Task::none(),
         }
     }
 
@@ -354,16 +395,19 @@ fn parse_command(input: &str) -> Option<UserCommand> {
     }
 }
 
-async fn run_search_cmd(cmd: UserCommand, stigs: Arc<RwLock<SGroup>>) -> Option<SGroup> {
+async fn run_search_cmd(cmd: UserCommand, sgroup_lock: Arc<RwLock<SGroup>>) -> Option<SGroup> {
     match cmd {
         UserCommand::SearchForKeyword(keyword) => {
-            let mut stig_wrappers_lock = stigs.read().unwrap();
-            let mut stig_wrappers_clone = stig_wrappers_lock.clone();
+            let mut sgroup = sgroup_lock.read().unwrap().clone();
             let re = Regex::new(&keyword).ok()?;
 
-            stig_wrappers_clone.unpin_all_from_cmd();
+            sgroup.unpin_all_from_cmd();
 
-            for stig_wrapper in stig_wrappers_clone.get_all().iter_mut() {
+            for stig_wrapper in sgroup.get_all().iter() {
+                if let Pinned::ByUser = stig_wrapper.pinned {
+                    continue;
+                }
+
                 let mut is_match = false;
 
                 is_match |= re.is_match(&stig_wrapper.stig.version);
@@ -374,40 +418,41 @@ async fn run_search_cmd(cmd: UserCommand, stigs: Arc<RwLock<SGroup>>) -> Option<
                 is_match |= re.is_match(&stig_wrapper.stig.similar_checks);
 
                 if is_match {
-                    stig_wrappers_clone.pin(stig_wrapper.uuid, Pinned::ByCmd);
+                    sgroup.pin(stig_wrapper.uuid, Pinned::ByCmd);
                 }
             }
 
-            stig_wrappers_clone.sort_by_version();
+            sgroup.sort_by_version();
 
-            Some(stig_wrappers_clone)
+            Some(sgroup)
         }
         UserCommand::SearchForName(name) => {
-            let mut stig_wrappers_lock = stigs.read().unwrap();
-            let mut stig_wrappers_clone = stig_wrappers_lock.clone();
+            let mut sgroup = sgroup_lock.read().unwrap().clone();
             let re = Regex::new(&name).ok()?;
 
-            stig_wrappers_clone.unpin_all_from_cmd();
+            sgroup.unpin_all_from_cmd();
 
-            for stig_wrapper in stig_wrappers_clone.get_all().iter_mut() {
+            for stig_wrapper in sgroup.get_all().iter() {
+                if let Pinned::ByUser = stig_wrapper.pinned {
+                    continue;
+                }
+
                 if re.is_match(&stig_wrapper.stig.version) {
-                    stig_wrappers_clone.pin(stig_wrapper.uuid, Pinned::ByCmd);
+                    sgroup.pin(stig_wrapper.uuid, Pinned::ByCmd);
                 }
             }
 
-            stig_wrappers_clone.sort_by_version();
+            sgroup.sort_by_version();
 
-            Some(stig_wrappers_clone)
+            Some(sgroup)
         }
         UserCommand::Reset => {
-            let mut stig_wrappers_lock = stigs.read().unwrap();
-            let mut stig_wrappers_clone = stig_wrappers_lock.clone();
+            let mut sgroup = sgroup_lock.read().unwrap().clone();
 
-            stig_wrappers_clone.unpin_all_from_cmd();
+            sgroup.unpin_all_from_cmd();
+            sgroup.sort_by_version();
 
-            stig_wrappers_clone.sort_by_version();
-
-            Some(stig_wrappers_clone)
+            Some(sgroup)
         }
     }
 }

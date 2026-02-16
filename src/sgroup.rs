@@ -121,7 +121,7 @@ impl SGroup {
         }
 
         if let Some(index) = index {
-            let mut stig_wrapper = self.not_pinned.swap_remove(index);
+            let mut stig_wrapper = self.pinned.swap_remove(index);
             stig_wrapper.pinned = Pinned::Not;
 
             self.not_pinned.push(stig_wrapper);
@@ -142,20 +142,10 @@ impl SGroup {
 
         let mut i: usize = 0;
         while i < self.pinned.len() {
-            if i == self.pinned.len() {
-                println!("{:?}", &self.pinned);
-                println!("{}", i);
-                panic!("What?");
-            }
-
-            if let Pinned::Not = self.pinned[0].pinned {
+            if let Pinned::Not = self.pinned[i].pinned {
                 self.pinned.swap_remove(i);
-
-                if i == 0 {
-                    continue;
-                } else {
-                    i -= 1;
-                }
+            } else {
+                i += 1;
             }
         }
     }
