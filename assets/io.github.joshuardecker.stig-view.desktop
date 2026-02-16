@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Stig View
+Exec=stig-view
+Icon=io.github.joshuardecker.stig-view
+Type=Application
+Categories=Utility;

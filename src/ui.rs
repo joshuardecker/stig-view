@@ -18,7 +18,7 @@ impl App {
             .to_str()
             .unwrap()
             .to_string()
-            + "/assets/";
+            + "/assets/images/";
 
         let final_gui = column![
             row![
@@ -70,7 +70,7 @@ impl App {
             .to_str()
             .unwrap()
             .to_string()
-            + "/assets/";
+            + "/assets/images/";
 
         let buttons_vec: Vec<Box<Button<Message>>> = self
             .list
@@ -230,7 +230,7 @@ impl App {
             .to_str()
             .unwrap()
             .to_string()
-            + "/assets/";
+            + "/assets/images/";
 
         container(
             sensor(
