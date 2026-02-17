@@ -4,6 +4,10 @@ Currently, I am only building for Linux, however the application supports cross 
 To build the application, install rust, and anything required for the compilation process, like a linker. Then simply run:
 ```cargo build --release```
 
-An executable will be made called stig-view in /target/release/ . Make sure to move the executable and assets folder into the same directiory.
-
-If you just download the release folder, keep the executable and assets folder together.
+# Useful Keybinds
+All of these features are accessable by clicking buttons, but here are some keybinds:
+1. Control + q to quit
+2. Control + tab to scrll next stig
+3. Control + p for cmd prompt
+4. Control + i to select a file
+5. Control + o tp select a folder
