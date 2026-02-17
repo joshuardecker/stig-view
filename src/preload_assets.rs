@@ -10,13 +10,6 @@ pub struct Assets {
 
 impl Assets {
     pub fn new() -> Self {
-        let assets_dir = std::env::current_dir()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string()
-            + "/assets/images/";
-
         Self {
             file_svg: include_bytes!("../assets/images/file.svg").to_vec(),
             folder_svg: include_bytes!("../assets/images/folder.svg").to_vec(),

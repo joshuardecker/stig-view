@@ -2,7 +2,6 @@ use regex::Regex;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use uuid::Uuid;
 
 /// A data structure containing the useful values of a DISA stig.
 #[derive(Debug, PartialEq, Clone)]
