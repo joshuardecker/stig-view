@@ -2,9 +2,10 @@ use iced::Element;
 use iced::Length::{Fill, FillPortion, Shrink};
 use iced::alignment::Alignment::Center;
 use iced::alignment::Horizontal::Left;
+use iced::time;
 use iced::widget::{
     Button, Container, Id, button, column, container, row, scrollable, sensor, space, stack, svg,
-    text, text_editor, text_input,
+    text, text_editor, text_input, tooltip,
 };
 use iced::{Background, Shadow};
 use iced::{Border, Theme, border, color};
@@ -25,20 +26,41 @@ impl App {
                 space().width(15),
                 column![
                     row![
-                        button(svg(file_svg_handle))
-                            .padding(1)
-                            .width(40)
-                            .on_press(Message::OpenFileSelect),
+                        tooltip(
+                            button(svg(file_svg_handle))
+                                .padding(1)
+                                .width(40)
+                                .on_press(Message::OpenFileSelect),
+                            container(text("Open a File"))
+                                .padding(4)
+                                .style(stig_list_container_style),
+                            tooltip::Position::FollowCursor,
+                        )
+                        .delay(time::milliseconds(600)),
                         space::horizontal(),
-                        button(svg(folder_svg_handle))
-                            .padding(1)
-                            .width(40)
-                            .on_press(Message::OpenFolderSelect),
+                        tooltip(
+                            button(svg(folder_svg_handle))
+                                .padding(1)
+                                .width(40)
+                                .on_press(Message::OpenFolderSelect),
+                            container(text("Open a Folder"))
+                                .padding(4)
+                                .style(stig_list_container_style),
+                            tooltip::Position::FollowCursor
+                        )
+                        .delay(time::milliseconds(600)),
                         space::horizontal(),
-                        button(svg(terminal_svg_handle))
-                            .padding(1)
-                            .width(40)
-                            .on_press(Message::ToggleCmdInput),
+                        tooltip(
+                            button(svg(terminal_svg_handle))
+                                .padding(1)
+                                .width(40)
+                                .on_press(Message::ToggleCmdInput),
+                            container(text("Open a Command Prompt"))
+                                .padding(4)
+                                .style(stig_list_container_style),
+                            tooltip::Position::FollowCursor
+                        )
+                        .delay(time::milliseconds(600)),
                     ],
                     space().height(15),
                     container(space::vertical())
@@ -188,20 +210,41 @@ impl App {
                     space().width(15),
                     column![
                         row![
-                            button(svg(file_svg_handle))
-                                .padding(1)
-                                .width(40)
-                                .on_press(Message::OpenFileSelect),
+                            tooltip(
+                                button(svg(file_svg_handle))
+                                    .padding(1)
+                                    .width(40)
+                                    .on_press(Message::OpenFileSelect),
+                                container(text("Open a File"))
+                                    .padding(4)
+                                    .style(stig_list_container_style),
+                                tooltip::Position::FollowCursor,
+                            )
+                            .delay(time::milliseconds(600)),
                             space::horizontal(),
-                            button(svg(folder_svg_handle))
-                                .padding(1)
-                                .width(40)
-                                .on_press(Message::OpenFolderSelect),
+                            tooltip(
+                                button(svg(folder_svg_handle))
+                                    .padding(1)
+                                    .width(40)
+                                    .on_press(Message::OpenFolderSelect),
+                                container(text("Open a Folder"))
+                                    .padding(4)
+                                    .style(stig_list_container_style),
+                                tooltip::Position::FollowCursor
+                            )
+                            .delay(time::milliseconds(600)),
                             space::horizontal(),
-                            button(svg(terminal_svg_handle))
-                                .padding(1)
-                                .width(40)
-                                .on_press(Message::ToggleCmdInput),
+                            tooltip(
+                                button(svg(terminal_svg_handle))
+                                    .padding(1)
+                                    .width(40)
+                                    .on_press(Message::ToggleCmdInput),
+                                container(text("Open a Command Prompt"))
+                                    .padding(4)
+                                    .style(stig_list_container_style),
+                                tooltip::Position::FollowCursor
+                            )
+                            .delay(time::milliseconds(600)),
                         ],
                         space().height(15),
                         container(column![
