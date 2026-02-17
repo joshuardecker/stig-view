@@ -5,7 +5,7 @@ To build the application, install rust, and anything required for the compilatio
 ```cargo build --release```
 
 # Useful Keybinds
-All of these features are accessable by clicking buttons, but here are some keybinds:
+All of these features are accessible by clicking buttons, but here are some keybinds:
 1. Control + q to quit
 2. Control + tab to scroll next stig
 3. Control + p for cmd prompt
