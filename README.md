@@ -7,7 +7,7 @@ To build the application, install rust, and anything required for the compilatio
 # Useful Keybinds
 All of these features are accessable by clicking buttons, but here are some keybinds:
 1. Control + q to quit
-2. Control + tab to scrll next stig
+2. Control + tab to scroll next stig
 3. Control + p for cmd prompt
 4. Control + i to select a file
 5. Control + o to select a folder
