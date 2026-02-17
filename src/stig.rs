@@ -4,6 +4,7 @@ use std::io::Read;
 use std::path::Path;
 use uuid::Uuid;
 
+/// A data structure containing the useful values of a DISA stig.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Stig {
     pub version: String,
@@ -12,12 +13,11 @@ pub struct Stig {
     pub check_text: String,
     pub desc: String,
     pub fix_text: String,
-
-    // todo: remove
-    pub uuid: Uuid,
 }
 
 impl Stig {
+    /// Create a stig from a given xylok generated txt file of a stig.
+    /// Returns none if a random txt is given.
     pub fn from_xylok_txt<P: AsRef<Path>>(path: P) -> Option<Stig> {
         let mut file = File::open(path).ok()?;
         let mut buf = String::new();
@@ -38,8 +38,6 @@ impl Stig {
             check_text: captures.get(4).unwrap().as_str().trim().to_string(),
             desc: captures.get(5).unwrap().as_str().trim().to_string(),
             fix_text: captures.get(6).unwrap().as_str().trim().to_string(),
-            // todo: remove
-            uuid: Uuid::new_v4(),
         })
     }
 }
@@ -53,8 +51,6 @@ fn test_from_xylok_txt() {
         check_text: String::from("Content!"),
         desc: String::from("Discussion!"),
         fix_text: String::from("Fix!"),
-        // todo: remove
-        uuid: Uuid::new_v4(),
     };
 
     let loaded_stig = Stig::from_xylok_txt("test_stig.txt");
