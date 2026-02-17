@@ -12,6 +12,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use uuid::Uuid;
 
+use crate::preload_assets::Assets;
 use crate::sgroup::{Pinned, SGroup, StigWrapper};
 use crate::stig::Stig;
 
@@ -23,6 +24,7 @@ pub struct App {
     pub content: [text_editor::Content; 6],
     pub popup: Option<Popup>,
     pub cmd_input: String,
+    pub assets: Assets,
 }
 
 /// Every way the state of the application can change.
@@ -87,6 +89,7 @@ impl App {
             ],
             popup: None,
             cmd_input: String::new(),
+            assets: Assets::new(),
         }
     }
 

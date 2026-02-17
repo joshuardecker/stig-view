@@ -15,12 +15,9 @@ use crate::sgroup::Pinned;
 impl App {
     /// What should be displayed when nothing has been loaded.
     pub fn get_view_none_displayed(&self) -> Element<'_, Message> {
-        let assets_dir = std::env::current_dir()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string()
-            + "/assets/images/";
+        let file_svg_handle = svg::Handle::from_memory(self.assets.file_svg.clone());
+        let folder_svg_handle = svg::Handle::from_memory(self.assets.folder_svg.clone());
+        let terminal_svg_handle = svg::Handle::from_memory(self.assets.terminal_svg.clone());
 
         let final_gui = column![
             space().height(15),
@@ -28,17 +25,17 @@ impl App {
                 space().width(15),
                 column![
                     row![
-                        button(svg(assets_dir.clone() + "file.svg"))
+                        button(svg(file_svg_handle))
                             .padding(1)
                             .width(40)
                             .on_press(Message::OpenFileSelect),
                         space::horizontal(),
-                        button(svg(assets_dir.clone() + "folder.svg"))
+                        button(svg(folder_svg_handle))
                             .padding(1)
                             .width(40)
                             .on_press(Message::OpenFolderSelect),
                         space::horizontal(),
-                        button(svg(assets_dir + "terminal.svg"))
+                        button(svg(terminal_svg_handle))
                             .padding(1)
                             .width(40)
                             .on_press(Message::ToggleCmdInput),
@@ -78,12 +75,12 @@ impl App {
 
     /// Get what should be drawn to the screen when content has been loaded.
     pub fn get_view_displayed(&self) -> Element<'_, Message> {
-        let assets_dir = std::env::current_dir()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string()
-            + "/assets/images/";
+        let file_svg_handle = svg::Handle::from_memory(self.assets.file_svg.clone());
+        let folder_svg_handle = svg::Handle::from_memory(self.assets.folder_svg.clone());
+        let terminal_svg_handle = svg::Handle::from_memory(self.assets.terminal_svg.clone());
+        let lightbulb_svg_handle = svg::Handle::from_memory(self.assets.lightbulb_svg.clone());
+        let lightbulb_filled_svg_handle =
+            svg::Handle::from_memory(self.assets.lightbulb_filled_svg.clone());
 
         // Create the buttons on the side of the application.
         let buttons_vec: Vec<Box<Button<Message>>> = self
@@ -93,12 +90,12 @@ impl App {
             .get_all()
             .iter()
             .map(|stig_wrapper| {
-                let icon_path: String;
+                let icon: svg::Handle;
 
                 match stig_wrapper.pinned {
-                    Pinned::Not => icon_path = assets_dir.clone() + "lightbulb.svg",
-                    Pinned::ByUser => icon_path = assets_dir.clone() + "lightbulb-filled.svg",
-                    Pinned::ByCmd => icon_path = assets_dir.clone() + "terminal.svg",
+                    Pinned::Not => icon = lightbulb_svg_handle.clone(),
+                    Pinned::ByUser => icon = lightbulb_filled_svg_handle.clone(),
+                    Pinned::ByCmd => icon = terminal_svg_handle.clone(),
                 }
 
                 Box::new(
@@ -110,7 +107,7 @@ impl App {
                                 .width(Fill)
                                 .center(),
                             space::horizontal(),
-                            button(svg(icon_path).height(32))
+                            button(svg(icon).height(32))
                                 .padding(1)
                                 .style(button_no_style)
                                 .on_press(Message::UserPin(stig_wrapper.uuid))
@@ -191,17 +188,17 @@ impl App {
                     space().width(15),
                     column![
                         row![
-                            button(svg(assets_dir.clone() + "file.svg"))
+                            button(svg(file_svg_handle))
                                 .padding(1)
                                 .width(40)
                                 .on_press(Message::OpenFileSelect),
                             space::horizontal(),
-                            button(svg(assets_dir.clone() + "folder.svg"))
+                            button(svg(folder_svg_handle))
                                 .padding(1)
                                 .width(40)
                                 .on_press(Message::OpenFolderSelect),
                             space::horizontal(),
-                            button(svg(assets_dir + "terminal.svg"))
+                            button(svg(terminal_svg_handle))
                                 .padding(1)
                                 .width(40)
                                 .on_press(Message::ToggleCmdInput),
@@ -242,14 +239,9 @@ impl App {
 
     /// A function that returns the cmd prompt popup ui.
     fn command_prompt_popup(&self) -> Container<'_, Message> {
-        let id = Id::new("cmd_text_input");
+        let right_tick_svg_handle = svg::Handle::from_memory(self.assets.right_tick_svg.clone());
 
-        let assets_dir = std::env::current_dir()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string()
-            + "/assets/images/";
+        let id = Id::new("cmd_text_input");
 
         container(
             sensor(
@@ -261,7 +253,7 @@ impl App {
                             .id(id.clone()),
                         space().height(20),
                         row![
-                            svg(assets_dir.clone() + "right-tick.svg")
+                            svg(right_tick_svg_handle.clone())
                                 .style(right_tick_svg_style)
                                 .width(Shrink),
                             space().width(5),
@@ -269,7 +261,7 @@ impl App {
                         ]
                         .height(24),
                         row![
-                            svg(assets_dir.clone() + "right-tick.svg")
+                            svg(right_tick_svg_handle.clone())
                                 .style(right_tick_svg_style)
                                 .width(Shrink),
                             space().width(5),
@@ -277,7 +269,7 @@ impl App {
                         ]
                         .height(24),
                         row![
-                            svg(assets_dir.clone() + "right-tick.svg")
+                            svg(right_tick_svg_handle.clone())
                                 .style(right_tick_svg_style)
                                 .width(Shrink),
                             space().width(5),
@@ -286,7 +278,7 @@ impl App {
                         .height(24),
                         space().height(15),
                         row![
-                            svg(assets_dir + "right-tick.svg")
+                            svg(right_tick_svg_handle.clone())
                                 .style(right_tick_svg_style)
                                 .width(Shrink),
                             space().width(5),
