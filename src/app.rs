@@ -12,6 +12,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use uuid::Uuid;
 
+use crate::preload_assets::Assets;
 use crate::sgroup::{Pinned, SGroup, StigWrapper};
 use crate::stig::Stig;
 
@@ -23,8 +24,10 @@ pub struct App {
     pub content: [text_editor::Content; 6],
     pub popup: Option<Popup>,
     pub cmd_input: String,
+    pub assets: Assets,
 }
 
+/// Every way the state of the application can change.
 #[derive(Debug, Clone)]
 pub enum Message {
     KeyPressed(keyboard::Event),
@@ -42,7 +45,7 @@ pub enum Message {
     SwitchDisplayed(Uuid),
     SwitchNext,
 
-    OpenCmdInput,
+    ToggleCmdInput,
     FocusCmdInput(Id),
     ChangeCmdInput(String),
     SubmitCmdInput,
@@ -51,15 +54,19 @@ pub enum Message {
 
     UserPin(Uuid),
 
-    Done(()),
+    // Used when an async task finishes with no return value.
+    Done,
 }
 
+// A popup that appears over the main content of the application.
 #[derive(Debug, Clone)]
 pub enum Popup {
     CommandPrompt,
+    // Not an error value, a popup displaying there was an error.
     Error,
 }
 
+/// Commands that can be sent by the user from the cmd prompt popup.
 #[derive(Debug, Clone)]
 pub enum UserCommand {
     SearchForName(String),
@@ -82,11 +89,15 @@ impl App {
             ],
             popup: None,
             cmd_input: String::new(),
+            assets: Assets::new(),
         }
     }
 
+    /// Updates the state of the application given the message.
     pub fn update(&mut self, msg: Message) -> Task<Message> {
         match msg {
+            // Handle keys being pressed, looking for keybind combinations.
+            // I dont like how iced handles this, it seems verbose.
             Message::KeyPressed(event) => match &event {
                 keyboard::Event::KeyPressed {
                     key: key::Key::Character(key_smolstr),
@@ -96,7 +107,7 @@ impl App {
                     "q" if modifiers.control() => return iced::exit(),
                     "i" if modifiers.control() => return Task::done(Message::OpenFileSelect),
                     "o" if modifiers.control() => return Task::done(Message::OpenFolderSelect),
-                    "p" if modifiers.control() => return Task::done(Message::OpenCmdInput),
+                    "p" if modifiers.control() => return Task::done(Message::ToggleCmdInput),
                     _ => Task::none(),
                 },
                 keyboard::Event::KeyPressed {
@@ -109,15 +120,8 @@ impl App {
                 },
                 _ => Task::none(),
             },
-            Message::OpenCmdInput => match &self.popup {
-                Some(Popup::CommandPrompt) => {
-                    return Task::done(Message::ChangePopup(None));
-                }
-                None => {
-                    return Task::done(Message::ChangePopup(Some(Popup::CommandPrompt)));
-                }
-                _ => return Task::none(),
-            },
+
+            // Open the single file select system menu.
             Message::OpenFileSelect => Task::perform(
                 async {
                     let home_dir = std::env::home_dir().unwrap_or(PathBuf::from("/"));
@@ -137,6 +141,7 @@ impl App {
                 },
                 Message::OpenFile,
             ),
+            // Open the folder select system menu.
             Message::OpenFolderSelect => Task::perform(
                 async {
                     let home_dir = std::env::home_dir().unwrap_or(PathBuf::from("/"));
@@ -156,21 +161,30 @@ impl App {
                 },
                 Message::OpenFolder,
             ),
+            // Add the file into the program for the user to see.
             Message::OpenFile(path) => {
+                let sgroup_lock = self.list.clone();
+                let displayed_lock = self.displayed.clone();
+
                 if let Some(path) = path {
-                    let stig = Stig::from_xylok_txt(path.clone());
+                    Task::future(async move {
+                        let stig = Stig::from_xylok_txt(path);
 
-                    if let Some(stig) = stig {
-                        let stig = Box::new(stig);
-                        self.list.write().unwrap().add(stig.clone());
-                        *self.displayed.write().unwrap() = Some(self.list.read().unwrap().first());
-                    }
+                        if let Some(stig) = stig {
+                            let stig = Box::new(stig);
+                            sgroup_lock.write().unwrap().add(stig.clone());
+                            *displayed_lock.write().unwrap() =
+                                Some(sgroup_lock.read().unwrap().first());
+                        }
 
-                    Task::done(Message::PushStigToContent)
+                        Message::PushStigToContent
+                    })
                 } else {
                     Task::none()
                 }
             }
+            // Open a folder and search all of its contents, including subfolders for
+            // stigs to add.
             Message::OpenFolder(path) => {
                 if let Some(path) = path {
                     Task::perform(
@@ -181,31 +195,53 @@ impl App {
                     Task::none()
                 }
             }
+            // Given a vector of stigs, set the application to have those open.
+            // This is different than adding to the already loaded stigs.
             Message::SetStigVec(stigs) => {
                 if stigs.len() == 0 {
                     return Task::none();
                 }
 
-                self.list.write().unwrap().set_group(stigs);
+                let sgroup_lock = self.list.clone();
+                let displayed_lock = self.displayed.clone();
 
-                *self.displayed.write().unwrap() = Some(self.list.read().unwrap().first());
+                Task::future(async move {
+                    sgroup_lock.write().unwrap().set_group(stigs);
+                    *displayed_lock.write().unwrap() = Some(sgroup_lock.read().unwrap().first());
 
-                Task::done(Message::PushStigToContent)
+                    Message::PushStigToContent
+                })
             }
+            // Push contents of the selected stig to the screen for the user to see.
             Message::PushStigToContent => {
-                if let Some(stig_wrapper) = &*self.displayed.read().unwrap() {
-                    self.content[0] = text_editor::Content::with_text(&stig_wrapper.stig.version);
-                    self.content[1] = text_editor::Content::with_text(&stig_wrapper.stig.intro);
-                    self.content[2] = text_editor::Content::with_text(&stig_wrapper.stig.desc);
-                    self.content[3] =
-                        text_editor::Content::with_text(&stig_wrapper.stig.check_text);
-                    self.content[4] = text_editor::Content::with_text(&stig_wrapper.stig.fix_text);
-                    self.content[5] =
-                        text_editor::Content::with_text(&stig_wrapper.stig.similar_checks);
+                let displayed_lock = self.displayed.clone();
+
+                if let Some(stig) = &*displayed_lock.read().unwrap() {
+                    self.content[0] = text_editor::Content::with_text(&stig.stig.version);
+                    self.content[1] = text_editor::Content::with_text(&stig.stig.intro);
+                    self.content[2] = text_editor::Content::with_text(&stig.stig.desc);
+                    self.content[3] = text_editor::Content::with_text(&stig.stig.check_text);
+                    self.content[4] = text_editor::Content::with_text(&stig.stig.fix_text);
+                    self.content[5] = text_editor::Content::with_text(&stig.stig.similar_checks);
                 }
 
                 Task::none()
             }
+            // When the stigs have been sorted, save this order to the app state here.
+            Message::StigsSorted(sorted_stigs) => {
+                let sgroup_lock = self.list.clone();
+
+                Task::future(async move {
+                    if let Some(sorted_stigs) = sorted_stigs {
+                        *sgroup_lock.write().unwrap() = sorted_stigs;
+                    }
+
+                    Message::Done
+                })
+            }
+
+            // Handle the user selecting text to copy and paste.
+            // Block the user from adding / removing text.
             Message::SelectContent(action, index) => {
                 if let text_editor::Action::Edit(_) = action {
                     return Task::none();
@@ -215,21 +251,53 @@ impl App {
 
                 Task::none()
             }
+
+            // Switch which stig is being displayed.
             Message::SwitchDisplayed(uuid) => {
-                let new_displayed_stig = self.list.read().unwrap().get_by_uuid(uuid);
+                let sgroup_lock = self.list.clone();
+                let displayed_lock = self.displayed.clone();
 
-                if let Some(new_displayed_stig) = new_displayed_stig {
-                    *self.displayed.write().unwrap() = Some(new_displayed_stig);
-                }
+                Task::future(async move {
+                    let new_stig = sgroup_lock.read().unwrap().get_by_uuid(uuid);
 
-                Task::done(Message::PushStigToContent)
+                    if let Some(new_stig) = new_stig {
+                        *displayed_lock.write().unwrap() = Some(new_stig);
+                    }
+
+                    Message::PushStigToContent
+                })
             }
+            // Switch to the next stig.
+            // Used for the keybind control + tab.
             Message::SwitchNext => {
-                let mut displayed_stig = self.displayed.write().unwrap();
+                let sgroup_lock = self.list.clone();
+                let displayed_lock = self.displayed.clone();
+
+                // Dead async code.
+                // For some reason, switching this code to run async makes the RwLock get stuck on itself.
+                // I cant get it to do that in sync land, so we will keep it there I guess.
+                /*Task::future(async move {
+                    let mut displayed = displayed_lock.read().unwrap();
+
+                    let stig = displayed.clone();
+
+                    if let Some(stig) = stig {
+                        let next_stig = sgroup_lock.read().unwrap().get_next_wrapping(stig.uuid);
+
+                        if let Some(next_stig) = next_stig {
+                            Message::SwitchDisplayed(next_stig.uuid)
+                        } else {
+                            Message::Done
+                        }
+                    } else {
+                        Message::Done
+                    }
+                })*/
+
+                let mut displayed_stig = displayed_lock.write().unwrap();
 
                 if let Some(stig) = displayed_stig.clone() {
-                    let next_stig = self
-                        .list
+                    let next_stig = sgroup_lock
                         .read()
                         .unwrap()
                         .get_next_wrapping(stig.uuid.clone());
@@ -241,11 +309,25 @@ impl App {
                     Task::none()
                 }
             }
+
+            // Toggle whether the cmd prompt is open or closed.
+            Message::ToggleCmdInput => match &self.popup {
+                Some(Popup::CommandPrompt) => {
+                    return Task::done(Message::ChangePopup(None));
+                }
+                None => {
+                    return Task::done(Message::ChangePopup(Some(Popup::CommandPrompt)));
+                }
+                _ => return Task::none(),
+            },
+            // Automatically have the cmd prompt text box selected, that way the user does not
+            // have to manually click into it every time.
             Message::FocusCmdInput(id) => iced::widget::operation::focus(id),
             Message::ChangeCmdInput(input) => {
                 self.cmd_input = input;
                 Task::none()
             }
+            // When the user presses enter in the cmd prompt.
             Message::SubmitCmdInput => {
                 let user_command = parse_command(&self.cmd_input);
 
@@ -259,22 +341,13 @@ impl App {
                     Task::none()
                 }
             }
+
+            // Switch the popup displayed.
             Message::ChangePopup(new_popup) => {
                 self.popup = new_popup;
                 Task::none()
             }
-            Message::StigsSorted(sorted_stigs) => {
-                let sgroup_lock = self.list.clone();
-
-                Task::perform(
-                    async move {
-                        if let Some(sorted_stigs) = sorted_stigs {
-                            *sgroup_lock.write().unwrap() = sorted_stigs;
-                        }
-                    },
-                    Message::Done,
-                )
-            }
+            // User manually pins a stig.
             Message::UserPin(uuid) => {
                 let sgroup_lock = self.list.clone();
 
@@ -303,10 +376,12 @@ impl App {
                     Message::StigsSorted,
                 )
             }
-            Message::Done(()) => Task::none(),
+
+            Message::Done => Task::none(),
         }
     }
 
+    /// Get the view that should be rendered to the screen.
     pub fn get_view(&self) -> Element<'_, Message> {
         if let Some(_) = *self.displayed.read().unwrap() {
             self.get_view_displayed()
@@ -315,16 +390,16 @@ impl App {
         }
     }
 
+    /// Listen for all keyboard inputs.
     pub fn subscription(&self) -> Subscription<Message> {
         keyboard::listen().filter_map(|event| Some(Message::KeyPressed(event)))
     }
 
+    /// The theme of the application.
     pub fn theme(&self) -> Theme {
         let palette = theme::Palette {
             background: color!(0x2B2D31),
             text: Color::from_rgb(0.90, 0.90, 0.90),
-            //primary: color!(0x6CA0DC),
-            //primary: color!(0xC5D8E5),
             primary: color!(0xA2A2D0),
             success: color!(0x12664f),
             warning: color!(0xffc14e),
@@ -335,6 +410,10 @@ impl App {
     }
 }
 
+/// Load all found stigs from a given directory.
+/// Searches all subfolders as well.
+/// If I had to rewrite this, I would return stig wrappers,
+/// rather than raw stigs.
 async fn load_dir(path: PathBuf) -> Vec<Box<Stig>> {
     let mut dirs: Vec<Box<PathBuf>> = vec![Box::new(path)];
     let mut next_dirs: Vec<Box<PathBuf>> = vec![];
@@ -364,6 +443,9 @@ async fn load_dir(path: PathBuf) -> Vec<Box<Stig>> {
             }
         }
 
+        // To make rust happy, we save subfolders found in a new variable.
+        // At the end of the loop, iterate through all of the new subfolders.
+        // Repeat until no more sub folders.
         dirs = next_dirs;
         next_dirs = Vec::new();
 
@@ -372,6 +454,8 @@ async fn load_dir(path: PathBuf) -> Vec<Box<Stig>> {
         }
     }
 
+    // Loop through all text files found.
+    // If it is a xylok generated txt stig file, save it.
     for txt in txts {
         if let Some(stig) = Stig::from_xylok_txt(&*txt) {
             stigs.push(Box::new(stig));
@@ -381,6 +465,7 @@ async fn load_dir(path: PathBuf) -> Vec<Box<Stig>> {
     stigs
 }
 
+/// Parse the given str from the cmd prompt into a command.
 fn parse_command(input: &str) -> Option<UserCommand> {
     let cmd_regex = Regex::new(r"(\w+)\s*(.*)").unwrap();
     let captures = cmd_regex.captures(input)?;
@@ -395,6 +480,7 @@ fn parse_command(input: &str) -> Option<UserCommand> {
     }
 }
 
+/// Run the given command, and return the modified group of stigs.
 async fn run_search_cmd(cmd: UserCommand, sgroup_lock: Arc<RwLock<SGroup>>) -> Option<SGroup> {
     match cmd {
         UserCommand::SearchForKeyword(keyword) => {

@@ -1,4 +1,5 @@
 mod app;
+mod preload_assets;
 mod sgroup;
 mod stig;
 mod ui;
