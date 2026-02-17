@@ -10,4 +10,4 @@ All of these features are accessable by clicking buttons, but here are some keyb
 2. Control + tab to scrll next stig
 3. Control + p for cmd prompt
 4. Control + i to select a file
-5. Control + o tp select a folder
+5. Control + o to select a folder
