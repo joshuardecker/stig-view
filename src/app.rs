@@ -4,6 +4,7 @@ use iced::theme;
 use iced::theme::Custom;
 use iced::widget::Id;
 use iced::widget::text_editor;
+use iced::window;
 use iced::{Color, color};
 use iced::{Element, Subscription, Task, Theme};
 use regex::Regex;
@@ -25,6 +26,8 @@ pub struct App {
     pub popup: Option<Popup>,
     pub cmd_input: String,
     pub assets: Assets,
+    // Not known at when creating state.
+    pub window_id: window::Id,
 }
 
 /// Every way the state of the application can change.
@@ -56,6 +59,12 @@ pub enum Message {
 
     // Used when an async task finishes with no return value.
     Done,
+
+    GetWindowId(Option<window::Id>),
+    CloseApp,
+    MinimizeApp,
+    ToggleFullscreenApp,
+    MoveWindow,
 }
 
 // A popup that appears over the main content of the application.
@@ -75,22 +84,28 @@ pub enum UserCommand {
 }
 
 impl App {
-    pub fn new() -> Self {
-        App {
-            list: Arc::new(RwLock::new(SGroup::new())),
-            displayed: Arc::new(RwLock::new(None)),
-            content: [
-                text_editor::Content::new(),
-                text_editor::Content::new(),
-                text_editor::Content::new(),
-                text_editor::Content::new(),
-                text_editor::Content::new(),
-                text_editor::Content::new(),
-            ],
-            popup: None,
-            cmd_input: String::new(),
-            assets: Assets::new(),
-        }
+    pub fn new() -> (Self, Task<Message>) {
+        let (id, _) = window::open(window::Settings::default());
+
+        (
+            App {
+                list: Arc::new(RwLock::new(SGroup::new())),
+                displayed: Arc::new(RwLock::new(None)),
+                content: [
+                    text_editor::Content::new(),
+                    text_editor::Content::new(),
+                    text_editor::Content::new(),
+                    text_editor::Content::new(),
+                    text_editor::Content::new(),
+                    text_editor::Content::new(),
+                ],
+                popup: None,
+                cmd_input: String::new(),
+                assets: Assets::new(),
+                window_id: id,
+            },
+            window::oldest().map(Message::GetWindowId),
+        )
     }
 
     /// Updates the state of the application given the message.
@@ -378,6 +393,18 @@ impl App {
             }
 
             Message::Done => Task::none(),
+
+            // Run at the beginning of the program.
+            Message::GetWindowId(id) => {
+                self.window_id = id.expect("Did not get window id!");
+
+                window::toggle_decorations(self.window_id)
+            }
+            Message::CloseApp => iced::exit(),
+            Message::ToggleFullscreenApp => window::toggle_maximize(self.window_id),
+            Message::MinimizeApp => window::minimize(self.window_id, true),
+            // Allow the user to drag the window by grabbing the top.
+            Message::MoveWindow => window::drag(self.window_id),
         }
     }
 

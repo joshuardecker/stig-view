@@ -1,14 +1,14 @@
-use iced::Element;
 use iced::Length::{Fill, FillPortion, Shrink};
-use iced::alignment::Alignment::Center;
+use iced::alignment::Alignment::{Center, End};
 use iced::alignment::Horizontal::Left;
 use iced::time;
 use iced::widget::{
-    Button, Container, Id, button, column, container, row, scrollable, sensor, space, stack, svg,
-    text, text_editor, text_input, tooltip,
+    Button, Container, Id, Row, button, column, container, row, scrollable, sensor, space, stack,
+    svg, text, text_editor, text_input, tooltip,
 };
 use iced::{Background, Shadow};
 use iced::{Border, Theme, border, color};
+use iced::{Element, widget};
 
 use crate::app::{App, Message, Popup};
 use crate::sgroup::Pinned;
@@ -22,7 +22,9 @@ impl App {
         let terminal_svg_handle = svg::Handle::from_memory(self.assets.terminal_svg.clone());
 
         let final_gui = column![
-            space().height(15),
+            space().height(5),
+            self.window_decorations(),
+            space().height(5),
             row![
                 space().width(15),
                 column![
@@ -213,7 +215,9 @@ impl App {
             ];
 
             let final_gui = column![
-                space().height(15),
+                space().height(5),
+                self.window_decorations(),
+                space().height(5),
                 row![
                     space().width(15),
                     column![
@@ -376,5 +380,65 @@ impl App {
             .style(container::danger),
         )
         .center(Fill)
+    }
+
+    fn window_decorations(&self) -> Container<'_, Message> {
+        let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
+        let square_svg_handle = svg::Handle::from_memory(self.assets.square_svg.clone());
+        let down_tick_svg_handle = svg::Handle::from_memory(self.assets.down_tick_svg.clone());
+
+        // A complicated way of getting mouse_area to work.
+        // Captures mouse input in the window decorations so the window can be dragged.
+        container(
+            widget::mouse_area(
+                container(
+                    row![
+                        button(
+                            svg(down_tick_svg_handle)
+                                .style(colored_svg)
+                                .width(20)
+                                .height(20)
+                        )
+                        .padding(1)
+                        .width(Shrink)
+                        .height(Shrink)
+                        .style(no_button)
+                        .on_press(Message::MinimizeApp),
+                        space().width(15),
+                        button(
+                            svg(square_svg_handle)
+                                .style(colored_svg)
+                                .width(16)
+                                .height(16)
+                        )
+                        .padding(1)
+                        .width(Shrink)
+                        .height(Shrink)
+                        .style(no_button)
+                        .on_press(Message::ToggleFullscreenApp),
+                        space().width(15),
+                        button(
+                            svg(cross_svg_handle)
+                                .style(colored_svg)
+                                .width(25)
+                                .height(25)
+                        )
+                        .padding(1)
+                        .width(Shrink)
+                        .height(Shrink)
+                        .style(no_button)
+                        .on_press(Message::CloseApp),
+                        space().width(8)
+                    ]
+                    .align_y(Center),
+                )
+                .height(26)
+                .padding(1)
+                .align_x(End)
+                .align_y(Center)
+                .width(Fill),
+            )
+            .on_press(Message::MoveWindow),
+        )
     }
 }
