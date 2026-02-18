@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,3 +18,29 @@ jobs:
         with:
           name: stig-view
           path: target/release/stig-view
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --release
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: stig-view-macos
+          path: target/release/stig-view
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --release
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: stig-view-windows
+          path: target/release/stig-view.exe
