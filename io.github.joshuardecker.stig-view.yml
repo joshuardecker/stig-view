@@ -1,0 +1,19 @@
+app-id: io.github.joshuardecker.stig-view
+runtime: org.freedesktop.Platform
+runtime-version: "25.08"
+sdk: org.freedesktop.Sdk
+command: stig-view
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --share=ipc
+  - --filesystem=host
+modules:
+  - name: stig-view-module
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 stig-view /app/bin/stig-view
+    sources:
+      - type: file
+        path: /var/home/jdecker/Projects/stig-view/target/release/stig-view
