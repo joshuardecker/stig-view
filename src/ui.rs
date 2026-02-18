@@ -12,6 +12,7 @@ use iced::{Border, Theme, border, color};
 
 use crate::app::{App, Message, Popup};
 use crate::sgroup::Pinned;
+use crate::styles::*;
 
 impl App {
     /// What should be displayed when nothing has been loaded.
@@ -26,45 +27,50 @@ impl App {
                 space().width(15),
                 column![
                     row![
+                        space().width(5),
                         tooltip(
-                            button(svg(file_svg_handle))
-                                .padding(1)
+                            button(svg(file_svg_handle).style(colored_svg))
+                                .padding(2)
                                 .width(40)
-                                .on_press(Message::OpenFileSelect),
+                                .on_press(Message::OpenFileSelect)
+                                .style(no_button),
                             container(text("Open a File"))
                                 .padding(4)
-                                .style(stig_list_container_style),
+                                .style(tooltip_container),
                             tooltip::Position::FollowCursor,
                         )
                         .delay(time::milliseconds(600)),
                         space::horizontal(),
                         tooltip(
-                            button(svg(folder_svg_handle))
+                            button(svg(folder_svg_handle).style(colored_svg))
                                 .padding(1)
                                 .width(40)
-                                .on_press(Message::OpenFolderSelect),
+                                .on_press(Message::OpenFolderSelect)
+                                .style(no_button),
                             container(text("Open a Folder"))
                                 .padding(4)
-                                .style(stig_list_container_style),
+                                .style(tooltip_container),
                             tooltip::Position::FollowCursor
                         )
                         .delay(time::milliseconds(600)),
                         space::horizontal(),
                         tooltip(
-                            button(svg(terminal_svg_handle))
+                            button(svg(terminal_svg_handle).style(colored_svg))
                                 .padding(1)
                                 .width(40)
-                                .on_press(Message::ToggleCmdInput),
+                                .on_press(Message::ToggleCmdInput)
+                                .style(no_button),
                             container(text("Open a Command Prompt"))
                                 .padding(4)
-                                .style(stig_list_container_style),
+                                .style(tooltip_container),
                             tooltip::Position::FollowCursor
                         )
                         .delay(time::milliseconds(600)),
+                        space().width(5),
                     ],
                     space().height(15),
                     container(space::vertical())
-                        .style(stig_list_container_style)
+                        .style(background_container)
                         .width(FillPortion(1)),
                 ],
                 space().width(15),
@@ -76,7 +82,7 @@ impl App {
                         .size(24),
                     space::vertical()
                 ])
-                .style(stig_container_initial_style)
+                .style(background_container)
                 .width(FillPortion(5))
                 .height(Fill),
                 space().width(15),
@@ -100,9 +106,11 @@ impl App {
         let file_svg_handle = svg::Handle::from_memory(self.assets.file_svg.clone());
         let folder_svg_handle = svg::Handle::from_memory(self.assets.folder_svg.clone());
         let terminal_svg_handle = svg::Handle::from_memory(self.assets.terminal_svg.clone());
-        let lightbulb_svg_handle = svg::Handle::from_memory(self.assets.lightbulb_svg.clone());
-        let lightbulb_filled_svg_handle =
-            svg::Handle::from_memory(self.assets.lightbulb_filled_svg.clone());
+
+        let filter_svg_handle = svg::Handle::from_memory(self.assets.filter_svg.clone());
+        let bookmark_svg_handle = svg::Handle::from_memory(self.assets.bookmark_svg.clone());
+        let filled_bookmark_svg_handle =
+            svg::Handle::from_memory(self.assets.bookmark_filled_svg.clone());
 
         // Create the buttons on the side of the application.
         let buttons_vec: Vec<Box<Button<Message>>> = self
@@ -115,9 +123,9 @@ impl App {
                 let icon: svg::Handle;
 
                 match stig_wrapper.pinned {
-                    Pinned::Not => icon = lightbulb_svg_handle.clone(),
-                    Pinned::ByUser => icon = lightbulb_filled_svg_handle.clone(),
-                    Pinned::ByCmd => icon = terminal_svg_handle.clone(),
+                    Pinned::Not => icon = bookmark_svg_handle.clone(),
+                    Pinned::ByUser => icon = filled_bookmark_svg_handle.clone(),
+                    Pinned::ByCmd => icon = filter_svg_handle.clone(),
                 }
 
                 Box::new(
@@ -129,9 +137,9 @@ impl App {
                                 .width(Fill)
                                 .center(),
                             space::horizontal(),
-                            button(svg(icon).height(32))
+                            button(svg(icon).height(32).style(colored_svg))
                                 .padding(1)
-                                .style(button_no_style)
+                                .style(no_button)
                                 .on_press(Message::UserPin(stig_wrapper.uuid))
                         ]
                         .align_y(Center),
@@ -139,13 +147,13 @@ impl App {
                     .height(50)
                     .padding(8)
                     .width(Fill)
-                    .style(button::primary)
+                    .style(rounded_boring_button)
                     .on_press(Message::SwitchDisplayed(stig_wrapper.uuid.clone())),
                 )
             })
             .collect();
 
-        let mut button_col = column![];
+        let mut button_col = column![].padding(1);
 
         for button in buttons_vec {
             button_col = button_col.push(*button);
@@ -159,47 +167,47 @@ impl App {
                 row![
                     space().width(10),
                     text_editor(&self.content[0])
-                        .style(text_editor_no_style)
+                        .style(no_text_editor)
                         .on_action(|action| Message::SelectContent(action, 0))
                 ],
-                space().height(10),
+                space().height(15),
                 text("Introduction").size(32),
                 row![
                     space().width(10),
                     text_editor(&self.content[1])
-                        .style(text_editor_no_style)
+                        .style(no_text_editor)
                         .on_action(|action| Message::SelectContent(action, 1))
                 ],
-                space().height(10),
+                space().height(15),
                 text("Description").size(32),
                 row![
                     space().width(10),
                     text_editor(&self.content[2])
-                        .style(text_editor_no_style)
+                        .style(no_text_editor)
                         .on_action(|action| Message::SelectContent(action, 2))
                 ],
-                space().height(10),
+                space().height(15),
                 text("Check").size(32),
                 row![
                     space().width(10),
                     text_editor(&self.content[3])
-                        .style(text_editor_no_style)
+                        .style(no_text_editor)
                         .on_action(|action| Message::SelectContent(action, 3))
                 ],
-                space().height(10),
+                space().height(15),
                 text("Fix").size(32),
                 row![
                     space().width(10),
                     text_editor(&self.content[4])
-                        .style(text_editor_no_style)
+                        .style(no_text_editor)
                         .on_action(|action| Message::SelectContent(action, 4))
                 ],
-                space().height(10),
+                space().height(15),
                 text("Similar Checks").size(32),
                 row![
                     space().width(10),
                     text_editor(&self.content[5])
-                        .style(text_editor_no_style)
+                        .style(no_text_editor)
                         .on_action(|action| Message::SelectContent(action, 5))
                 ],
             ];
@@ -210,55 +218,60 @@ impl App {
                     space().width(15),
                     column![
                         row![
+                            space().width(5),
                             tooltip(
-                                button(svg(file_svg_handle))
-                                    .padding(1)
+                                button(svg(file_svg_handle).style(colored_svg))
+                                    .padding(2)
                                     .width(40)
-                                    .on_press(Message::OpenFileSelect),
+                                    .on_press(Message::OpenFileSelect)
+                                    .style(no_button),
                                 container(text("Open a File"))
                                     .padding(4)
-                                    .style(stig_list_container_style),
+                                    .style(tooltip_container),
                                 tooltip::Position::FollowCursor,
                             )
                             .delay(time::milliseconds(600)),
                             space::horizontal(),
                             tooltip(
-                                button(svg(folder_svg_handle))
+                                button(svg(folder_svg_handle).style(colored_svg))
                                     .padding(1)
                                     .width(40)
-                                    .on_press(Message::OpenFolderSelect),
+                                    .on_press(Message::OpenFolderSelect)
+                                    .style(no_button),
                                 container(text("Open a Folder"))
                                     .padding(4)
-                                    .style(stig_list_container_style),
+                                    .style(tooltip_container),
                                 tooltip::Position::FollowCursor
                             )
                             .delay(time::milliseconds(600)),
                             space::horizontal(),
                             tooltip(
-                                button(svg(terminal_svg_handle))
+                                button(svg(terminal_svg_handle).style(colored_svg))
                                     .padding(1)
                                     .width(40)
-                                    .on_press(Message::ToggleCmdInput),
+                                    .on_press(Message::ToggleCmdInput)
+                                    .style(no_button),
                                 container(text("Open a Command Prompt"))
                                     .padding(4)
-                                    .style(stig_list_container_style),
+                                    .style(tooltip_container),
                                 tooltip::Position::FollowCursor
                             )
                             .delay(time::milliseconds(600)),
+                            space().width(5),
                         ],
                         space().height(15),
                         container(column![
                             scrollable(button_col).spacing(5),
                             space::vertical()
                         ])
-                        .style(stig_list_container_style)
+                        .style(background_container)
                         .padding(5)
                         .width(FillPortion(1))
                     ],
                     space().width(15),
                     container(column![scrollable(stig_col).spacing(5), space::vertical()])
-                        .style(stig_container_style)
-                        .padding(10)
+                        .style(background_container)
+                        .padding(15)
                         .width(FillPortion(5))
                         .height(Fill),
                     space().width(15),
@@ -282,6 +295,7 @@ impl App {
 
     /// A function that returns the cmd prompt popup ui.
     fn command_prompt_popup(&self) -> Container<'_, Message> {
+        let filter_svg_handle = svg::Handle::from_memory(self.assets.filter_svg.clone());
         let right_tick_svg_handle = svg::Handle::from_memory(self.assets.right_tick_svg.clone());
 
         let id = Id::new("cmd_text_input");
@@ -290,14 +304,19 @@ impl App {
             sensor(
                 container(
                     column![
-                        text_input("Type commands here, then press enter...", &self.cmd_input)
-                            .on_input(Message::ChangeCmdInput)
-                            .on_submit(Message::SubmitCmdInput)
-                            .id(id.clone()),
+                        row![
+                            svg(filter_svg_handle).width(Shrink).style(boring_svg),
+                            space().width(5),
+                            text_input("Type commands here, then press enter...", &self.cmd_input)
+                                .on_input(Message::ChangeCmdInput)
+                                .on_submit(Message::SubmitCmdInput)
+                                .id(id.clone()),
+                        ]
+                        .height(30),
                         space().height(20),
                         row![
                             svg(right_tick_svg_handle.clone())
-                                .style(right_tick_svg_style)
+                                .style(boring_svg)
                                 .width(Shrink),
                             space().width(5),
                             text("(title|name) (...) to filter by title."),
@@ -305,7 +324,7 @@ impl App {
                         .height(24),
                         row![
                             svg(right_tick_svg_handle.clone())
-                                .style(right_tick_svg_style)
+                                .style(boring_svg)
                                 .width(Shrink),
                             space().width(5),
                             text("(search|find) (...) to filter by keywords."),
@@ -313,7 +332,7 @@ impl App {
                         .height(24),
                         row![
                             svg(right_tick_svg_handle.clone())
-                                .style(right_tick_svg_style)
+                                .style(boring_svg)
                                 .width(Shrink),
                             space().width(5),
                             text("(reset) to undo applied filters."),
@@ -322,7 +341,7 @@ impl App {
                         space().height(15),
                         row![
                             svg(right_tick_svg_handle.clone())
-                                .style(right_tick_svg_style)
+                                .style(boring_svg)
                                 .width(Shrink),
                             space().width(5),
                             text("All commands are case sensitive."),
@@ -334,7 +353,7 @@ impl App {
                 .width(550)
                 .height(Shrink)
                 .padding(15)
-                .style(cmd_prompt_container_style),
+                .style(cmd_container),
             )
             .on_show(move |_| Message::FocusCmdInput(id.clone())),
         )
@@ -357,103 +376,5 @@ impl App {
             .style(container::danger),
         )
         .center(Fill)
-    }
-}
-
-/// Get a style for a text editor that is transparent when possible.
-fn text_editor_no_style(theme: &Theme, _status: text_editor::Status) -> text_editor::Style {
-    let palette = theme.extended_palette();
-
-    text_editor::Style {
-        background: Background::Color(color!(0, 0, 0, 0.0)),
-        border: Border {
-            color: color!(0, 0, 0, 0.0),
-            ..Border::default()
-        },
-        placeholder: color!(0, 0, 0, 0.0),
-        value: palette.background.base.text,
-        selection: palette.primary.weak.color,
-    }
-}
-
-/// Get the style of the container that stig contents will be displayed in.
-fn stig_container_initial_style(theme: &Theme) -> container::Style {
-    let palette = theme.extended_palette();
-
-    container::Style {
-        text_color: Some(palette.background.weak.text),
-        background: Some(palette.background.weakest.color.into()),
-        border: Border {
-            color: palette.primary.base.color,
-            width: 2.0,
-            ..border::rounded(4)
-        },
-        ..container::Style::default()
-    }
-}
-
-/// Get the style of the container that stig contents are being displayed in.
-fn stig_container_style(theme: &Theme) -> container::Style {
-    let palette = theme.extended_palette();
-
-    container::Style {
-        text_color: Some(palette.background.weak.text),
-        background: Some(palette.background.weaker.color.into()),
-        border: Border {
-            color: palette.primary.base.color,
-            width: 2.0,
-            ..border::rounded(4)
-        },
-        ..container::Style::default()
-    }
-}
-
-/// Get the style of the container where stigs are listed for the user to choose between.
-fn stig_list_container_style(theme: &Theme) -> container::Style {
-    let palette = theme.extended_palette();
-
-    container::Style {
-        text_color: Some(palette.background.weak.text),
-        background: Some(palette.background.weakest.color.into()),
-        border: Border {
-            ..border::rounded(4)
-        },
-        ..container::Style::default()
-    }
-}
-
-/// Get the style of the cmd prompt.
-fn cmd_prompt_container_style(theme: &Theme) -> container::Style {
-    let palette = theme.extended_palette();
-
-    container::Style {
-        text_color: Some(palette.background.weak.text),
-        background: Some(color!(0x111111).into()),
-        border: Border {
-            ..border::rounded(4)
-        },
-        shadow: Shadow {
-            color: color!(0x000000),
-            blur_radius: 8.0,
-            ..Shadow::default()
-        },
-        ..container::Style::default()
-    }
-}
-
-/// Get the style for the rick arrows in the cmd prompt.
-fn right_tick_svg_style(theme: &Theme, _status: svg::Status) -> svg::Style {
-    let palette = theme.extended_palette();
-
-    svg::Style {
-        color: Some(palette.background.weak.text),
-    }
-}
-
-/// Get the style of a button with no style.
-fn button_no_style(_theme: &Theme, _status: button::Status) -> button::Style {
-    button::Style {
-        background: Some(color!(0, 0, 0, 0.0).into()),
-        ..button::Style::default()
     }
 }

@@ -398,10 +398,10 @@ impl App {
     /// The theme of the application.
     pub fn theme(&self) -> Theme {
         let palette = theme::Palette {
-            background: color!(0x2B2D31),
-            text: Color::from_rgb(0.90, 0.90, 0.90),
+            background: color!(0x1B1C1C),
+            text: color!(0xE6E6E6),
             primary: color!(0xA2A2D0),
-            success: color!(0x12664f),
+            success: color!(0x188B6C),
             warning: color!(0xffc14e),
             danger: color!(0xc3423f),
         };

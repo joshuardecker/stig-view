@@ -2,6 +2,7 @@ mod app;
 mod preload_assets;
 mod sgroup;
 mod stig;
+mod styles;
 mod ui;
 
 use crate::app::App;
