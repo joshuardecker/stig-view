@@ -5,8 +5,12 @@ use iced::theme::Custom;
 use iced::widget::Id;
 use iced::widget::text_editor;
 use iced::window;
+use iced::window::Settings;
+use iced::window::icon::*;
+use iced::window::settings::PlatformSpecific;
 use iced::{Color, color};
 use iced::{Element, Subscription, Task, Theme};
+use image::ImageFormat;
 use regex::Regex;
 use rfd::AsyncFileDialog;
 use std::path::PathBuf;
@@ -27,7 +31,7 @@ pub struct App {
     pub cmd_input: String,
     pub assets: Assets,
     // Not known at when creating state.
-    pub window_id: window::Id,
+    pub window_id: Option<window::Id>,
 }
 
 /// Every way the state of the application can change.
@@ -85,8 +89,6 @@ pub enum UserCommand {
 
 impl App {
     pub fn new() -> (Self, Task<Message>) {
-        let (id, _) = window::open(window::Settings::default());
-
         (
             App {
                 list: Arc::new(RwLock::new(SGroup::new())),
@@ -102,7 +104,7 @@ impl App {
                 popup: None,
                 cmd_input: String::new(),
                 assets: Assets::new(),
-                window_id: id,
+                window_id: None,
             },
             window::oldest().map(Message::GetWindowId),
         )
@@ -396,15 +398,22 @@ impl App {
 
             // Run at the beginning of the program.
             Message::GetWindowId(id) => {
-                self.window_id = id.expect("Did not get window id!");
+                self.window_id = id;
 
-                window::toggle_decorations(self.window_id)
+                Task::batch(vec![
+                    window::toggle_decorations(self.window_id.unwrap()),
+                    window::set_icon(
+                        self.window_id.unwrap(),
+                        from_file_data(&self.assets.app_icon, Some(ImageFormat::Png))
+                            .expect("Could not load app icon!"),
+                    ),
+                ])
             }
             Message::CloseApp => iced::exit(),
-            Message::ToggleFullscreenApp => window::toggle_maximize(self.window_id),
-            Message::MinimizeApp => window::minimize(self.window_id, true),
+            Message::ToggleFullscreenApp => window::toggle_maximize(self.window_id.unwrap()),
+            Message::MinimizeApp => window::minimize(self.window_id.unwrap(), true),
             // Allow the user to drag the window by grabbing the top.
-            Message::MoveWindow => window::drag(self.window_id),
+            Message::MoveWindow => window::drag(self.window_id.unwrap()),
         }
     }
 

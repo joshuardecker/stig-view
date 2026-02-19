@@ -5,6 +5,8 @@ mod stig;
 mod styles;
 mod ui;
 
+use iced::window::settings::{PlatformSpecific, Settings};
+
 use crate::app::App;
 
 fn main() -> iced::Result {
@@ -13,5 +15,16 @@ fn main() -> iced::Result {
         .theme(App::theme)
         .title("Stig View")
         .default_font(iced::font::Font::MONOSPACE)
+        /*.settings(Settings {
+            id: Some(String::from("io.github.joshuardecker.stig-view")),
+            ..Settings::default()
+        })*/
+        .window(Settings {
+            platform_specific: PlatformSpecific {
+                application_id: String::from("io.github.joshuardecker.stig-view"),
+                override_redirect: false,
+            },
+            ..Settings::default()
+        })
         .run()
 }
