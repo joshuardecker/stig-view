@@ -9,6 +9,7 @@ use iced::window::settings::{PlatformSpecific, Settings};
 
 use crate::app::App;
 
+#[cfg(target_os = "linux")]
 fn main() -> iced::Result {
     iced::application(App::new, App::update, App::get_view)
         .subscription(App::subscription)
@@ -22,5 +23,15 @@ fn main() -> iced::Result {
             },
             ..Settings::default()
         })
+        .run()
+}
+
+#[cfg(not(target_os = "linux"))]
+fn main() -> iced::Result {
+    iced::application(App::new, App::update, App::get_view)
+        .subscription(App::subscription)
+        .theme(App::theme)
+        .title("Stig View")
+        .default_font(iced::font::Font::MONOSPACE)
         .run()
 }
