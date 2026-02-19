@@ -1,3 +1,4 @@
+use iced::color;
 use iced::keyboard;
 use iced::keyboard::key;
 use iced::theme;
@@ -5,10 +6,7 @@ use iced::theme::Custom;
 use iced::widget::Id;
 use iced::widget::text_editor;
 use iced::window;
-use iced::window::Settings;
 use iced::window::icon::*;
-use iced::window::settings::PlatformSpecific;
-use iced::{Color, color};
 use iced::{Element, Subscription, Task, Theme};
 use image::ImageFormat;
 use regex::Regex;

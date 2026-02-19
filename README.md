@@ -12,6 +12,8 @@ All of these features are accessible by clicking buttons, but here are some keyb
 4. Control + i to select a file
 5. Control + o to select a folder
 
+![](https://github.com/joshuardecker/stig-view/showcase.gif)
+
 # How to build for flatpak
 This is more for me, but this is how I have gotten it to build for flatpak.
 

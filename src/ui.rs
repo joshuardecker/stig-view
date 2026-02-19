@@ -3,11 +3,9 @@ use iced::alignment::Alignment::{Center, End};
 use iced::alignment::Horizontal::Left;
 use iced::time;
 use iced::widget::{
-    Button, Container, Id, Row, button, column, container, row, scrollable, sensor, space, stack,
-    svg, text, text_editor, text_input, tooltip,
+    Button, Container, Id, button, column, container, row, scrollable, sensor, space, stack, svg,
+    text, text_editor, text_input, tooltip,
 };
-use iced::{Background, Shadow};
-use iced::{Border, Theme, border, color};
 use iced::{Element, widget};
 
 use crate::app::{App, Message, Popup};
