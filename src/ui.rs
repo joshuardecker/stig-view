@@ -3,13 +3,14 @@ use iced::alignment::Alignment::{Center, End};
 use iced::alignment::Horizontal::Left;
 use iced::time;
 use iced::widget::{
-    Button, Container, Id, button, column, container, row, scrollable, sensor, space, stack, svg,
-    text, text_editor, text_input, tooltip,
+    Button, Column, Container, Id, button, column, container, row, scrollable, sensor, space,
+    stack, svg, text, text_editor, text_input, tooltip,
 };
 use iced::{Element, widget};
+use tokio::runtime::Runtime;
 
 use crate::app::{App, Message, Popup};
-use crate::sgroup::Pinned;
+use crate::db::{DB, Data, Pinned};
 use crate::styles::*;
 
 impl App {
@@ -107,61 +108,12 @@ impl App {
         let folder_svg_handle = svg::Handle::from_memory(self.assets.folder_svg.clone());
         let terminal_svg_handle = svg::Handle::from_memory(self.assets.terminal_svg.clone());
 
-        let filter_svg_handle = svg::Handle::from_memory(self.assets.filter_svg.clone());
-        let bookmark_svg_handle = svg::Handle::from_memory(self.assets.bookmark_svg.clone());
-        let filled_bookmark_svg_handle =
-            svg::Handle::from_memory(self.assets.bookmark_filled_svg.clone());
+        let db = self.db.clone();
 
-        // Create the buttons on the side of the application.
-        let buttons_vec: Vec<Box<Button<Message>>> = self
-            .list
-            .read()
-            .unwrap()
-            .get_all()
-            .iter()
-            .map(|stig_wrapper| {
-                let icon: svg::Handle;
-
-                match stig_wrapper.pinned {
-                    Pinned::Not => icon = bookmark_svg_handle.clone(),
-                    Pinned::ByUser => icon = filled_bookmark_svg_handle.clone(),
-                    Pinned::ByCmd => icon = filter_svg_handle.clone(),
-                }
-
-                Box::new(
-                    button(
-                        row![
-                            space().width(32),
-                            text(stig_wrapper.stig.version.clone())
-                                .height(Fill)
-                                .width(Fill)
-                                .center(),
-                            space::horizontal(),
-                            button(svg(icon).height(32).style(colored_svg))
-                                .padding(1)
-                                .style(no_button)
-                                .on_press(Message::UserPin(stig_wrapper.uuid))
-                        ]
-                        .align_y(Center),
-                    )
-                    .height(50)
-                    .padding(8)
-                    .width(Fill)
-                    .style(rounded_boring_button)
-                    .on_press(Message::SwitchDisplayed(stig_wrapper.uuid.clone())),
-                )
-            })
-            .collect();
-
-        let mut button_col = column![].padding(1);
-
-        for button in buttons_vec {
-            button_col = button_col.push(*button);
-            button_col = button_col.push(space().height(8)) // Add a tiny seperation between each button.
-        }
+        let button_col = self.get_stig_buttons(db.clone());
 
         // Always a displayed stig when this function is called.
-        if let Some(_stig) = &*self.displayed.read().unwrap() {
+        if let Some(_name) = &self.displayed {
             let stig_col = column![
                 text("Version").size(32),
                 row![
@@ -438,5 +390,109 @@ impl App {
             )
             .on_press(Message::MoveWindow),
         )
+    }
+
+    fn get_stig_buttons(&self, db: DB) -> Column<'_, Message> {
+        let mut user_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
+        let mut filter_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
+        let mut not_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
+
+        let filter_svg_handle = svg::Handle::from_memory(self.assets.filter_svg.clone());
+        let bookmark_svg_handle = svg::Handle::from_memory(self.assets.bookmark_svg.clone());
+        let filled_bookmark_svg_handle =
+            svg::Handle::from_memory(self.assets.bookmark_filled_svg.clone());
+
+        let rt = Runtime::new().unwrap();
+
+        let snapshot = rt.block_on(async move { db.snapshot().await });
+
+        for (name, data) in snapshot.iter() {
+            match data.get_pin() {
+                Pinned::ByUser => {
+                    user_pin_col.push(Box::new(
+                        button(
+                            row![
+                                space().width(32),
+                                text(name.to_owned()).height(Fill).width(Fill).center(),
+                                space::horizontal(),
+                                button(
+                                    svg(filled_bookmark_svg_handle.clone())
+                                        .height(32)
+                                        .style(colored_svg)
+                                )
+                                .padding(1)
+                                .style(no_button)
+                                .on_press(Message::UserPin(name.to_owned()))
+                            ]
+                            .align_y(Center),
+                        )
+                        .height(50)
+                        .padding(8)
+                        .width(Fill)
+                        .style(rounded_boring_button)
+                        .on_press(Message::SetDisplayed(name.to_owned())),
+                    ));
+                }
+                Pinned::ByFilter => {
+                    filter_pin_col.push(Box::new(
+                        button(
+                            row![
+                                space().width(32),
+                                text(name.to_owned()).height(Fill).width(Fill).center(),
+                                space::horizontal(),
+                                button(
+                                    svg(filter_svg_handle.clone()).height(32).style(colored_svg)
+                                )
+                                .padding(1)
+                                .style(no_button)
+                                .on_press(Message::UserPin(name.to_owned()))
+                            ]
+                            .align_y(Center),
+                        )
+                        .height(50)
+                        .padding(8)
+                        .width(Fill)
+                        .style(rounded_boring_button)
+                        .on_press(Message::SetDisplayed(name.to_owned())),
+                    ));
+                }
+                Pinned::Not => {
+                    not_pin_col.push(Box::new(
+                        button(
+                            row![
+                                space().width(32),
+                                text(name.to_owned()).height(Fill).width(Fill).center(),
+                                space::horizontal(),
+                                button(
+                                    svg(bookmark_svg_handle.clone())
+                                        .height(32)
+                                        .style(colored_svg)
+                                )
+                                .padding(1)
+                                .style(no_button)
+                                .on_press(Message::UserPin(name.to_owned()))
+                            ]
+                            .align_y(Center),
+                        )
+                        .height(50)
+                        .padding(8)
+                        .width(Fill)
+                        .style(rounded_boring_button)
+                        .on_press(Message::SetDisplayed(name.to_owned())),
+                    ));
+                }
+            }
+        }
+
+        user_pin_col.append(&mut filter_pin_col);
+        user_pin_col.append(&mut not_pin_col);
+
+        let mut col = column![].padding(1).spacing(8);
+
+        for button in user_pin_col {
+            col = col.push(*button);
+        }
+
+        col
     }
 }

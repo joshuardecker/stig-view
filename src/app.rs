@@ -202,10 +202,12 @@ impl App {
             // Open a folder and search all of its contents, including subfolders for
             // stigs to add.
             Message::OpenFolder(path) => {
-                let db = self.db.clone();
+                let mut db = self.db.clone();
 
                 if let Some(path) = path {
                     Task::future(async move {
+                        db.clean().await;
+
                         load_dir(path, db.clone()).await;
 
                         let snapshot = db.snapshot().await;
@@ -279,6 +281,12 @@ impl App {
 
                         if let Some(entry) = entry {
                             return Message::SetDisplayed(entry.0.to_owned());
+                        }
+
+                        let first = snapshot.first_key_value();
+
+                        if let Some(first) = first {
+                            return Message::SetDisplayed(first.0.clone());
                         }
 
                         Message::SetDisplayed("".to_string())
