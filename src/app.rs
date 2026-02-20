@@ -13,17 +13,18 @@ use regex::Regex;
 use rfd::AsyncFileDialog;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
+use tokio::runtime::Runtime;
 use uuid::Uuid;
 
+use crate::db::{DB, Data, Pinned};
 use crate::preload_assets::Assets;
-use crate::sgroup::{Pinned, SGroup, StigWrapper};
 use crate::stig::Stig;
 
 /// This applications state.
 #[derive(Debug, Clone)]
 pub struct App {
-    pub list: Arc<RwLock<SGroup>>,
-    pub displayed: Arc<RwLock<Option<Box<StigWrapper>>>>,
+    pub db: DB,
+    pub displayed: Option<String>,
     pub content: [text_editor::Content; 6],
     pub popup: Option<Popup>,
     pub cmd_input: String,
@@ -41,13 +42,11 @@ pub enum Message {
     OpenFolderSelect,
     OpenFile(Option<PathBuf>),
     OpenFolder(Option<PathBuf>),
-    SetStigVec(Vec<Box<Stig>>),
     PushStigToContent,
-    StigsSorted(Option<SGroup>),
+    SetDisplayed(String),
 
     SelectContent(text_editor::Action, usize),
 
-    SwitchDisplayed(Uuid),
     SwitchNext,
 
     ToggleCmdInput,
@@ -57,7 +56,7 @@ pub enum Message {
 
     ChangePopup(Option<Popup>),
 
-    UserPin(Uuid),
+    UserPin(String),
 
     // Used when an async task finishes with no return value.
     Done,
@@ -89,8 +88,8 @@ impl App {
     pub fn new() -> (Self, Task<Message>) {
         (
             App {
-                list: Arc::new(RwLock::new(SGroup::new())),
-                displayed: Arc::new(RwLock::new(None)),
+                db: DB::new(),
+                displayed: None,
                 content: [
                     text_editor::Content::new(),
                     text_editor::Content::new(),
@@ -178,21 +177,23 @@ impl App {
             ),
             // Add the file into the program for the user to see.
             Message::OpenFile(path) => {
-                let sgroup_lock = self.list.clone();
-                let displayed_lock = self.displayed.clone();
+                let db = self.db.clone();
 
                 if let Some(path) = path {
                     Task::future(async move {
                         let stig = Stig::from_xylok_txt(path);
 
                         if let Some(stig) = stig {
-                            let stig = Box::new(stig);
-                            sgroup_lock.write().unwrap().add(stig.clone());
-                            *displayed_lock.write().unwrap() =
-                                Some(sgroup_lock.read().unwrap().first());
+                            let name = stig.version.clone();
+                            let stig = Arc::new(stig);
+                            let data = Data::new(stig);
+
+                            db.insert(name.clone(), data).await;
+
+                            return Message::SetDisplayed(name);
                         }
 
-                        Message::PushStigToContent
+                        Message::Done
                     })
                 } else {
                     Task::none()
@@ -201,58 +202,51 @@ impl App {
             // Open a folder and search all of its contents, including subfolders for
             // stigs to add.
             Message::OpenFolder(path) => {
+                let db = self.db.clone();
+
                 if let Some(path) = path {
-                    Task::perform(
-                        async move { load_dir(path.clone()).await },
-                        Message::SetStigVec,
-                    )
+                    Task::future(async move {
+                        load_dir(path, db.clone()).await;
+
+                        let snapshot = db.snapshot().await;
+
+                        let first = snapshot.first_key_value();
+
+                        if let Some(first) = first {
+                            return Message::SetDisplayed(first.0.clone());
+                        }
+
+                        Message::SetDisplayed("".to_string())
+                    })
                 } else {
                     Task::none()
                 }
             }
-            // Given a vector of stigs, set the application to have those open.
-            // This is different than adding to the already loaded stigs.
-            Message::SetStigVec(stigs) => {
-                if stigs.len() == 0 {
-                    return Task::none();
-                }
-
-                let sgroup_lock = self.list.clone();
-                let displayed_lock = self.displayed.clone();
-
-                Task::future(async move {
-                    sgroup_lock.write().unwrap().set_group(stigs);
-                    *displayed_lock.write().unwrap() = Some(sgroup_lock.read().unwrap().first());
-
-                    Message::PushStigToContent
-                })
-            }
             // Push contents of the selected stig to the screen for the user to see.
             Message::PushStigToContent => {
-                let displayed_lock = self.displayed.clone();
+                if let Some(name) = &self.displayed {
+                    let rt = Runtime::new().unwrap();
 
-                if let Some(stig) = &*displayed_lock.read().unwrap() {
-                    self.content[0] = text_editor::Content::with_text(&stig.stig.version);
-                    self.content[1] = text_editor::Content::with_text(&stig.stig.intro);
-                    self.content[2] = text_editor::Content::with_text(&stig.stig.desc);
-                    self.content[3] = text_editor::Content::with_text(&stig.stig.check_text);
-                    self.content[4] = text_editor::Content::with_text(&stig.stig.fix_text);
-                    self.content[5] = text_editor::Content::with_text(&stig.stig.similar_checks);
+                    let displayed_data = rt.block_on(self.db.get(&name));
+
+                    if let Some(displayed_data) = displayed_data {
+                        let stig = displayed_data.get_stig();
+
+                        self.content[0] = text_editor::Content::with_text(&stig.version);
+                        self.content[1] = text_editor::Content::with_text(&stig.intro);
+                        self.content[2] = text_editor::Content::with_text(&stig.desc);
+                        self.content[3] = text_editor::Content::with_text(&stig.check_text);
+                        self.content[4] = text_editor::Content::with_text(&stig.fix_text);
+                        self.content[5] = text_editor::Content::with_text(&stig.similar_checks);
+                    }
                 }
 
                 Task::none()
             }
-            // When the stigs have been sorted, save this order to the app state here.
-            Message::StigsSorted(sorted_stigs) => {
-                let sgroup_lock = self.list.clone();
+            Message::SetDisplayed(name) => {
+                self.displayed = Some(name);
 
-                Task::future(async move {
-                    if let Some(sorted_stigs) = sorted_stigs {
-                        *sgroup_lock.write().unwrap() = sorted_stigs;
-                    }
-
-                    Message::Done
-                })
+                Task::done(Message::PushStigToContent)
             }
 
             // Handle the user selecting text to copy and paste.
@@ -267,59 +261,28 @@ impl App {
                 Task::none()
             }
 
-            // Switch which stig is being displayed.
-            Message::SwitchDisplayed(uuid) => {
-                let sgroup_lock = self.list.clone();
-                let displayed_lock = self.displayed.clone();
-
-                Task::future(async move {
-                    let new_stig = sgroup_lock.read().unwrap().get_by_uuid(uuid);
-
-                    if let Some(new_stig) = new_stig {
-                        *displayed_lock.write().unwrap() = Some(new_stig);
-                    }
-
-                    Message::PushStigToContent
-                })
-            }
             // Switch to the next stig.
             // Used for the keybind control + tab.
             Message::SwitchNext => {
-                let sgroup_lock = self.list.clone();
-                let displayed_lock = self.displayed.clone();
+                let db = self.db.clone();
+                let displayed_name = self.displayed.clone();
 
-                // Dead async code.
-                // For some reason, switching this code to run async makes the RwLock get stuck on itself.
-                // I cant get it to do that in sync land, so we will keep it there I guess.
-                /*Task::future(async move {
-                    let mut displayed = displayed_lock.read().unwrap();
+                if let Some(displayed_name) = displayed_name {
+                    Task::future(async move {
+                        let snapshot = db.snapshot().await;
 
-                    let stig = displayed.clone();
+                        let mut iter = snapshot.iter();
 
-                    if let Some(stig) = stig {
-                        let next_stig = sgroup_lock.read().unwrap().get_next_wrapping(stig.uuid);
+                        let _ = iter.find(|entry| *entry.0 == displayed_name);
 
-                        if let Some(next_stig) = next_stig {
-                            Message::SwitchDisplayed(next_stig.uuid)
-                        } else {
-                            Message::Done
+                        let entry: Option<(&String, &Data)> = iter.next();
+
+                        if let Some(entry) = entry {
+                            return Message::SetDisplayed(entry.0.to_owned());
                         }
-                    } else {
-                        Message::Done
-                    }
-                })*/
 
-                let mut displayed_stig = displayed_lock.write().unwrap();
-
-                if let Some(stig) = displayed_stig.clone() {
-                    let next_stig = sgroup_lock
-                        .read()
-                        .unwrap()
-                        .get_next_wrapping(stig.uuid.clone());
-
-                    *displayed_stig = next_stig;
-
-                    Task::done(Message::PushStigToContent)
+                        Message::SetDisplayed("".to_string())
+                    })
                 } else {
                     Task::none()
                 }
@@ -347,11 +310,13 @@ impl App {
                 let user_command = parse_command(&self.cmd_input);
 
                 if let Some(user_command) = user_command {
-                    let list_clone = self.list.clone();
-                    Task::perform(
-                        async move { run_search_cmd(user_command, list_clone).await },
-                        Message::StigsSorted,
-                    )
+                    let db = self.db.clone();
+
+                    Task::future(async move {
+                        run_search_cmd(user_command, db).await;
+
+                        Message::Done
+                    })
                 } else {
                     Task::none()
                 }
@@ -363,33 +328,24 @@ impl App {
                 Task::none()
             }
             // User manually pins a stig.
-            Message::UserPin(uuid) => {
-                let sgroup_lock = self.list.clone();
+            Message::UserPin(name) => {
+                let db = self.db.clone();
 
-                Task::perform(
-                    async move {
-                        let mut sgroup = sgroup_lock.read().unwrap().clone();
-                        let stig_wrapper = sgroup.get_by_uuid(uuid);
+                Task::future(async move {
+                    let stig = db.get(&name).await;
 
-                        if let Some(stig_wrapper) = stig_wrapper {
-                            match stig_wrapper.pinned {
-                                Pinned::ByUser => {
-                                    sgroup.unpin(uuid);
-                                    sgroup.sort_by_version();
-                                    return Some(sgroup);
-                                }
-                                Pinned::Not => {
-                                    sgroup.pin(uuid, Pinned::ByUser);
-                                    sgroup.sort_by_version();
-                                    return Some(sgroup);
-                                }
-                                Pinned::ByCmd => (),
-                            }
+                    if let Some(mut stig) = stig {
+                        match stig.get_pin() {
+                            Pinned::Not => stig.set_pin(Pinned::ByUser),
+                            Pinned::ByUser => stig.set_pin(Pinned::Not),
+                            Pinned::ByFilter => return Message::Done,
                         }
-                        Some(sgroup)
-                    },
-                    Message::StigsSorted,
-                )
+
+                        db.insert(name, stig).await;
+                    }
+
+                    Message::Done
+                })
             }
 
             Message::Done => Task::none(),
@@ -417,7 +373,7 @@ impl App {
 
     /// Get the view that should be rendered to the screen.
     pub fn get_view(&self) -> Element<'_, Message> {
-        if let Some(_) = *self.displayed.read().unwrap() {
+        if let Some(_name) = &self.displayed {
             self.get_view_displayed()
         } else {
             self.get_view_none_displayed()
@@ -448,12 +404,11 @@ impl App {
 /// Searches all subfolders as well.
 /// If I had to rewrite this, I would return stig wrappers,
 /// rather than raw stigs.
-async fn load_dir(path: PathBuf) -> Vec<Box<Stig>> {
+async fn load_dir(path: PathBuf, db: DB) {
     let mut dirs: Vec<Box<PathBuf>> = vec![Box::new(path)];
     let mut next_dirs: Vec<Box<PathBuf>> = vec![];
 
     let mut txts = Vec::new();
-    let mut stigs = Vec::new();
 
     loop {
         for dir in dirs.iter() {
@@ -492,11 +447,13 @@ async fn load_dir(path: PathBuf) -> Vec<Box<Stig>> {
     // If it is a xylok generated txt stig file, save it.
     for txt in txts {
         if let Some(stig) = Stig::from_xylok_txt(&*txt) {
-            stigs.push(Box::new(stig));
+            let name = stig.version.clone();
+            let stig = Arc::new(stig);
+            let data = Data::new(stig);
+
+            db.insert(name, data).await;
         }
     }
-
-    stigs
 }
 
 /// Parse the given str from the cmd prompt into a command.
@@ -515,64 +472,84 @@ fn parse_command(input: &str) -> Option<UserCommand> {
 }
 
 /// Run the given command, and return the modified group of stigs.
-async fn run_search_cmd(cmd: UserCommand, sgroup_lock: Arc<RwLock<SGroup>>) -> Option<SGroup> {
+async fn run_search_cmd(cmd: UserCommand, db: DB) {
     match cmd {
         UserCommand::SearchForKeyword(keyword) => {
-            let mut sgroup = sgroup_lock.read().unwrap().clone();
-            let re = Regex::new(&keyword).ok()?;
+            let re = Regex::new(&keyword).ok().expect("Bad regex!");
 
-            sgroup.unpin_all_from_cmd();
+            let snapshot = db.snapshot().await;
 
-            for stig_wrapper in sgroup.get_all().iter() {
-                if let Pinned::ByUser = stig_wrapper.pinned {
+            for (name, data) in snapshot.iter() {
+                if let Pinned::ByUser = data.get_pin() {
                     continue;
                 }
 
                 let mut is_match = false;
 
-                is_match |= re.is_match(&stig_wrapper.stig.version);
-                is_match |= re.is_match(&stig_wrapper.stig.intro);
-                is_match |= re.is_match(&stig_wrapper.stig.desc);
-                is_match |= re.is_match(&stig_wrapper.stig.check_text);
-                is_match |= re.is_match(&stig_wrapper.stig.fix_text);
-                is_match |= re.is_match(&stig_wrapper.stig.similar_checks);
+                is_match |= re.is_match(&data.get_stig().version);
+                is_match |= re.is_match(&data.get_stig().intro);
+                is_match |= re.is_match(&data.get_stig().desc);
+                is_match |= re.is_match(&data.get_stig().check_text);
+                is_match |= re.is_match(&data.get_stig().fix_text);
+                is_match |= re.is_match(&data.get_stig().similar_checks);
 
                 if is_match {
-                    sgroup.pin(stig_wrapper.uuid, Pinned::ByCmd);
-                }
-            }
+                    let mut data = data.to_owned();
+                    data.set_pin(Pinned::ByFilter);
 
-            sgroup.sort_by_version();
+                    db.insert(name.to_owned(), data).await;
 
-            Some(sgroup)
-        }
-        UserCommand::SearchForName(name) => {
-            let mut sgroup = sgroup_lock.read().unwrap().clone();
-            let re = Regex::new(&name).ok()?;
-
-            sgroup.unpin_all_from_cmd();
-
-            for stig_wrapper in sgroup.get_all().iter() {
-                if let Pinned::ByUser = stig_wrapper.pinned {
                     continue;
                 }
 
-                if re.is_match(&stig_wrapper.stig.version) {
-                    sgroup.pin(stig_wrapper.uuid, Pinned::ByCmd);
+                if let Pinned::ByFilter = data.get_pin() {
+                    let mut data = data.to_owned();
+                    data.set_pin(Pinned::Not);
+
+                    db.insert(name.to_owned(), data).await;
                 }
             }
+        }
+        UserCommand::SearchForName(name) => {
+            let re = Regex::new(&name).ok().expect("Bad regex!");
 
-            sgroup.sort_by_version();
+            let snapshot = db.snapshot().await;
 
-            Some(sgroup)
+            for (name, data) in snapshot.iter() {
+                if let Pinned::ByUser = data.get_pin() {
+                    continue;
+                }
+
+                let is_match = re.is_match(&data.get_stig().version);
+
+                if is_match {
+                    let mut data = data.to_owned();
+                    data.set_pin(Pinned::ByFilter);
+
+                    db.insert(name.to_owned(), data).await;
+
+                    continue;
+                }
+
+                if let Pinned::ByFilter = data.get_pin() {
+                    let mut data = data.to_owned();
+                    data.set_pin(Pinned::Not);
+
+                    db.insert(name.to_owned(), data).await;
+                }
+            }
         }
         UserCommand::Reset => {
-            let mut sgroup = sgroup_lock.read().unwrap().clone();
+            let snapshot = db.snapshot().await;
 
-            sgroup.unpin_all_from_cmd();
-            sgroup.sort_by_version();
+            for (name, data) in snapshot.iter() {
+                if let Pinned::ByFilter = data.get_pin() {
+                    let mut data = data.to_owned();
+                    data.set_pin(Pinned::Not);
 
-            Some(sgroup)
+                    db.insert(name.to_owned(), data).await;
+                }
+            }
         }
     }
 }

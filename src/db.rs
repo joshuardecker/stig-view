@@ -12,7 +12,9 @@ pub struct DB {
 
 impl DB {
     pub fn new() -> Self {
-        unimplemented!()
+        Self {
+            data: Arc::new(RwLock::new(BTreeMap::new())),
+        }
     }
 
     pub async fn insert(&self, name: String, data: Data) {
