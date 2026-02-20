@@ -14,7 +14,6 @@ use rfd::AsyncFileDialog;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use tokio::runtime::Runtime;
-use uuid::Uuid;
 
 use crate::db::{DB, Data, Pinned};
 use crate::preload_assets::Assets;
