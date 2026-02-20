@@ -27,7 +27,7 @@ impl App {
             row![
                 space().width(15),
                 column![
-                    row![
+                    /*row![
                         space().width(5),
                         tooltip(
                             button(svg(file_svg_handle).style(colored_svg))
@@ -69,7 +69,7 @@ impl App {
                         .delay(time::milliseconds(600)),
                         space().width(5),
                     ],
-                    space().height(15),
+                    space().height(15),*/
                     container(space::vertical())
                         .style(background_container)
                         .width(FillPortion(1)),
@@ -171,7 +171,8 @@ impl App {
                 row![
                     space().width(15),
                     column![
-                        row![
+                        //space().height(30),
+                        /*row![
                             space().width(5),
                             tooltip(
                                 button(svg(file_svg_handle).style(colored_svg))
@@ -212,15 +213,16 @@ impl App {
                             )
                             .delay(time::milliseconds(600)),
                             space().width(5),
-                        ],
-                        space().height(15),
+                        ],*/
+                        //space().height(15),
                         container(column![
                             scrollable(button_col).spacing(5),
                             space::vertical()
                         ])
                         .style(background_container)
                         .padding(5)
-                        .width(FillPortion(1))
+                        .width(FillPortion(1)),
+                        //space().height(15),
                     ],
                     space().width(15),
                     container(column![scrollable(stig_col).spacing(5), space::vertical()])
@@ -228,7 +230,7 @@ impl App {
                         .padding(15)
                         .width(FillPortion(5))
                         .height(Fill),
-                    space().width(15),
+                    space().width(30),
                 ],
                 space().height(15),
             ];
@@ -333,6 +335,7 @@ impl App {
     }
 
     fn window_decorations(&self) -> Container<'_, Message> {
+        let settings_svg_handle = svg::Handle::from_memory(self.assets.settings_svg.clone());
         let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
         let square_svg_handle = svg::Handle::from_memory(self.assets.square_svg.clone());
         let down_tick_svg_handle = svg::Handle::from_memory(self.assets.down_tick_svg.clone());
@@ -343,6 +346,40 @@ impl App {
             widget::mouse_area(
                 container(
                     row![
+                        space().width(11),
+                        button(
+                            svg(settings_svg_handle)
+                                .style(colored_svg)
+                                .width(20)
+                                .height(20)
+                        )
+                        .padding(1)
+                        .width(Shrink)
+                        .height(Shrink)
+                        .style(no_button)
+                        .on_press(Message::OpenFileSelect),
+                        space().width(8),
+                        button(text("File").center().size(14))
+                            .padding(6)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(rounded_dark_button)
+                            .on_press(Message::OpenFileSelect),
+                        space().width(4),
+                        button(text("Folder").center().size(14))
+                            .padding(6)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(rounded_dark_button)
+                            .on_press(Message::OpenFolderSelect),
+                        space().width(4),
+                        button(text("Filter").center().size(14))
+                            .padding(6)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(rounded_dark_button)
+                            .on_press(Message::ToggleCmdInput),
+                        space::horizontal(),
                         button(
                             svg(down_tick_svg_handle)
                                 .style(colored_svg)

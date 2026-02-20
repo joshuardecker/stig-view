@@ -12,6 +12,7 @@ pub struct Assets {
     pub bookmark_svg: Vec<u8>,
     pub bookmark_filled_svg: Vec<u8>,
     pub terminal_svg: Vec<u8>,
+    pub settings_svg: Vec<u8>,
 
     pub app_icon: Vec<u8>,
 }
@@ -30,6 +31,7 @@ impl Assets {
             bookmark_svg: include_bytes!("../assets/images/bookmark.svg").to_vec(),
             bookmark_filled_svg: include_bytes!("../assets/images/bookmark-filled.svg").to_vec(),
             terminal_svg: include_bytes!("../assets/images/terminal.svg").to_vec(),
+            settings_svg: include_bytes!("../assets/images/settings.svg").to_vec(),
 
             app_icon: include_bytes!("../assets/io.github.joshuardecker.stig-view.png").to_vec(),
         }

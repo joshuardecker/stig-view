@@ -67,6 +67,35 @@ pub fn rounded_boring_button(theme: &Theme, status: button::Status) -> button::S
     }
 }
 
+pub fn rounded_dark_button(theme: &Theme, status: button::Status) -> button::Style {
+    let palette = theme.extended_palette();
+
+    match status {
+        button::Status::Hovered => button::Style {
+            background: Some(palette.background.weakest.color.into()),
+            text_color: palette.background.base.text,
+            border: Border {
+                ..border::rounded(BORDER_RAD)
+            },
+            shadow: Shadow {
+                ..Shadow::default()
+            },
+            snap: false,
+        },
+        _ => button::Style {
+            background: Some(color!(0, 0, 0, 0.0).into()),
+            text_color: palette.primary.base.color,
+            border: Border {
+                ..border::rounded(BORDER_RAD)
+            },
+            shadow: Shadow {
+                ..Shadow::default()
+            },
+            snap: false,
+        },
+    }
+}
+
 /// A button that is not visible.
 pub fn no_button(theme: &Theme, _status: button::Status) -> button::Style {
     let palette = theme.extended_palette();
@@ -90,7 +119,7 @@ pub fn colored_svg(theme: &Theme, status: svg::Status) -> svg::Style {
 
     match status {
         svg::Status::Hovered => svg::Style {
-            color: Some(palette.primary.weak.color),
+            color: Some(palette.background.base.text),
         },
         _ => svg::Style {
             color: Some(palette.primary.base.color),
