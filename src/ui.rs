@@ -80,9 +80,9 @@ impl App {
         } else {
             let list_col = column![space::vertical()];
             let main_col = column![
+                space().height(300),
                 text("Open a file or folder to get started.")
                     .width(Fill)
-                    .height(Fill)
                     .center()
                     .size(24),
             ];
@@ -113,14 +113,14 @@ impl App {
             row![
                 space().width(15),
                 column![
-                    container(scrollable(list_col))
+                    container(scrollable(list_col).spacing(4))
                         .style(background_container)
                         .width(250)
                         .height(Fill)
                         .padding(8)
                 ],
                 space().width(15),
-                container(scrollable(main_col))
+                container(scrollable(main_col).spacing(4))
                     .style(background_container)
                     .width(FillPortion(1))
                     .height(Fill)
