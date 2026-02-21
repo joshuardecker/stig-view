@@ -8,6 +8,7 @@ use iced::widget::{button, container, svg, text_editor};
 const BORDER_RAD: f32 = 8.0;
 
 /// A rounded button in the primary color.
+#[allow(dead_code)]
 pub fn rounded_primary_button(theme: &Theme, status: button::Status) -> button::Style {
     let palette = theme.extended_palette();
 
@@ -161,7 +162,7 @@ pub fn tooltip_container(theme: &Theme) -> container::Style {
 
     container::Style {
         text_color: Some(palette.background.base.text),
-        background: Some(palette.background.weaker.color.into()),
+        background: Some(palette.background.weakest.color.into()),
         border: Border {
             color: palette.background.base.color,
             width: 2.0,

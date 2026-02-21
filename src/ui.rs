@@ -1,7 +1,6 @@
 use iced::Length::{Fill, FillPortion, Shrink};
 use iced::alignment::Alignment::{Center, End};
 use iced::alignment::Horizontal::Left;
-use iced::time;
 use iced::widget::{
     Button, Column, Container, Id, button, column, container, row, scrollable, sensor, space,
     stack, svg, text, text_editor, text_input, tooltip,
@@ -10,111 +9,19 @@ use iced::{Element, widget};
 use tokio::runtime::Runtime;
 
 use crate::app::{App, Message, Popup};
-use crate::db::{DB, Data, Pinned};
+use crate::db::{DB, Pinned};
 use crate::styles::*;
 
 impl App {
-    /// What should be displayed when nothing has been loaded.
-    pub fn get_view_none_displayed(&self) -> Element<'_, Message> {
-        let file_svg_handle = svg::Handle::from_memory(self.assets.file_svg.clone());
-        let folder_svg_handle = svg::Handle::from_memory(self.assets.folder_svg.clone());
-        let terminal_svg_handle = svg::Handle::from_memory(self.assets.terminal_svg.clone());
-
-        let final_gui = column![
-            space().height(5),
-            self.window_decorations(),
-            space().height(5),
-            row![
-                space().width(15),
-                column![
-                    /*row![
-                        space().width(5),
-                        tooltip(
-                            button(svg(file_svg_handle).style(colored_svg))
-                                .padding(2)
-                                .width(40)
-                                .on_press(Message::OpenFileSelect)
-                                .style(no_button),
-                            container(text("Open a File"))
-                                .padding(4)
-                                .style(tooltip_container),
-                            tooltip::Position::FollowCursor,
-                        )
-                        .delay(time::milliseconds(600)),
-                        space::horizontal(),
-                        tooltip(
-                            button(svg(folder_svg_handle).style(colored_svg))
-                                .padding(1)
-                                .width(40)
-                                .on_press(Message::OpenFolderSelect)
-                                .style(no_button),
-                            container(text("Open a Folder"))
-                                .padding(4)
-                                .style(tooltip_container),
-                            tooltip::Position::FollowCursor
-                        )
-                        .delay(time::milliseconds(600)),
-                        space::horizontal(),
-                        tooltip(
-                            button(svg(terminal_svg_handle).style(colored_svg))
-                                .padding(1)
-                                .width(40)
-                                .on_press(Message::ToggleCmdInput)
-                                .style(no_button),
-                            container(text("Open a Command Prompt"))
-                                .padding(4)
-                                .style(tooltip_container),
-                            tooltip::Position::FollowCursor
-                        )
-                        .delay(time::milliseconds(600)),
-                        space().width(5),
-                    ],
-                    space().height(15),*/
-                    container(space::vertical())
-                        .style(background_container)
-                        .width(FillPortion(1)),
-                ],
-                space().width(15),
-                container(column![
-                    space::vertical(),
-                    text("Tap the file or folder icon to get started.")
-                        .width(Fill)
-                        .align_x(Center)
-                        .size(24),
-                    space::vertical()
-                ])
-                .style(background_container)
-                .width(FillPortion(5))
-                .height(Fill),
-                space().width(15),
-            ],
-            space().height(15),
-        ];
-
-        // If there is a popup, stack that on top of the main gui.
-        if let Some(popup) = &self.popup {
-            match popup {
-                Popup::CommandPrompt => stack!(final_gui, self.command_prompt_popup()).into(),
-                Popup::Error => stack!(final_gui, self.error_popup()).into(),
-            }
-        } else {
-            final_gui.into()
-        }
-    }
-
-    /// Get what should be drawn to the screen when content has been loaded.
-    pub fn get_view_displayed(&self) -> Element<'_, Message> {
-        let file_svg_handle = svg::Handle::from_memory(self.assets.file_svg.clone());
-        let folder_svg_handle = svg::Handle::from_memory(self.assets.folder_svg.clone());
-        let terminal_svg_handle = svg::Handle::from_memory(self.assets.terminal_svg.clone());
-
-        let db = self.db.clone();
-
-        let button_col = self.get_stig_buttons(db.clone());
-
-        // Always a displayed stig when this function is called.
+    /// Get the application gui.
+    pub fn get_view(&self) -> Element<'_, Message> {
         if let Some(_name) = &self.displayed {
-            let stig_col = column![
+            let db = self.db.clone();
+
+            let mut list_col = self.get_stig_buttons(db.clone());
+            list_col = list_col.push(space::vertical());
+
+            let main_col = column![
                 text("Version").size(32),
                 row![
                     space().width(10),
@@ -164,92 +71,80 @@ impl App {
                 ],
             ];
 
-            let final_gui = column![
-                space().height(5),
-                self.window_decorations(),
-                space().height(5),
-                row![
-                    space().width(15),
-                    column![
-                        //space().height(30),
-                        /*row![
-                            space().width(5),
-                            tooltip(
-                                button(svg(file_svg_handle).style(colored_svg))
-                                    .padding(2)
-                                    .width(40)
-                                    .on_press(Message::OpenFileSelect)
-                                    .style(no_button),
-                                container(text("Open a File"))
-                                    .padding(4)
-                                    .style(tooltip_container),
-                                tooltip::Position::FollowCursor,
-                            )
-                            .delay(time::milliseconds(600)),
-                            space::horizontal(),
-                            tooltip(
-                                button(svg(folder_svg_handle).style(colored_svg))
-                                    .padding(1)
-                                    .width(40)
-                                    .on_press(Message::OpenFolderSelect)
-                                    .style(no_button),
-                                container(text("Open a Folder"))
-                                    .padding(4)
-                                    .style(tooltip_container),
-                                tooltip::Position::FollowCursor
-                            )
-                            .delay(time::milliseconds(600)),
-                            space::horizontal(),
-                            tooltip(
-                                button(svg(terminal_svg_handle).style(colored_svg))
-                                    .padding(1)
-                                    .width(40)
-                                    .on_press(Message::ToggleCmdInput)
-                                    .style(no_button),
-                                container(text("Open a Command Prompt"))
-                                    .padding(4)
-                                    .style(tooltip_container),
-                                tooltip::Position::FollowCursor
-                            )
-                            .delay(time::milliseconds(600)),
-                            space().width(5),
-                        ],*/
-                        //space().height(15),
-                        container(column![
-                            scrollable(button_col).spacing(5),
-                            space::vertical()
-                        ])
-                        .style(background_container)
-                        .padding(5)
-                        .width(FillPortion(1)),
-                        //space().height(15),
-                    ],
-                    space().width(15),
-                    container(column![scrollable(stig_col).spacing(5), space::vertical()])
-                        .style(background_container)
-                        .padding(15)
-                        .width(FillPortion(5))
-                        .height(Fill),
-                    space().width(30),
-                ],
-                space().height(15),
-            ];
+            let main_gui = self.main_gui(self.window_decorations(), list_col, main_col);
 
-            // If there is a popup, stack that above the main gui.
-            if let Some(popup) = &self.popup {
-                match popup {
-                    Popup::CommandPrompt => stack!(final_gui, self.command_prompt_popup()).into(),
-                    Popup::Error => stack!(final_gui, self.error_popup()).into(),
-                }
-            } else {
-                final_gui.into()
+            match self.popup {
+                Some(Popup::CommandPrompt) => self.get_stack(self.command_prompt_popup(), main_gui),
+                None => main_gui,
             }
         } else {
-            unreachable!();
+            let list_col = column![space::vertical()];
+            let main_col = column![
+                text("Open a file or folder to get started.")
+                    .width(Fill)
+                    .height(Fill)
+                    .center()
+                    .size(24),
+            ];
+
+            let main_gui = self.main_gui(self.window_decorations(), list_col, main_col);
+
+            match self.popup {
+                Some(Popup::CommandPrompt) => self.get_stack(self.command_prompt_popup(), main_gui),
+                None => main_gui,
+            }
         }
     }
 
-    /// A function that returns the cmd prompt popup ui.
+    /// The main gui of the application with some inputs.
+    fn main_gui<'a, Message>(
+        &self,
+        window_decorations: Container<'a, Message>,
+        list_col: Column<'a, Message>,
+        main_col: Column<'a, Message>,
+    ) -> Element<'a, Message>
+    where
+        Message: 'a,
+    {
+        column![
+            space().height(5),
+            window_decorations,
+            space().height(5),
+            row![
+                space().width(15),
+                column![
+                    container(scrollable(list_col))
+                        .style(background_container)
+                        .width(250)
+                        .height(Fill)
+                        .padding(8)
+                ],
+                space().width(15),
+                container(scrollable(main_col))
+                    .style(background_container)
+                    .width(FillPortion(1))
+                    .height(Fill)
+                    .padding(15),
+                space().width(15),
+            ],
+            space().height(15),
+        ]
+        .into()
+    }
+
+    /// Stack the main gui with a popup.
+    fn get_stack<'a, Message>(
+        &self,
+        popup: Container<'a, Message>,
+        main_gui: Element<'a, Message>,
+    ) -> Element<'a, Message>
+    where
+        Message: 'a,
+    {
+        stack![main_gui, popup].into()
+    }
+
+    /// A function that returns the cmd prompt popup ui as a container.
     fn command_prompt_popup(&self) -> Container<'_, Message> {
         let filter_svg_handle = svg::Handle::from_memory(self.assets.filter_svg.clone());
         let right_tick_svg_handle = svg::Handle::from_memory(self.assets.right_tick_svg.clone());
@@ -316,24 +211,7 @@ impl App {
         .center(Fill)
     }
 
-    /// A function that returns the error popup ui.
-    /// Currently unused.
-    fn error_popup(&self) -> Container<'_, Message> {
-        container(
-            container(column![
-                text("An Error has Occured.")
-                    .width(Fill)
-                    .height(Fill)
-                    .center(),
-            ])
-            .width(500)
-            .height(150)
-            .padding(5)
-            .style(container::danger),
-        )
-        .center(Fill)
-    }
-
+    /// Return the window decorations container.
     fn window_decorations(&self) -> Container<'_, Message> {
         let settings_svg_handle = svg::Handle::from_memory(self.assets.settings_svg.clone());
         let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
@@ -359,26 +237,41 @@ impl App {
                         .style(no_button)
                         .on_press(Message::OpenFileSelect),
                         space().width(8),
-                        button(text("File").center().size(14))
-                            .padding(6)
-                            .width(Shrink)
-                            .height(Shrink)
-                            .style(rounded_dark_button)
-                            .on_press(Message::OpenFileSelect),
+                        tooltip(
+                            button(text("File").center().size(14))
+                                .padding(6)
+                                .width(Shrink)
+                                .height(Shrink)
+                                .style(rounded_dark_button)
+                                .on_press(Message::OpenFileSelect),
+                            container("Ctrl + I").style(tooltip_container).padding(4),
+                            tooltip::Position::Right
+                        )
+                        .delay(iced::time::Duration::from_secs(1)),
                         space().width(4),
-                        button(text("Folder").center().size(14))
-                            .padding(6)
-                            .width(Shrink)
-                            .height(Shrink)
-                            .style(rounded_dark_button)
-                            .on_press(Message::OpenFolderSelect),
+                        tooltip(
+                            button(text("Folder").center().size(14))
+                                .padding(6)
+                                .width(Shrink)
+                                .height(Shrink)
+                                .style(rounded_dark_button)
+                                .on_press(Message::OpenFolderSelect),
+                            container("Ctrl + O").style(tooltip_container).padding(4),
+                            tooltip::Position::Right
+                        )
+                        .delay(iced::time::Duration::from_secs(1)),
                         space().width(4),
-                        button(text("Filter").center().size(14))
-                            .padding(6)
-                            .width(Shrink)
-                            .height(Shrink)
-                            .style(rounded_dark_button)
-                            .on_press(Message::ToggleCmdInput),
+                        tooltip(
+                            button(text("Filter").center().size(14))
+                                .padding(6)
+                                .width(Shrink)
+                                .height(Shrink)
+                                .style(rounded_dark_button)
+                                .on_press(Message::ToggleCmdInput),
+                            container("Ctrl + P").style(tooltip_container),
+                            tooltip::Position::Right
+                        )
+                        .delay(iced::time::Duration::from_secs(1)),
                         space::horizontal(),
                         button(
                             svg(down_tick_svg_handle)
@@ -429,6 +322,7 @@ impl App {
         )
     }
 
+    /// Return a column of the sorted buttons to display.
     fn get_stig_buttons(&self, db: DB) -> Column<'_, Message> {
         let mut user_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
         let mut filter_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
@@ -449,15 +343,15 @@ impl App {
                     user_pin_col.push(Box::new(
                         button(
                             row![
-                                space().width(32),
-                                text(name.to_owned()).height(Fill).width(Fill).center(),
+                                text(name.to_owned()).center(),
                                 space::horizontal(),
                                 button(
                                     svg(filled_bookmark_svg_handle.clone())
+                                        .width(32)
                                         .height(32)
                                         .style(colored_svg)
                                 )
-                                .padding(1)
+                                .padding(2)
                                 .style(no_button)
                                 .on_press(Message::UserPin(name.to_owned()))
                             ]
@@ -474,13 +368,15 @@ impl App {
                     filter_pin_col.push(Box::new(
                         button(
                             row![
-                                space().width(32),
-                                text(name.to_owned()).height(Fill).width(Fill).center(),
+                                text(name.to_owned()).center(),
                                 space::horizontal(),
                                 button(
-                                    svg(filter_svg_handle.clone()).height(32).style(colored_svg)
+                                    svg(filter_svg_handle.clone())
+                                        .width(32)
+                                        .height(32)
+                                        .style(colored_svg)
                                 )
-                                .padding(1)
+                                .padding(2)
                                 .style(no_button)
                                 .on_press(Message::UserPin(name.to_owned()))
                             ]
@@ -497,15 +393,15 @@ impl App {
                     not_pin_col.push(Box::new(
                         button(
                             row![
-                                space().width(32),
-                                text(name.to_owned()).height(Fill).width(Fill).center(),
+                                text(name.to_owned()).center(),
                                 space::horizontal(),
                                 button(
                                     svg(bookmark_svg_handle.clone())
+                                        .width(32)
                                         .height(32)
                                         .style(colored_svg)
                                 )
-                                .padding(1)
+                                .padding(2)
                                 .style(no_button)
                                 .on_press(Message::UserPin(name.to_owned()))
                             ]

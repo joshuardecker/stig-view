@@ -1,5 +1,6 @@
 /// All asset files are bundled into the binary as a vector of bytes.
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct Assets {
     pub file_svg: Vec<u8>,
     pub folder_svg: Vec<u8>,

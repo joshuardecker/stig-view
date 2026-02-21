@@ -7,12 +7,12 @@ use iced::widget::Id;
 use iced::widget::text_editor;
 use iced::window;
 use iced::window::icon::*;
-use iced::{Element, Subscription, Task, Theme};
+use iced::{Subscription, Task, Theme};
 use image::ImageFormat;
 use regex::Regex;
 use rfd::AsyncFileDialog;
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use tokio::runtime::Runtime;
 
 use crate::db::{DB, Data, Pinned};
@@ -71,8 +71,6 @@ pub enum Message {
 #[derive(Debug, Clone)]
 pub enum Popup {
     CommandPrompt,
-    // Not an error value, a popup displaying there was an error.
-    Error,
 }
 
 /// Commands that can be sent by the user from the cmd prompt popup.
@@ -303,7 +301,6 @@ impl App {
                 None => {
                     return Task::done(Message::ChangePopup(Some(Popup::CommandPrompt)));
                 }
-                _ => return Task::none(),
             },
             // Automatically have the cmd prompt text box selected, that way the user does not
             // have to manually click into it every time.
@@ -375,15 +372,6 @@ impl App {
             Message::MinimizeApp => window::minimize(self.window_id.unwrap(), true),
             // Allow the user to drag the window by grabbing the top.
             Message::MoveWindow => window::drag(self.window_id.unwrap()),
-        }
-    }
-
-    /// Get the view that should be rendered to the screen.
-    pub fn get_view(&self) -> Element<'_, Message> {
-        if let Some(_name) = &self.displayed {
-            self.get_view_displayed()
-        } else {
-            self.get_view_none_displayed()
         }
     }
 
