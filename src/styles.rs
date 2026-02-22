@@ -128,12 +128,39 @@ pub fn colored_svg(theme: &Theme, status: svg::Status) -> svg::Style {
     }
 }
 
+/// A svg with the primary color, just saturated.
+pub fn saturated_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
+    let palette = theme.extended_palette();
+
+    svg::Style {
+        color: Some(palette.primary.weak.color),
+    }
+}
+
 /// A svg with the background color.
 pub fn boring_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
     let palette = theme.extended_palette();
 
     svg::Style {
         color: Some(palette.background.base.text),
+    }
+}
+
+/// A svg with the success color.
+pub fn good_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
+    let palette = theme.extended_palette();
+
+    svg::Style {
+        color: Some(palette.success.base.color),
+    }
+}
+
+/// A svg with the danger color.
+pub fn bad_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
+    let palette = theme.extended_palette();
+
+    svg::Style {
+        color: Some(palette.danger.base.color),
     }
 }
 

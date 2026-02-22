@@ -8,6 +8,7 @@ use iced::widget::{
 use iced::{Element, widget};
 use tokio::runtime::Runtime;
 
+use crate::app;
 use crate::app::{App, Message, Popup};
 use crate::db::{DB, Pinned};
 use crate::styles::*;
@@ -146,24 +147,36 @@ impl App {
 
     /// A function that returns the cmd prompt popup ui as a container.
     fn command_prompt_popup(&self) -> Container<'_, Message> {
-        let filter_svg_handle = svg::Handle::from_memory(self.assets.filter_svg.clone());
         let right_tick_svg_handle = svg::Handle::from_memory(self.assets.right_tick_svg.clone());
 
         let id = Id::new("cmd_text_input");
+
+        let prompt_svg: svg::Svg;
+
+        if let Some(_command) = app::parse_command(&self.cmd_input) {
+            prompt_svg =
+                svg(svg::Handle::from_memory(self.assets.check_svg.clone())).style(good_svg);
+        } else {
+            prompt_svg =
+                svg(svg::Handle::from_memory(self.assets.cross_svg.clone())).style(bad_svg);
+        }
 
         container(
             sensor(
                 container(
                     column![
+                        space().height(5),
                         row![
-                            svg(filter_svg_handle).width(Shrink).style(boring_svg),
-                            space().width(5),
+                            //prompt_svg.width(Shrink),
+                            space().width(1),
                             text_input("Type commands here, then press enter...", &self.cmd_input)
                                 .on_input(Message::ChangeCmdInput)
                                 .on_submit(Message::SubmitCmdInput)
                                 .id(id.clone()),
+                            space().width(15),
+                            prompt_svg.width(Shrink),
                         ]
-                        .height(30),
+                        .height(32),
                         space().height(20),
                         row![
                             svg(right_tick_svg_handle.clone())
@@ -198,6 +211,7 @@ impl App {
                             text("All commands are case sensitive."),
                         ]
                         .height(24),
+                        space().height(5),
                     ]
                     .align_x(Left),
                 )
@@ -374,7 +388,7 @@ impl App {
                                     svg(filter_svg_handle.clone())
                                         .width(32)
                                         .height(32)
-                                        .style(colored_svg)
+                                        .style(saturated_svg)
                                 )
                                 .padding(2)
                                 .style(no_button)

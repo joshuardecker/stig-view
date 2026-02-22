@@ -452,7 +452,7 @@ async fn load_dir(path: PathBuf, db: DB) {
 }
 
 /// Parse the given str from the cmd prompt into a command.
-fn parse_command(input: &str) -> Option<UserCommand> {
+pub fn parse_command(input: &str) -> Option<UserCommand> {
     let cmd_regex = Regex::new(r"(\w+)\s*(.*)").unwrap();
     let captures = cmd_regex.captures(input)?;
 
