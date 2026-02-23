@@ -382,6 +382,7 @@ impl App {
 
     /// The theme of the application.
     pub fn theme(&self) -> Theme {
+        // Dark theme:
         let palette = theme::Palette {
             background: color!(0x1B1C1C),
             text: color!(0xE6E6E6),
@@ -390,6 +391,16 @@ impl App {
             warning: color!(0xffc14e),
             danger: color!(0xc3423f),
         };
+
+        // Light theme
+        /*let palette = theme::Palette {
+            background: color!(0xDFD7D5),
+            text: color!(0x1B1C1C),
+            primary: color!(0x444488),
+            success: color!(0x188B6C),
+            warning: color!(0xffc14e),
+            danger: color!(0xc3423f),
+        };*/
 
         Theme::Custom(Arc::new(Custom::new(String::from("Custom Dark"), palette)))
     }

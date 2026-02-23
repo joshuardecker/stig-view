@@ -388,7 +388,7 @@ impl App {
                                     svg(filter_svg_handle.clone())
                                         .width(32)
                                         .height(32)
-                                        .style(saturated_svg)
+                                        .style(good_svg)
                                 )
                                 .padding(2)
                                 .style(no_button)

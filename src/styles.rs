@@ -133,7 +133,7 @@ pub fn saturated_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
     let palette = theme.extended_palette();
 
     svg::Style {
-        color: Some(palette.primary.weak.color),
+        color: Some(palette.primary.strong.color),
     }
 }
 
