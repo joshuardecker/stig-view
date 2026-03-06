@@ -15,9 +15,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
 
-use crate::db::{DB, Data, Pinned};
 use crate::preload_assets::Assets;
-use crate::stig::Stig;
+use stig_view_core::db::{DB, Data, Pinned};
+use stig_view_core::stig::Stig;
 
 /// This applications state.
 #[derive(Debug, Clone)]

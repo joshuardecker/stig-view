@@ -43,7 +43,7 @@ impl Stig {
 
 #[test]
 fn test_from_xylok_txt() {
-    let mut stig = Stig {
+    let stig = Stig {
         version: String::from("SOME-NUMBER2077"),
         intro: String::from("Hello!"),
         similar_checks: String::from("This is a similar check: Similar check."),
@@ -56,9 +56,6 @@ fn test_from_xylok_txt() {
 
     match loaded_stig {
         Some(loaded_stig) => {
-            // Ensure uuid's are the same for this test.
-            stig.uuid = loaded_stig.uuid.clone();
-
             assert_eq!(loaded_stig, stig);
         }
         None => panic!("Was not able to load test_sig.txt!"),

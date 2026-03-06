@@ -1,0 +1,12 @@
+[package]
+name = "stig-view-core"
+version = "0.1.1"
+edition = "2024"
+
+[lib]
+name = "stig_view_core"
+path = "src/lib.rs"
+
+[dependencies]
+regex = "1.12.2"
+tokio = { version = "1.49.0", features = ["sync", "rt"]}

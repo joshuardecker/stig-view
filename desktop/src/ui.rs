@@ -10,8 +10,8 @@ use tokio::runtime::Runtime;
 
 use crate::app;
 use crate::app::{App, Message, Popup};
-use crate::db::{DB, Pinned};
 use crate::styles::*;
+use stig_view_core::db::{DB, Pinned};
 
 impl App {
     /// Get the application gui.

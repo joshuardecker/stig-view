@@ -1,7 +1,5 @@
 mod app;
-mod db;
 mod preload_assets;
-mod stig;
 mod styles;
 mod ui;
 

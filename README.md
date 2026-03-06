@@ -23,7 +23,7 @@ All of these features are accessible by clicking buttons, but here are some keyb
 This is more for me, but this is how I have gotten it to build for flatpak.
 
 ```
-flatpak run org.flatpak.Builder --repo <some dir> <build dir, another one than repo> io.github.joshuardecker.stig-view.yml --force-clean
+flatpak run org.flatpak.Builder --repo <some dir> <build dir, another one than repo> flatpak_builder.yml --force-clean
 
 flatpak build-bundle <repo dir> <export name> io.github.joshuardecker.stig-view
 ```
