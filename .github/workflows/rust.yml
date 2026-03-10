@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        run: cargo build --release
+        run: cargo build --release -p stig-view-desktop
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        run: cargo build --release
+        run: cargo build --release -p stig-view-desktop
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        run: cargo build --release
+        run: cargo build --release -p stig-view-desktop
 
       - name: Upload
         uses: actions/upload-artifact@v4
