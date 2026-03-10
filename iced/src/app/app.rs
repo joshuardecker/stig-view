@@ -8,6 +8,7 @@ use iced::window::icon::from_file_data;
 use image::ImageFormat;
 use std::sync::Arc;
 
+use crate::app::async_fns::open_file;
 use crate::app::*;
 
 impl App {
@@ -19,6 +20,7 @@ impl App {
                 popup: Popup::None,
                 assets: Assets::new(),
                 window_id: None,
+                current_theme: AppTheme::Dark,
             },
             window::oldest().map(Message::InitWindow),
         )
@@ -29,27 +31,32 @@ impl App {
     }
 
     pub fn theme(&self) -> Theme {
-        // Dark theme:
-        let palette = Palette {
-            background: color!(0x1B1C1C),
-            text: color!(0xE6E6E6),
-            primary: color!(0xA2A2D0),
-            success: color!(0x188B6C),
-            warning: color!(0xffc14e),
-            danger: color!(0xc3423f),
+        let (palette, name) = match self.current_theme {
+            AppTheme::Dark => (
+                Palette {
+                    background: color!(0x1B1C1C),
+                    text: color!(0xE6E6E6),
+                    primary: color!(0xA2A2D0),
+                    success: color!(0x188B6C),
+                    warning: color!(0xffc14e),
+                    danger: color!(0xc3423f),
+                },
+                String::from("Custom Dark"),
+            ),
+            AppTheme::Light => (
+                Palette {
+                    background: color!(0xDFD7D5),
+                    text: color!(0x1B1C1C),
+                    primary: color!(0x444488),
+                    success: color!(0x188B6C),
+                    warning: color!(0xffc14e),
+                    danger: color!(0xc3423f),
+                },
+                String::from("Custom Light"),
+            ),
         };
 
-        // Light theme
-        /*let palette = Palette {
-            background: color!(0xDFD7D5),
-            text: color!(0x1B1C1C),
-            primary: color!(0x444488),
-            success: color!(0x188B6C),
-            warning: color!(0xffc14e),
-            danger: color!(0xc3423f),
-        };*/
-
-        Theme::Custom(Arc::new(Custom::new(String::from("Custom Dark"), palette)))
+        Theme::Custom(Arc::new(Custom::new(name, palette)))
     }
 
     pub fn get_view(&self) -> Element<'_, Message> {
@@ -66,8 +73,8 @@ impl App {
 
                     // Toggle window decorations and set the app icon.
                     return Task::batch(vec![
-                        //window::toggle_decorations(self.window_id.unwrap()),
-                        //window::set_resizable(self.window_id.unwrap(), false),
+                        window::toggle_decorations(self.window_id.unwrap()),
+                        window::set_resizable(self.window_id.unwrap(), true),
                         window::set_icon(
                             self.window_id.unwrap(),
                             from_file_data(&self.assets.app_icon, Some(ImageFormat::Png))
@@ -84,7 +91,27 @@ impl App {
             Message::WindowMove => window::drag(self.window_id.unwrap()),
             Message::WindowDragResize(dir) => window::drag_resize(self.window_id.unwrap(), dir),
 
-            _ => Task::none(),
+            Message::OpenFile => {
+                let db = self.db.clone();
+
+                Task::future(async move {
+                    let id = open_file(db).await;
+
+                    Message::Switch(id)
+                })
+            }
+            Message::OpenFolder => todo!(),
+
+            Message::SelectContent(action, idx) => todo!(),
+
+            Message::Switch(id) => todo!(),
+            Message::SwitchNext => todo!(),
+
+            Message::SwitchPopup(popup) => todo!(),
+
+            Message::Pin(id) => todo!(),
+
+            Message::KeyPressed(key_event) => todo!(),
         }
     }
 }

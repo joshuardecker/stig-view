@@ -1,11 +1,12 @@
 pub mod app;
 mod assets;
+mod async_fns;
 
 // Re-exports:
 pub use crate::app::assets::Assets;
 
 use iced::keyboard;
-use iced::widget::text_editor::Content;
+use iced::widget::text_editor::Action;
 use iced::window;
 use iced::window::Direction;
 use stig_view_core::db::DB;
@@ -18,6 +19,7 @@ pub struct App {
     popup: Popup,
     assets: Assets,
     window_id: Option<window::Id>,
+    current_theme: AppTheme,
 }
 
 #[derive(Debug, Clone)]
@@ -39,9 +41,9 @@ pub enum Message {
     OpenFile,
     OpenFolder,
 
-    SelectContent(Content, usize),
+    SelectContent(Action, usize),
 
-    Switch(String),
+    Switch(Option<String>),
     SwitchNext,
 
     SwitchPopup(Popup),
@@ -49,4 +51,10 @@ pub enum Message {
     Pin(String),
 
     KeyPressed(keyboard::Event),
+}
+
+#[derive(Debug, Clone)]
+pub enum AppTheme {
+    Dark,
+    Light,
 }
