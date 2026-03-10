@@ -4,7 +4,7 @@
 # How to run the application
 Latest releases will contain at least the binary to run on Windows and Macos. A flatpak will be provided for Linux distribution. 
 
-If you are feeling adventurous, or need to build from source, it is relatively straight forward. Install rust and its dependencies, and run the command ```cargo build --release``` Run this command in the base directory of the project, and it will produce a binary in /target/release.
+If you are feeling adventurous, or need to build from source, it is relatively straight forward. Install rust and its dependencies, and run the command ```cargo build --release``` Run this command in desktop directory of the project, and it will produce a binary in /target/release.
 
 The strongest use case of this software is opening a directory that has been unpacked by bedit. I personally just select the entire Xylok folder, but if many directories are unpacked, consider being more specific with your folder choice. Xml versions of the stig from DISA are not yet supported.
 

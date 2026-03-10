@@ -2,5 +2,6 @@
 members = [
     "core",
     "desktop",
+    "iced",
 ]
 resolver = "2"
