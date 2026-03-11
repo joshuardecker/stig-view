@@ -16,4 +16,4 @@ rfd = "0.17.2"
 tokio = { version = "1.49.0", features = ["sync", "rt"]}
 
 [target.'cfg(target_os = "windows")'.dependencies]
-iced = { version = "0.14.0", features = ["tiny-skia", "svg", "image", "tokio"] }
+iced = { version = "0.14.0", default-features = false, features = ["crisp", "web-colors", "tiny-skia", "svg", "image", "tokio"] }
