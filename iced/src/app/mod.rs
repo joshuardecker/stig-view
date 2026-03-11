@@ -43,14 +43,19 @@ pub enum Message {
 
     SelectContent(Action, usize),
 
-    Switch(Option<String>),
+    Switch(String),
+    SwitchWithError(String, &'static str),
     SwitchNext,
 
     SwitchPopup(Popup),
 
+    SendErrNotif(&'static str),
+
     Pin(String),
 
     KeyPressed(keyboard::Event),
+
+    DoNothing,
 }
 
 #[derive(Debug, Clone)]

@@ -1,30 +1,129 @@
 use rfd::AsyncFileDialog;
-use std::path::PathBuf;
 use std::sync::Arc;
 use stig_view_core::db::{DB, Data};
 use stig_view_core::stig::Stig;
 
-pub async fn open_file(db: DB) -> Option<String> {
-    let home_dir = std::env::home_dir().unwrap_or(PathBuf::from("/"));
+#[derive(Debug, Clone)]
+pub enum FileError {
+    HomeDir(&'static str),
+    FilePick(&'static str),
+    NotAStig(&'static str),
+    ReadDir(&'static str),
+}
+
+/// Attempts to open a single file selected by the user using their system file picker.
+/// Returns the id of the STIG loaded, or an error if it could not load.
+pub async fn open_file(db: DB) -> Result<String, FileError> {
+    let home_dir = std::env::home_dir().ok_or(FileError::HomeDir(
+        "Program could not detect home directory.",
+    ))?;
 
     let file_handle = AsyncFileDialog::new()
         .add_filter("text", &["txt"])
         .set_directory(home_dir)
         .set_title("Stig View - Select File")
         .pick_file()
+        .await
+        .ok_or(FileError::FilePick("Error loading selected file."))?;
+
+    let stig = Stig::from_xylok_txt(file_handle.path()).ok_or(FileError::NotAStig(
+        "Selected file could not be loaded as a STIG.",
+    ))?;
+
+    let name = stig.version.clone();
+
+    db.insert(name.clone(), Data::new(Arc::new(stig))).await;
+
+    Ok(name)
+}
+
+/// Open a folder selected by the user with their system file picker.
+/// Scans this dir and any sub dirs for valid STIGs.
+/// Returns the first found STIGs id AND if an error occured.
+/// Does not report mutiple errors, only one.
+pub async fn open_folder(db: DB) -> (Option<String>, Option<FileError>) {
+    let home_dir = std::env::home_dir();
+
+    if let None = home_dir {
+        return (
+            None,
+            Some(FileError::HomeDir(
+                "Program could not detect home directory.",
+            )),
+        );
+    }
+
+    let folder_handle = AsyncFileDialog::new()
+        .set_directory(home_dir.unwrap()) // Safe unwrap call.
+        .set_title("Stig View - Select Folder")
+        .pick_folder()
         .await;
 
-    if let Some(file_handle) = file_handle {
-        let stig = Stig::from_xylok_txt(file_handle.path());
+    if let None = folder_handle {
+        return (
+            None,
+            Some(FileError::FilePick("Error loading selected folder.")),
+        );
+    }
 
-        if let Some(stig) = stig {
-            let name = stig.version.clone();
+    // Initialize variables that will be modified in the loop:
+    // Directories found that need to be scanned through.
+    let mut dirs_to_load = vec![folder_handle.unwrap().path().to_path_buf()]; // Safe unwrap call.
+    // All text files found.
+    let mut txt_files = Vec::new();
+    // If an error occurs, dont quit the loop, just save it here.
+    let mut error = None;
 
-            db.insert(name.clone(), Data::new(Arc::new(stig)));
+    // While there is still a dir to look through.
+    while dirs_to_load.len() != 0 {
+        // Remov and read this dir from the list at the same time.
+        let read_dir = dirs_to_load.swap_remove(0).read_dir();
 
-            return Some(name);
+        if let Err(_) = read_dir {
+            error = Some(FileError::ReadDir("Error when reading a directory."));
+            continue;
+        }
+
+        // Go through every entry in this dir.
+        for entry in read_dir.unwrap() {
+            // Safe unwrap call.
+            if let Err(_) = entry {
+                error = Some(FileError::ReadDir("Error when reading a directory."));
+                continue;
+            }
+
+            let entry_path = entry.unwrap().path(); // Safe unwrap call.
+
+            if entry_path.is_dir() {
+                dirs_to_load.push(entry_path);
+                continue;
+            }
+
+            // If its a txt file.
+            if entry_path.extension().unwrap_or_default() == "txt" {
+                txt_files.push(entry_path.as_path().to_path_buf());
+                continue;
+            }
         }
     }
 
-    None
+    // Id could be None if no valid STIGs are loaded.
+    let mut id = None;
+
+    for path in txt_files {
+        let stig = Stig::from_xylok_txt(path);
+
+        if let Some(stig) = stig {
+            // If this is the first stig to be inserted into the db,
+            // save its id so that the program can automatically display it.
+            if let None = id {
+                id = Some(stig.version.clone());
+            }
+
+            db.insert(stig.version.clone(), Data::new(Arc::new(stig)))
+                .await;
+        }
+    }
+
+    (id, error)
 }

@@ -8,7 +8,7 @@ use iced::window::icon::from_file_data;
 use image::ImageFormat;
 use std::sync::Arc;
 
-use crate::app::async_fns::open_file;
+use crate::app::async_fns::{FileError, open_file, open_folder};
 use crate::app::*;
 
 impl App {
@@ -97,21 +97,57 @@ impl App {
                 Task::future(async move {
                     let id = open_file(db).await;
 
-                    Message::Switch(id)
+                    match id {
+                        Ok(id) => Message::Switch(id),
+                        Err(e) => match e {
+                            FileError::HomeDir(err_msg) => Message::SendErrNotif(err_msg),
+                            FileError::FilePick(err_msg) => Message::SendErrNotif(err_msg),
+                            FileError::NotAStig(err_msg) => Message::SendErrNotif(err_msg),
+                            _ => unreachable!(),
+                        },
+                    }
                 })
             }
-            Message::OpenFolder => todo!(),
+            Message::OpenFolder => {
+                let db = self.db.clone();
+
+                Task::future(async move {
+                    let (id, error) = open_folder(db).await;
+
+                    match (id, error) {
+                        (Some(id), None) => Message::Switch(id),
+                        (Some(id), Some(err)) => match err {
+                            FileError::HomeDir(err_msg) => Message::SwitchWithError(id, err_msg),
+                            FileError::FilePick(err_msg) => Message::SwitchWithError(id, err_msg),
+                            FileError::ReadDir(err_msg) => Message::SwitchWithError(id, err_msg),
+                            _ => unreachable!(),
+                        },
+                        (None, Some(err)) => match err {
+                            FileError::HomeDir(err_msg) => Message::SendErrNotif(err_msg),
+                            FileError::FilePick(err_msg) => Message::SendErrNotif(err_msg),
+                            FileError::ReadDir(err_msg) => Message::SendErrNotif(err_msg),
+                            _ => unreachable!(),
+                        },
+                        (None, None) => Message::DoNothing,
+                    }
+                })
+            }
 
             Message::SelectContent(action, idx) => todo!(),
 
             Message::Switch(id) => todo!(),
+            Message::SwitchWithError(id, err_str) => todo!(),
             Message::SwitchNext => todo!(),
 
             Message::SwitchPopup(popup) => todo!(),
 
+            Message::SendErrNotif(err_str) => todo!(),
+
             Message::Pin(id) => todo!(),
 
             Message::KeyPressed(key_event) => todo!(),
+
+            Message::DoNothing => Task::none(),
         }
     }
 }
