@@ -17,7 +17,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stig-view
-          path: target/release/stig-view
+          path: target/release/stig_view_desktop
   build-macos:
     runs-on: macos-latest
 
@@ -30,7 +30,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stig-view-macos
-          path: target/release/stig-view
+          path: target/release/stig_view_desktop
   build-windows:
     runs-on: windows-latest
 
@@ -43,4 +43,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stig-view-windows
-          path: target/release/stig-view.exe
+          path: target/release/stig_view_desktop.exe
