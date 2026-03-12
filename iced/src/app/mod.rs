@@ -6,9 +6,11 @@ mod async_fns;
 pub use crate::app::assets::Assets;
 
 use iced::keyboard;
-use iced::widget::text_editor::Action;
+use iced::widget::Id;
+use iced::widget::text_editor::{Action, Content};
 use iced::window;
 use iced::window::Direction;
+use std::sync::Arc;
 use stig_view_core::db::DB;
 use stig_view_core::stig::Stig;
 
@@ -16,6 +18,7 @@ use stig_view_core::stig::Stig;
 pub struct App {
     db: DB,
     displayed: Option<Stig>,
+    contents: [Content; 6],
     popup: Popup,
     assets: Assets,
     window_id: Option<window::Id>,
@@ -46,12 +49,17 @@ pub enum Message {
     Switch(String),
     SwitchWithError(String, &'static str),
     SwitchNext,
+    Display(Arc<Stig>),
 
     SwitchPopup(Popup),
 
     SendErrNotif(&'static str),
 
     Pin(String),
+
+    FocusWidget(Id),
+
+    ProcessCmd,
 
     KeyPressed(keyboard::Event),
 

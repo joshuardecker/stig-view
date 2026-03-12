@@ -2,11 +2,11 @@ use iced::Element;
 use iced::Subscription;
 use iced::Task;
 use iced::color;
-use iced::keyboard;
 use iced::theme::{Custom, Palette, Theme};
 use iced::window::icon::from_file_data;
+use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
-use std::sync::Arc;
+use stig_view_core::db::{Data, Pinned};
 
 use crate::app::async_fns::{FileError, open_file, open_folder};
 use crate::app::*;
@@ -17,6 +17,14 @@ impl App {
             Self {
                 db: DB::new(),
                 displayed: None,
+                contents: [
+                    Content::new(),
+                    Content::new(),
+                    Content::new(),
+                    Content::new(),
+                    Content::new(),
+                    Content::new(),
+                ],
                 popup: Popup::None,
                 assets: Assets::new(),
                 window_id: None,
@@ -133,19 +141,149 @@ impl App {
                 })
             }
 
-            Message::SelectContent(action, idx) => todo!(),
+            Message::SelectContent(action, idx) => {
+                if idx > 6 {
+                    panic!("Index should not be this high!")
+                }
 
-            Message::Switch(id) => todo!(),
-            Message::SwitchWithError(id, err_str) => todo!(),
-            Message::SwitchNext => todo!(),
+                // Dont let the user delete or add letters to the displayed text.
+                if let Action::Edit(_) = action {
+                    return Task::none();
+                }
 
-            Message::SwitchPopup(popup) => todo!(),
+                self.contents[idx].perform(action);
+
+                Task::none()
+            }
+
+            Message::Switch(id) => {
+                let db = self.db.clone();
+
+                Task::future(async move {
+                    let stig = db.get(&id).await;
+
+                    if let Some(stig) = stig {
+                        Message::Display(stig.get_stig().clone())
+                    } else {
+                        Message::DoNothing
+                    }
+                })
+            }
+            Message::SwitchWithError(id, err_str) => {
+                let db = self.db.clone();
+
+                Task::batch(vec![
+                    Task::future(async move {
+                        let stig = db.get(&id).await;
+
+                        if let Some(stig) = stig {
+                            Message::Display(stig.get_stig().clone())
+                        } else {
+                            Message::DoNothing
+                        }
+                    }),
+                    Task::done(Message::SendErrNotif(err_str)),
+                ])
+            }
+            Message::SwitchNext => {
+                let db = self.db.clone();
+                let displayed_name = self.displayed.clone();
+
+                if let Some(displayed_name) = displayed_name {
+                    Task::future(async move {
+                        let snapshot = db.snapshot().await;
+
+                        let mut iter = snapshot.iter();
+
+                        let _ = iter.find(|entry| *entry.0 == displayed_name.version);
+
+                        let entry: Option<(&String, &Data)> = iter.next();
+
+                        if let Some(entry) = entry {
+                            return Message::Switch(entry.0.to_owned());
+                        }
+
+                        let first = snapshot.first_key_value();
+
+                        if let Some(first) = first {
+                            return Message::Switch(first.0.clone());
+                        }
+
+                        Message::DoNothing
+                    })
+                } else {
+                    Task::none()
+                }
+            }
+            Message::Display(stig) => {
+                self.contents[0] = Content::with_text(&stig.version);
+                self.contents[1] = Content::with_text(&stig.intro);
+                self.contents[2] = Content::with_text(&stig.desc);
+                self.contents[3] = Content::with_text(&stig.version);
+                self.contents[4] = Content::with_text(&stig.fix_text);
+                self.contents[5] = Content::with_text(&stig.similar_checks);
+
+                Task::none()
+            }
+
+            Message::SwitchPopup(popup) => {
+                self.popup = popup;
+
+                Task::none()
+            }
 
             Message::SendErrNotif(err_str) => todo!(),
 
-            Message::Pin(id) => todo!(),
+            Message::Pin(id) => {
+                let db = self.db.clone();
 
-            Message::KeyPressed(key_event) => todo!(),
+                Task::future(async move {
+                    let stig = db.get(&id).await;
+
+                    if let Some(mut stig) = stig {
+                        match stig.get_pin() {
+                            Pinned::Not => stig.set_pin(Pinned::ByUser),
+                            Pinned::ByUser => stig.set_pin(Pinned::Not),
+                            Pinned::ByFilter => return Message::DoNothing,
+                        }
+
+                        db.insert(id, stig).await;
+                    }
+
+                    Message::DoNothing
+                })
+            }
+
+            Message::FocusWidget(widget_id) => iced::widget::operation::focus(widget_id),
+
+            Message::ProcessCmd => todo!(),
+
+            Message::KeyPressed(event) => match &event {
+                keyboard::Event::KeyPressed {
+                    key: key::Key::Character(key_smolstr),
+                    modifiers,
+                    ..
+                } => match key_smolstr.as_str() {
+                    "q" if modifiers.control() => return iced::exit(),
+                    "i" if modifiers.control() => return Task::done(Message::OpenFile),
+                    "o" if modifiers.control() => return Task::done(Message::OpenFolder),
+                    "p" if modifiers.control() => {
+                        return Task::done(Message::SwitchPopup(Popup::Filter));
+                    }
+                    _ => Task::none(),
+                },
+
+                keyboard::Event::KeyPressed {
+                    key: key::Key::Named(key_name),
+                    modifiers,
+                    ..
+                } => match key_name {
+                    key::Named::Tab if modifiers.control() => Task::done(Message::SwitchNext),
+                    _ => Task::none(),
+                },
+
+                _ => Task::none(),
+            },
 
             Message::DoNothing => Task::none(),
         }
