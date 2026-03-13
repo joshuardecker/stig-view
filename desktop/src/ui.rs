@@ -425,6 +425,7 @@ impl App {
                         .on_press(Message::SetDisplayed(name.to_owned())),
                     ));
                 }
+                _ => unimplemented!(),
             }
         }
 

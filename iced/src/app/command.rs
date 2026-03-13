@@ -35,10 +35,6 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
             let snapshot = db.snapshot().map_err(|_| CommandErr::DBCacheErr)?;
 
             for (name, data) in snapshot.iter() {
-                if let Pinned::ByUser = data.get_pin() {
-                    continue;
-                }
-
                 let mut is_match = false;
 
                 is_match |= re.is_match(&data.get_stig().version);
@@ -49,19 +45,41 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
                 is_match |= re.is_match(&data.get_stig().similar_checks);
 
                 if is_match {
-                    let mut data = data.to_owned();
-                    data.set_pin(Pinned::ByFilter);
+                    match data.get_pin() {
+                        Pinned::Not => {
+                            let mut data = data.to_owned();
+                            data.set_pin(Pinned::ByFilter);
 
-                    db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data).await;
+                        }
+                        Pinned::ByUser => {
+                            let mut data = data.to_owned();
+                            data.set_pin(Pinned::ByFilterAndUser);
+
+                            db.insert(name.to_owned(), data).await;
+                        }
+                        Pinned::ByFilter => (),
+                        Pinned::ByFilterAndUser => (),
+                    }
 
                     continue;
-                }
+                } else {
+                    match data.get_pin() {
+                        Pinned::Not => (),
+                        Pinned::ByUser => (),
+                        Pinned::ByFilter => {
+                            let mut data = data.to_owned();
+                            data.set_pin(Pinned::Not);
 
-                if let Pinned::ByFilter = data.get_pin() {
-                    let mut data = data.to_owned();
-                    data.set_pin(Pinned::Not);
+                            db.insert(name.to_owned(), data).await;
+                        }
+                        Pinned::ByFilterAndUser => {
+                            let mut data = data.to_owned();
+                            data.set_pin(Pinned::ByUser);
 
-                    db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data).await;
+                        }
+                    }
                 }
             }
         }
@@ -71,26 +89,44 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
             let snapshot = db.snapshot().map_err(|_| CommandErr::DBCacheErr)?;
 
             for (name, data) in snapshot.iter() {
-                if let Pinned::ByUser = data.get_pin() {
-                    continue;
-                }
-
                 let is_match = re.is_match(&data.get_stig().version);
 
                 if is_match {
-                    let mut data = data.to_owned();
-                    data.set_pin(Pinned::ByFilter);
+                    match data.get_pin() {
+                        Pinned::Not => {
+                            let mut data = data.to_owned();
+                            data.set_pin(Pinned::ByFilter);
 
-                    db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data).await;
+                        }
+                        Pinned::ByUser => {
+                            let mut data = data.to_owned();
+                            data.set_pin(Pinned::ByFilterAndUser);
+
+                            db.insert(name.to_owned(), data).await;
+                        }
+                        Pinned::ByFilter => (),
+                        Pinned::ByFilterAndUser => (),
+                    }
 
                     continue;
-                }
+                } else {
+                    match data.get_pin() {
+                        Pinned::Not => (),
+                        Pinned::ByUser => (),
+                        Pinned::ByFilter => {
+                            let mut data = data.to_owned();
+                            data.set_pin(Pinned::Not);
 
-                if let Pinned::ByFilter = data.get_pin() {
-                    let mut data = data.to_owned();
-                    data.set_pin(Pinned::Not);
+                            db.insert(name.to_owned(), data).await;
+                        }
+                        Pinned::ByFilterAndUser => {
+                            let mut data = data.to_owned();
+                            data.set_pin(Pinned::ByUser);
 
-                    db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data).await;
+                        }
+                    }
                 }
             }
         }
@@ -98,11 +134,21 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
             let snapshot = db.snapshot().map_err(|_| CommandErr::DBCacheErr)?;
 
             for (name, data) in snapshot.iter() {
-                if let Pinned::ByFilter = data.get_pin() {
-                    let mut data = data.to_owned();
-                    data.set_pin(Pinned::Not);
+                match data.get_pin() {
+                    Pinned::Not => (),
+                    Pinned::ByUser => (),
+                    Pinned::ByFilter => {
+                        let mut data = data.to_owned();
+                        data.set_pin(Pinned::Not);
 
-                    db.insert(name.to_owned(), data).await;
+                        db.insert(name.to_owned(), data).await;
+                    }
+                    Pinned::ByFilterAndUser => {
+                        let mut data = data.to_owned();
+                        data.set_pin(Pinned::ByUser);
+
+                        db.insert(name.to_owned(), data).await;
+                    }
                 }
             }
         }

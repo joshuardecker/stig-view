@@ -346,9 +346,10 @@ impl App {
 
     /// Return a column of the sorted buttons to display.
     fn get_stig_buttons(&self, db: DB) -> Column<'_, Message> {
+        let mut not_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
         let mut user_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
         let mut filter_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
-        let mut not_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
+        let mut filter_user_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
 
         let filter_svg_handle = svg::Handle::from_memory(self.assets.filter_svg.clone());
         let bookmark_svg_handle = svg::Handle::from_memory(self.assets.bookmark_svg.clone());
@@ -359,6 +360,31 @@ impl App {
 
         for (name, data) in snapshot.iter() {
             match data.get_pin() {
+                Pinned::Not => {
+                    not_pin_col.push(Box::new(
+                        button(
+                            row![
+                                text(name.to_owned()).center(),
+                                space::horizontal(),
+                                button(
+                                    svg(bookmark_svg_handle.clone())
+                                        .width(32)
+                                        .height(32)
+                                        .style(colored_svg)
+                                )
+                                .padding(2)
+                                .style(no_button)
+                                .on_press(Message::Pin(name.to_owned()))
+                            ]
+                            .align_y(Center),
+                        )
+                        .height(50)
+                        .padding(8)
+                        .width(Fill)
+                        .style(rounded_boring_button)
+                        .on_press(Message::Display(data.get_stig())),
+                    ));
+                }
                 Pinned::ByUser => {
                     user_pin_col.push(Box::new(
                         button(
@@ -390,11 +416,15 @@ impl App {
                             row![
                                 text(name.to_owned()).center(),
                                 space::horizontal(),
+                                svg(filter_svg_handle.clone())
+                                    .width(32)
+                                    .height(32)
+                                    .style(good_svg),
                                 button(
-                                    svg(filter_svg_handle.clone())
+                                    svg(bookmark_svg_handle.clone())
                                         .width(32)
                                         .height(32)
-                                        .style(good_svg)
+                                        .style(colored_svg)
                                 )
                                 .padding(2)
                                 .style(no_button)
@@ -409,14 +439,18 @@ impl App {
                         .on_press(Message::Display(data.get_stig())),
                     ));
                 }
-                Pinned::Not => {
-                    not_pin_col.push(Box::new(
+                Pinned::ByFilterAndUser => {
+                    filter_user_pin_col.push(Box::new(
                         button(
                             row![
                                 text(name.to_owned()).center(),
                                 space::horizontal(),
+                                svg(filter_svg_handle.clone())
+                                    .width(32)
+                                    .height(32)
+                                    .style(good_svg),
                                 button(
-                                    svg(bookmark_svg_handle.clone())
+                                    svg(filled_bookmark_svg_handle.clone())
                                         .width(32)
                                         .height(32)
                                         .style(colored_svg)
@@ -437,12 +471,13 @@ impl App {
             }
         }
 
-        user_pin_col.append(&mut filter_pin_col);
-        user_pin_col.append(&mut not_pin_col);
+        filter_user_pin_col.append(&mut user_pin_col);
+        filter_user_pin_col.append(&mut filter_pin_col);
+        filter_user_pin_col.append(&mut not_pin_col);
 
         let mut col = column![].padding(1).spacing(8);
 
-        for button in user_pin_col {
+        for button in filter_user_pin_col {
             col = col.push(*button);
         }
 

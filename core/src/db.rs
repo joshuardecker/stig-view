@@ -110,4 +110,5 @@ pub enum Pinned {
     Not,
     ByUser,
     ByFilter,
+    ByFilterAndUser,
 }

@@ -252,8 +252,10 @@ impl App {
                     if let Some(mut stig) = stig {
                         match stig.get_pin() {
                             Pinned::Not => stig.set_pin(Pinned::ByUser),
-                            Pinned::ByFilter => stig.set_pin(Pinned::ByUser),
                             Pinned::ByUser => stig.set_pin(Pinned::Not),
+
+                            Pinned::ByFilter => stig.set_pin(Pinned::ByFilterAndUser),
+                            Pinned::ByFilterAndUser => stig.set_pin(Pinned::ByFilter),
                         }
 
                         db.insert(id, stig).await;
