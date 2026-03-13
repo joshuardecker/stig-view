@@ -2,7 +2,7 @@
 
 ## 0.2
 - [ ] Replace synchronous `std::fs::read_dir` in `iced/src/app/async_fns.rs` with `tokio::fs::read_dir` so the directory scan task is cancellable on shutdown, fixing the app freeze when quitting during a folder load.
-- [ ] Add a settings menu, initially supporting theme switching only.
+- [x] Add a settings menu, initially supporting theme switching only.
 - [ ] Add error notification display to the GUI (`ErrNotif` state is already set but never rendered).
 - [x] Add window click and drag resizing functionality.
 - [ ] Remove legacy `/desktop` crate once `/iced` is fully stable and ready to replace it.
@@ -10,7 +10,7 @@
 - [ ] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
 - [x] Show both the filter icon and bookmark icon simultaneously in the STIG list, rather than replacing the bookmark with the filter icon when a STIG is matched.
 - [ ] Persist user settings (e.g. theme) between sessions using a `config.toml` stored in `{config_dir}/stig-view/`. Use `dirs::config_dir()` for cross-platform and Flatpak-compatible path resolution. Fall back to defaults on first launch and write the config on save.
-- [ ] Implement the settings menu (see separate settings menu item above), then remove the `todo!()` panic in `Popup::Settings` match arm in `iced/src/ui/mod.rs`.
+- [x] Implement the settings menu (see separate settings menu item above), then remove the `todo!()` panic in `Popup::Settings` match arm in `iced/src/ui/mod.rs`.
 
 ## 0.3
 - [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, in addition to the existing Xylok internal format.

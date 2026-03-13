@@ -26,7 +26,7 @@ pub struct App {
     pub err_notif: ErrNotif,
     pub assets: Assets,
     pub window_id: Option<window::Id>,
-    pub current_theme: AppTheme,
+    pub current_theme: Option<AppTheme>,
 }
 
 #[derive(Debug, Clone)]
@@ -57,6 +57,8 @@ pub enum Message {
     WindowFullscreenToggle,
     WindowMove,
     WindowDragResize(Direction),
+
+    SwitchTheme(AppTheme),
 
     OpenFile,
     OpenFolder,
@@ -94,8 +96,17 @@ pub enum ContentSlot {
     SimilarChecks = 5,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AppTheme {
     Dark,
     Light,
+}
+
+impl std::fmt::Display for AppTheme {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            AppTheme::Dark => "Dark",
+            AppTheme::Light => "Light",
+        })
+    }
 }

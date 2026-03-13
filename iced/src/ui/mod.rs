@@ -1,12 +1,14 @@
 mod styles;
 
+use std::ops::Shr;
+
 use iced::Alignment::End;
 use iced::Element;
-use iced::widget::Id;
 use iced::widget::{
     Button, Column, Container, button, column, container, mouse_area, row, scrollable, sensor,
     space, stack, svg, text, text_editor, text_input, tooltip,
 };
+use iced::widget::{Id, pick_list};
 use iced::window::Direction::{
     East, North, NorthEast, NorthWest, South, SouthEast, SouthWest, West,
 };
@@ -82,7 +84,7 @@ impl App {
 
             match self.popup {
                 Popup::Filter => self.get_stack(self.command_prompt_popup(), main_gui),
-                Popup::Settings => todo!(),
+                Popup::Settings => self.get_stack(self.settings_menu(), main_gui),
                 Popup::None => main_gui,
             }
         } else {
@@ -99,7 +101,7 @@ impl App {
 
             match self.popup {
                 Popup::Filter => self.get_stack(self.command_prompt_popup(), main_gui),
-                Popup::Settings => todo!(),
+                Popup::Settings => self.get_stack(self.settings_menu(), main_gui),
                 Popup::None => main_gui,
             }
         }
@@ -135,7 +137,7 @@ impl App {
                 ),
             ],
             window_decorations,
-            space().height(5),
+            space().height(10),
             row![
                 container(
                     mouse_area(container(space::horizontal()).width(15).height(Fill))
@@ -205,13 +207,12 @@ impl App {
                 svg(svg::Handle::from_memory(self.assets.cross_svg.clone())).style(bad_svg);
         }
 
-        container(
+        /*container(
             sensor(
                 container(
                     column![
                         space().height(5),
                         row![
-                            //prompt_svg.width(Shrink),
                             space().width(1),
                             text_input(
                                 "Type commands here, then press enter...",
@@ -268,6 +269,125 @@ impl App {
                 .style(cmd_container),
             )
             .on_show(move |_| Message::FocusWidget(id.clone())),
+        )
+        .center(Fill);*/
+
+        let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
+
+        container(
+            sensor(
+                container(
+                    column![
+                        row![
+                            space::horizontal(),
+                            space().width(13),
+                            text("Filter Menu"),
+                            space::horizontal(),
+                            button(
+                                svg(cross_svg_handle)
+                                    .style(colored_svg)
+                                    .width(25)
+                                    .height(25)
+                            )
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::SwitchPopup(Popup::None)),
+                        ]
+                        .align_y(Center),
+                        space().height(20),
+                        text_input(
+                            "Type commands here, then press enter...",
+                            &self.filter_input
+                        )
+                        .on_input(Message::TypeCmd)
+                        .on_submit(Message::ProcessCmd(self.filter_input.clone()))
+                        .id(id.clone()),
+                        space().height(20),
+                        row![
+                            svg(right_tick_svg_handle.clone())
+                                .style(boring_svg)
+                                .width(Shrink),
+                            space().width(5),
+                            text("(name|title)  (...) to filter by title."),
+                            space::horizontal(),
+                        ]
+                        .height(24)
+                        .align_y(Center),
+                        row![
+                            svg(right_tick_svg_handle.clone())
+                                .style(boring_svg)
+                                .width(Shrink),
+                            space().width(5),
+                            text("(find|search) (...) to filter by keywords."),
+                            space::horizontal(),
+                        ]
+                        .height(24)
+                        .align_y(Center),
+                        row![
+                            svg(right_tick_svg_handle.clone())
+                                .style(boring_svg)
+                                .width(Shrink),
+                            space().width(5),
+                            text("(reset) to undo applied filters."),
+                            space::horizontal(),
+                        ]
+                        .height(24)
+                        .align_y(Center),
+                    ]
+                    .align_x(Center),
+                )
+                .width(500)
+                .height(200)
+                .padding(15)
+                .style(cmd_container),
+            )
+            .on_show(move |_| Message::FocusWidget(id.clone())),
+        )
+        .center(Fill)
+    }
+
+    fn settings_menu(&self) -> Container<'_, Message> {
+        let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
+
+        let themes = [AppTheme::Dark, AppTheme::Light];
+
+        container(
+            container(
+                column![
+                    row![
+                        space::horizontal(),
+                        space().width(13),
+                        text("Settings Menu"),
+                        space::horizontal(),
+                        button(
+                            svg(cross_svg_handle)
+                                .style(colored_svg)
+                                .width(25)
+                                .height(25)
+                        )
+                        .padding(1)
+                        .width(Shrink)
+                        .height(Shrink)
+                        .style(no_button)
+                        .on_press(Message::SwitchPopup(Popup::None)),
+                    ]
+                    .align_y(Center),
+                    space().height(20),
+                    row![
+                        text("Theme"),
+                        space::horizontal(),
+                        pick_list(themes, self.current_theme, Message::SwitchTheme),
+                    ]
+                    .align_y(Center)
+                ]
+                .align_x(Center),
+            )
+            .width(375)
+            .height(150)
+            .padding(15)
+            .style(cmd_container),
         )
         .center(Fill)
     }

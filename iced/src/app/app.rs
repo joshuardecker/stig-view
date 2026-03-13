@@ -32,7 +32,7 @@ impl App {
                 err_notif: ErrNotif::None,
                 assets: Assets::new(),
                 window_id: None,
-                current_theme: AppTheme::Light,
+                current_theme: Some(AppTheme::Dark),
             },
             window::oldest().map(Message::InitWindow),
         )
@@ -43,7 +43,16 @@ impl App {
     }
 
     pub fn theme(&self) -> Theme {
-        let (palette, name) = match self.current_theme {
+        let theme_to_match;
+
+        if let Some(theme) = &self.current_theme {
+            theme_to_match = theme.clone();
+        } else {
+            // Default to dark theme.
+            theme_to_match = AppTheme::Dark;
+        }
+
+        let (palette, name) = match theme_to_match {
             AppTheme::Dark => (
                 Palette {
                     background: color!(0x1B1C1C),
@@ -93,6 +102,12 @@ impl App {
             Message::WindowFullscreenToggle => window::toggle_maximize(self.window_id.unwrap()),
             Message::WindowMove => window::drag(self.window_id.unwrap()),
             Message::WindowDragResize(dir) => window::drag_resize(self.window_id.unwrap(), dir),
+
+            Message::SwitchTheme(theme) => {
+                self.current_theme = Some(theme);
+
+                Task::none()
+            }
 
             Message::OpenFile => {
                 let db = self.db.clone();
@@ -229,6 +244,7 @@ impl App {
             Message::SwitchPopup(popup) => {
                 match (&self.popup, &popup) {
                     (Popup::Filter, Popup::Filter) => self.popup = Popup::None,
+                    (Popup::Settings, Popup::Settings) => self.popup = Popup::None,
                     _ => self.popup = popup,
                 }
 
