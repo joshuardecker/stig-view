@@ -9,6 +9,7 @@ use image::ImageFormat;
 use stig_view_core::db::{Data, Pinned};
 
 use crate::app::async_fns::{FileError, open_file, open_folder};
+use crate::app::command::{CommandErr, parse_command, run_search_cmd};
 use crate::app::*;
 
 impl App {
@@ -25,10 +26,13 @@ impl App {
                     Content::new(),
                     Content::new(),
                 ],
+                filter_input: String::new(),
+                filter_valid: false,
                 popup: Popup::None,
+                err_notif: ErrNotif::None,
                 assets: Assets::new(),
                 window_id: None,
-                current_theme: AppTheme::Dark,
+                current_theme: AppTheme::Light,
             },
             window::oldest().map(Message::InitWindow),
         )
@@ -45,7 +49,7 @@ impl App {
                     background: color!(0x1B1C1C),
                     text: color!(0xE6E6E6),
                     primary: color!(0xA2A2D0),
-                    success: color!(0x188B6C),
+                    success: color!(0x22A67A),
                     warning: color!(0xffc14e),
                     danger: color!(0xc3423f),
                 },
@@ -53,24 +57,18 @@ impl App {
             ),
             AppTheme::Light => (
                 Palette {
-                    background: color!(0xDFD7D5),
-                    text: color!(0x1B1C1C),
-                    primary: color!(0x444488),
-                    success: color!(0x188B6C),
-                    warning: color!(0xffc14e),
-                    danger: color!(0xc3423f),
+                    background: color!(0xF5F2F7),
+                    text: color!(0x1E1A2E),
+                    primary: color!(0x6B4FA0),
+                    success: color!(0x22A67A),
+                    warning: color!(0xD98C2A),
+                    danger: color!(0xC0393A),
                 },
                 String::from("Custom Light"),
             ),
         };
 
         Theme::Custom(Arc::new(Custom::new(name, palette)))
-    }
-
-    pub fn get_view(&self) -> Element<'_, Message> {
-        iced::widget::container(iced::widget::text("hello"))
-            .style(iced::widget::container::primary)
-            .into()
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -209,23 +207,36 @@ impl App {
                 }
             }
             Message::Display(stig) => {
+                self.displayed = Some(stig.clone());
+
                 self.contents[ContentSlot::Version as usize] = Content::with_text(&stig.version);
                 self.contents[ContentSlot::Intro as usize] = Content::with_text(&stig.intro);
                 self.contents[ContentSlot::Desc as usize] = Content::with_text(&stig.desc);
-                self.contents[ContentSlot::CheckText as usize] = Content::with_text(&stig.check_text);
+                self.contents[ContentSlot::CheckText as usize] =
+                    Content::with_text(&stig.check_text);
                 self.contents[ContentSlot::FixText as usize] = Content::with_text(&stig.fix_text);
-                self.contents[ContentSlot::SimilarChecks as usize] = Content::with_text(&stig.similar_checks);
+                self.contents[ContentSlot::SimilarChecks as usize] =
+                    Content::with_text(&stig.similar_checks);
 
                 Task::none()
             }
 
             Message::SwitchPopup(popup) => {
-                self.popup = popup;
+                match (&self.popup, &popup) {
+                    (Popup::Filter, Popup::Filter) => self.popup = Popup::None,
+                    _ => self.popup = popup,
+                }
 
                 Task::none()
             }
 
-            Message::SendErrNotif(err_str) => todo!(),
+            Message::SendErrNotif(err_str) => {
+                if let ErrNotif::None = self.err_notif {
+                    self.err_notif = ErrNotif::Err(err_str);
+                }
+
+                Task::none()
+            }
 
             Message::Pin(id) => {
                 let db = self.db.clone();
@@ -236,8 +247,8 @@ impl App {
                     if let Some(mut stig) = stig {
                         match stig.get_pin() {
                             Pinned::Not => stig.set_pin(Pinned::ByUser),
+                            Pinned::ByFilter => stig.set_pin(Pinned::ByUser),
                             Pinned::ByUser => stig.set_pin(Pinned::Not),
-                            Pinned::ByFilter => return Message::DoNothing,
                         }
 
                         db.insert(id, stig).await;
@@ -249,7 +260,42 @@ impl App {
 
             Message::FocusWidget(widget_id) => iced::widget::operation::focus(widget_id),
 
-            Message::ProcessCmd => todo!(),
+            Message::TypeCmd(filter_input) => {
+                self.filter_input = filter_input;
+
+                if let Ok(_) = parse_command(&self.filter_input) {
+                    self.filter_valid = true;
+                } else {
+                    self.filter_valid = false;
+                }
+
+                Task::none()
+            }
+            Message::ProcessCmd(command_str) => {
+                let db = self.db.clone();
+
+                Task::future(async move {
+                    let command = parse_command(&command_str);
+
+                    match command {
+                        Ok(command) => {
+                            let err = run_search_cmd(command, db).await;
+
+                            if err.is_err() {
+                                return Message::SendErrNotif("Error when running the command.");
+                            }
+                        }
+                        Err(e) => match e {
+                            CommandErr::RegexErr => {
+                                return Message::SendErrNotif("Error when parsing the command.");
+                            }
+                            _ => (),
+                        },
+                    }
+
+                    Message::DoNothing
+                })
+            }
 
             Message::KeyPressed(event) => match &event {
                 keyboard::Event::KeyPressed {

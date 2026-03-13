@@ -1,6 +1,7 @@
 pub mod app;
 mod assets;
 mod async_fns;
+mod command;
 
 // Re-exports:
 pub use crate::app::assets::Assets;
@@ -16,13 +17,16 @@ use stig_view_core::stig::Stig;
 
 #[derive(Debug, Clone)]
 pub struct App {
-    db: DB,
-    displayed: Option<Stig>,
-    contents: [Content; 6],
-    popup: Popup,
-    assets: Assets,
-    window_id: Option<window::Id>,
-    current_theme: AppTheme,
+    pub db: DB,
+    pub displayed: Option<Arc<Stig>>,
+    pub contents: [Content; 6],
+    pub filter_input: String,
+    pub filter_valid: bool,
+    pub popup: Popup,
+    pub err_notif: ErrNotif,
+    pub assets: Assets,
+    pub window_id: Option<window::Id>,
+    pub current_theme: AppTheme,
 }
 
 #[derive(Debug, Clone)]
@@ -30,6 +34,19 @@ pub enum Popup {
     Filter,
     Settings,
     None,
+}
+
+#[derive(Debug, Clone)]
+pub enum ErrNotif {
+    Err(&'static str),
+    None,
+}
+
+#[derive(Debug, Clone)]
+pub enum Command {
+    NameSearch(String),
+    KeywordSearch(String),
+    Reset,
 }
 
 #[derive(Debug, Clone)]
@@ -59,7 +76,8 @@ pub enum Message {
 
     FocusWidget(Id),
 
-    ProcessCmd,
+    TypeCmd(String),
+    ProcessCmd(String),
 
     KeyPressed(keyboard::Event),
 
