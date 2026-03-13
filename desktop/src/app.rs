@@ -207,7 +207,7 @@ impl App {
 
                         load_dir(path, db.clone()).await;
 
-                        let snapshot = db.snapshot().await;
+                        let snapshot = db.snapshot().expect("DB Snapshot error.");
 
                         let first = snapshot.first_key_value();
 
@@ -268,7 +268,7 @@ impl App {
 
                 if let Some(displayed_name) = displayed_name {
                     Task::future(async move {
-                        let snapshot = db.snapshot().await;
+                        let snapshot = db.snapshot().expect("DB Snapshot error.");
 
                         let mut iter = snapshot.iter();
 
@@ -483,7 +483,7 @@ async fn run_search_cmd(cmd: UserCommand, db: DB) {
         UserCommand::SearchForKeyword(keyword) => {
             let re = Regex::new(&keyword).ok().expect("Bad regex!");
 
-            let snapshot = db.snapshot().await;
+            let snapshot = db.snapshot().expect("DB Snapshot error.");
 
             for (name, data) in snapshot.iter() {
                 if let Pinned::ByUser = data.get_pin() {
@@ -519,7 +519,7 @@ async fn run_search_cmd(cmd: UserCommand, db: DB) {
         UserCommand::SearchForName(name) => {
             let re = Regex::new(&name).ok().expect("Bad regex!");
 
-            let snapshot = db.snapshot().await;
+            let snapshot = db.snapshot().expect("DB Snapshot error.");
 
             for (name, data) in snapshot.iter() {
                 if let Pinned::ByUser = data.get_pin() {
@@ -546,7 +546,7 @@ async fn run_search_cmd(cmd: UserCommand, db: DB) {
             }
         }
         UserCommand::Reset => {
-            let snapshot = db.snapshot().await;
+            let snapshot = db.snapshot().expect("DB Snapshot error.");
 
             for (name, data) in snapshot.iter() {
                 if let Pinned::ByFilter = data.get_pin() {

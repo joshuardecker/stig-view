@@ -6,7 +6,6 @@ use iced::widget::{
     stack, svg, text, text_editor, text_input, tooltip,
 };
 use iced::{Element, widget};
-use tokio::runtime::Runtime;
 
 use crate::app;
 use crate::app::{App, Message, Popup};
@@ -347,9 +346,7 @@ impl App {
         let filled_bookmark_svg_handle =
             svg::Handle::from_memory(self.assets.bookmark_filled_svg.clone());
 
-        let rt = Runtime::new().unwrap();
-
-        let snapshot = rt.block_on(async move { db.snapshot().await });
+        let snapshot = db.snapshot().expect("DB Snapshot error.");
 
         for (name, data) in snapshot.iter() {
             match data.get_pin() {

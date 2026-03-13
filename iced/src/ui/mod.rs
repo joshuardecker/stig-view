@@ -9,7 +9,6 @@ use iced::widget::{
 };
 use iced::{Center, Fill, Left, Shrink};
 use stig_view_core::db::{DB, Pinned};
-use tokio::runtime::Runtime;
 
 use crate::app::*;
 use crate::ui::styles::*;
@@ -356,9 +355,7 @@ impl App {
         let filled_bookmark_svg_handle =
             svg::Handle::from_memory(self.assets.bookmark_filled_svg.clone());
 
-        let rt = Runtime::new().unwrap();
-
-        let snapshot = rt.block_on(async move { db.snapshot().await });
+        let snapshot = db.snapshot().unwrap_or_default();
 
         for (name, data) in snapshot.iter() {
             match data.get_pin() {

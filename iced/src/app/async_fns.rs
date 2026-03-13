@@ -77,7 +77,8 @@ pub async fn open_folder(db: DB) -> (Option<String>, Option<FileError>) {
     // While there is still a dir to look through.
     while !dirs_to_load.is_empty() {
         // Remov and read this dir from the list at the same time.
-        let read_dir = dirs_to_load.swap_remove(0).read_dir();
+        let path = dirs_to_load.swap_remove(0);
+        let read_dir = path.read_dir();
 
         if let Err(_) = read_dir {
             error = Some(FileError::ReadDir("Error when reading a directory."));
@@ -92,12 +93,14 @@ pub async fn open_folder(db: DB) -> (Option<String>, Option<FileError>) {
                 continue;
             }
 
-            let entry_path = entry.unwrap().path(); // Safe unwrap call.
+            let entry = entry.unwrap(); // Safe unwrap call.
 
-            if entry_path.is_dir() {
-                dirs_to_load.push(entry_path);
+            if entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false) {
+                dirs_to_load.push(entry.path());
                 continue;
             }
+
+            let entry_path = entry.path();
 
             // If its a txt file.
             if entry_path.extension().unwrap_or_default() == "txt" {

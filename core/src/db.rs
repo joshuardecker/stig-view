@@ -1,29 +1,40 @@
 use std::collections::BTreeMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use std::sync::{Arc, RwLock};
+use tokio::sync::RwLock as AsyncRwLock;
 
 use crate::stig::Stig;
 
 /// A memory based data base for storing stigs.
 #[derive(Debug, Clone)]
 pub struct DB {
-    data: Arc<RwLock<BTreeMap<String, Data>>>,
+    data: Arc<AsyncRwLock<BTreeMap<String, Data>>>,
+    cache: Arc<RwLock<BTreeMap<String, Data>>>,
+}
+
+#[derive(Debug, Clone)]
+pub enum DBErr {
+    CacheErr(&'static str),
 }
 
 impl DB {
     /// Create a new memory database.
     pub fn new() -> Self {
         Self {
-            data: Arc::new(RwLock::new(BTreeMap::new())),
+            data: Arc::new(AsyncRwLock::new(BTreeMap::new())),
+            cache: Arc::new(RwLock::new(BTreeMap::new())),
         }
     }
 
     /// Insert a stig into the database.
     /// Name is equivalent to stig version.
-    pub async fn insert(&self, name: String, data: Data) {
+    pub async fn insert(&self, name: String, data: Data) -> Result<(), DBErr> {
         let mut btree = self.data.write().await;
+        btree.insert(name, data);
+        *self.cache.write().map_err(|_| {
+            DBErr::CacheErr("DB cache error. If this error persists, restart the application.")
+        })? = btree.clone();
 
-        let _ = btree.insert(name, data);
+        Ok(())
     }
 
     /// Get an element from the database.
@@ -34,19 +45,29 @@ impl DB {
         Some(data.to_owned())
     }
 
-    /// Take a snapshot of the database.
+    /// Get a snapshot of the database.
     /// Performance of calling this isnt too bad, most of the data
     /// is stored in read only smart pointers, so most data is copied by copying
     /// pointers, not the data.
-    pub async fn snapshot(&self) -> BTreeMap<String, Data> {
-        self.data.read().await.clone()
+    pub fn snapshot(&self) -> Result<BTreeMap<String, Data>, DBErr> {
+        Ok(self
+            .cache
+            .read()
+            .map_err(|_| {
+                DBErr::CacheErr("DB cache error. If this error persists, restart the application.")
+            })?
+            .clone())
     }
 
     /// Completely clean out the database of all entries.
-    pub async fn clean(&self) {
+    pub async fn clean(&self) -> Result<(), DBErr> {
         let mut btree = self.data.write().await;
-
         *btree = BTreeMap::new();
+        *self.cache.write().map_err(|_| {
+            DBErr::CacheErr("DB cache error. If this error persists, restart the application.")
+        })? = BTreeMap::new();
+
+        Ok(())
     }
 }
 

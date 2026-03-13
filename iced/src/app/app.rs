@@ -6,7 +6,7 @@ use iced::theme::{Custom, Palette, Theme};
 use iced::window::icon::from_file_data;
 use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
-use stig_view_core::db::{Data, Pinned};
+use stig_view_core::db::{DBErr, Data, Pinned};
 
 use crate::app::async_fns::{FileError, open_file, open_folder};
 use crate::app::command::{CommandErr, parse_command, run_search_cmd};
@@ -182,7 +182,12 @@ impl App {
 
                 if let Some(displayed_name) = displayed_name {
                     Task::future(async move {
-                        let snapshot = db.snapshot().await;
+                        let maybe_snapshot = db.snapshot();
+
+                        let snapshot = match maybe_snapshot {
+                            Ok(snapshot) => snapshot,
+                            Err(DBErr::CacheErr(err_str)) => return Message::SendErrNotif(err_str),
+                        };
 
                         let mut iter = snapshot.iter();
 

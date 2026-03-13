@@ -7,6 +7,7 @@ use crate::app::Command;
 pub enum CommandErr {
     NotCommand,
     RegexErr,
+    DBCacheErr,
 }
 
 pub fn parse_command(input: &str) -> Result<Command, CommandErr> {
@@ -31,7 +32,7 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
         Command::KeywordSearch(keyword) => {
             let re = Regex::new(&keyword).map_err(|_| CommandErr::RegexErr)?;
 
-            let snapshot = db.snapshot().await;
+            let snapshot = db.snapshot().map_err(|_| CommandErr::DBCacheErr)?;
 
             for (name, data) in snapshot.iter() {
                 if let Pinned::ByUser = data.get_pin() {
@@ -67,7 +68,7 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
         Command::NameSearch(name) => {
             let re = Regex::new(&name).map_err(|_| CommandErr::RegexErr)?;
 
-            let snapshot = db.snapshot().await;
+            let snapshot = db.snapshot().map_err(|_| CommandErr::DBCacheErr)?;
 
             for (name, data) in snapshot.iter() {
                 if let Pinned::ByUser = data.get_pin() {
@@ -94,7 +95,7 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
             }
         }
         Command::Reset => {
-            let snapshot = db.snapshot().await;
+            let snapshot = db.snapshot().map_err(|_| CommandErr::DBCacheErr)?;
 
             for (name, data) in snapshot.iter() {
                 if let Pinned::ByFilter = data.get_pin() {
