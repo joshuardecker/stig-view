@@ -76,22 +76,19 @@ impl App {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::InitWindow(id) => {
-                if let Some(id) = id {
-                    self.window_id = Some(id);
+                let id = id.expect("Not able to retrieve window id.");
+                self.window_id = Some(id);
 
-                    // Toggle window decorations and set the app icon.
-                    return Task::batch(vec![
-                        window::toggle_decorations(self.window_id.unwrap()),
-                        window::set_resizable(self.window_id.unwrap(), true),
-                        window::set_icon(
-                            self.window_id.unwrap(),
-                            from_file_data(&self.assets.app_icon, Some(ImageFormat::Png))
-                                .expect("Could not load app icon!"),
-                        ),
-                    ]);
-                }
-
-                panic!("Not able to retrieve window id.")
+                // Toggle window decorations and set the app icon.
+                Task::batch(vec![
+                    window::toggle_decorations(id),
+                    window::set_resizable(id, true),
+                    window::set_icon(
+                        id,
+                        from_file_data(&self.assets.app_icon, Some(ImageFormat::Png))
+                            .expect("Could not load app icon!"),
+                    ),
+                ])
             }
             Message::WindowClose => iced::exit(),
             Message::WindowMin => window::minimize(self.window_id.unwrap(), true),
@@ -141,17 +138,13 @@ impl App {
                 })
             }
 
-            Message::SelectContent(action, idx) => {
-                if idx > 6 {
-                    panic!("Index should not be this high!")
-                }
-
+            Message::SelectContent(action, slot) => {
                 // Dont let the user delete or add letters to the displayed text.
                 if let Action::Edit(_) = action {
                     return Task::none();
                 }
 
-                self.contents[idx].perform(action);
+                self.contents[slot as usize].perform(action);
 
                 Task::none()
             }
@@ -216,12 +209,12 @@ impl App {
                 }
             }
             Message::Display(stig) => {
-                self.contents[0] = Content::with_text(&stig.version);
-                self.contents[1] = Content::with_text(&stig.intro);
-                self.contents[2] = Content::with_text(&stig.desc);
-                self.contents[3] = Content::with_text(&stig.version);
-                self.contents[4] = Content::with_text(&stig.fix_text);
-                self.contents[5] = Content::with_text(&stig.similar_checks);
+                self.contents[ContentSlot::Version as usize] = Content::with_text(&stig.version);
+                self.contents[ContentSlot::Intro as usize] = Content::with_text(&stig.intro);
+                self.contents[ContentSlot::Desc as usize] = Content::with_text(&stig.desc);
+                self.contents[ContentSlot::CheckText as usize] = Content::with_text(&stig.check_text);
+                self.contents[ContentSlot::FixText as usize] = Content::with_text(&stig.fix_text);
+                self.contents[ContentSlot::SimilarChecks as usize] = Content::with_text(&stig.similar_checks);
 
                 Task::none()
             }

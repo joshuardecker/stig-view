@@ -44,7 +44,7 @@ pub enum Message {
     OpenFile,
     OpenFolder,
 
-    SelectContent(Action, usize),
+    SelectContent(Action, ContentSlot),
 
     Switch(String),
     SwitchWithError(String, &'static str),
@@ -64,6 +64,16 @@ pub enum Message {
     KeyPressed(keyboard::Event),
 
     DoNothing,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ContentSlot {
+    Version = 0,
+    Intro = 1,
+    Desc = 2,
+    CheckText = 3,
+    FixText = 4,
+    SimilarChecks = 5,
 }
 
 #[derive(Debug, Clone)]

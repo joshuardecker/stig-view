@@ -14,7 +14,7 @@ pub enum FileError {
 /// Attempts to open a single file selected by the user using their system file picker.
 /// Returns the id of the STIG loaded, or an error if it could not load.
 pub async fn open_file(db: DB) -> Result<String, FileError> {
-    let home_dir = std::env::home_dir().ok_or(FileError::HomeDir(
+    let home_dir = dirs::home_dir().ok_or(FileError::HomeDir(
         "Program could not detect home directory.",
     ))?;
 
@@ -42,9 +42,9 @@ pub async fn open_file(db: DB) -> Result<String, FileError> {
 /// Returns the first found STIGs id AND if an error occured.
 /// Does not report mutiple errors, only one.
 pub async fn open_folder(db: DB) -> (Option<String>, Option<FileError>) {
-    let home_dir = std::env::home_dir();
+    let home_dir = dirs::home_dir();
 
-    if let None = home_dir {
+    if home_dir.is_none() {
         return (
             None,
             Some(FileError::HomeDir(
@@ -59,7 +59,7 @@ pub async fn open_folder(db: DB) -> (Option<String>, Option<FileError>) {
         .pick_folder()
         .await;
 
-    if let None = folder_handle {
+    if folder_handle.is_none() {
         return (
             None,
             Some(FileError::FilePick("Error loading selected folder.")),
@@ -75,7 +75,7 @@ pub async fn open_folder(db: DB) -> (Option<String>, Option<FileError>) {
     let mut error = None;
 
     // While there is still a dir to look through.
-    while dirs_to_load.len() != 0 {
+    while !dirs_to_load.is_empty() {
         // Remov and read this dir from the list at the same time.
         let read_dir = dirs_to_load.swap_remove(0).read_dir();
 
@@ -116,7 +116,7 @@ pub async fn open_folder(db: DB) -> (Option<String>, Option<FileError>) {
         if let Some(stig) = stig {
             // If this is the first stig to be inserted into the db,
             // save its id so that the program can automatically display it.
-            if let None = id {
+            if id.is_none() {
                 id = Some(stig.version.clone());
             }
 

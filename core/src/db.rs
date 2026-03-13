@@ -43,7 +43,7 @@ impl DB {
     }
 
     /// Completely clean out the database of all entries.
-    pub async fn clean(&mut self) {
+    pub async fn clean(&self) {
         let mut btree = self.data.write().await;
 
         *btree = BTreeMap::new();
