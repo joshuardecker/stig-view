@@ -4,7 +4,7 @@
 - [ ] Replace synchronous `std::fs::read_dir` in `iced/src/app/async_fns.rs` with `tokio::fs::read_dir` so the directory scan task is cancellable on shutdown, fixing the app freeze when quitting during a folder load.
 - [ ] Add a settings menu, initially supporting theme switching only.
 - [ ] Add error notification display to the GUI (`ErrNotif` state is already set but never rendered).
-- [ ] Add window click and drag resizing functionality.
+- [x] Add window click and drag resizing functionality.
 - [ ] Remove legacy `/desktop` crate once `/iced` is fully stable and ready to replace it.
 - [ ] Fix cancelling the file/folder picker incorrectly triggering an error notification.
 - [ ] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
@@ -22,3 +22,7 @@
 
 ## Backlog
 - [ ] Benchmark folder load performance on large directories to inform loading indicator design.
+- [ ] Expand unit tests for `core/src/stig.rs` — cover valid Xylok files, files with missing fields, non-Xylok files returning `None`, and edge cases like empty fields or unusual whitespace.
+- [ ] Add unit tests for `core/src/db.rs` — verify that `insert` and `clean` keep the `std::sync::RwLock` cache consistent with the underlying tokio `RwLock` data.
+- [ ] Add unit tests for `iced/src/app/command.rs` — cover each valid command keyword, invalid input returning the correct error, and regex errors in search terms being handled gracefully.
+- [ ] Write hand-crafted tests first for all of the above using known good/bad cases and real sample files as fixtures. Then add fuzz testing for `Stig::from_xylok_txt()` using `cargo-fuzz` as a one-time hardening step before a release, to catch panics and pathological regex behavior on arbitrary input.

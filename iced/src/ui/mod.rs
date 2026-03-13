@@ -7,6 +7,9 @@ use iced::widget::{
     Button, Column, Container, button, column, container, mouse_area, row, scrollable, sensor,
     space, stack, svg, text, text_editor, text_input, tooltip,
 };
+use iced::window::Direction::{
+    East, North, NorthEast, NorthWest, South, SouthEast, SouthWest, West,
+};
 use iced::{Center, Fill, Left, Shrink};
 use stig_view_core::db::{DB, Pinned};
 
@@ -103,7 +106,7 @@ impl App {
     }
 
     /// The main gui of the application with some inputs.
-    fn main_gui<'a, Message>(
+    fn main_gui<'a>(
         &self,
         window_decorations: Container<'a, Message>,
         list_col: Column<'a, Message>,
@@ -112,12 +115,32 @@ impl App {
     where
         Message: 'a,
     {
+        // There are a few mouse areas here.
+        // Without window decorations, we need to handle windoe drag and click resizing ourselves.
+        // So we surround the gui on every edge with a mouse area to detect window resizing.
+
         column![
-            space().height(5),
+            row![
+                container(
+                    mouse_area(container(space::horizontal()).width(10).height(10))
+                        .on_press(Message::WindowDragResize(NorthWest))
+                ),
+                container(
+                    mouse_area(container(space::horizontal()).width(Fill).height(10))
+                        .on_press(Message::WindowDragResize(North))
+                ),
+                container(
+                    mouse_area(container(space::horizontal()).width(10).height(10))
+                        .on_press(Message::WindowDragResize(NorthEast))
+                ),
+            ],
             window_decorations,
             space().height(5),
             row![
-                space().width(15),
+                container(
+                    mouse_area(container(space::horizontal()).width(15).height(Fill))
+                        .on_press(Message::WindowDragResize(West))
+                ),
                 column![
                     container(scrollable(list_col).spacing(4))
                         .style(background_container)
@@ -131,9 +154,25 @@ impl App {
                     .width(Fill)
                     .height(Fill)
                     .padding(15),
-                space().width(15),
+                container(
+                    mouse_area(container(space::horizontal()).width(15).height(Fill))
+                        .on_press(Message::WindowDragResize(East))
+                ),
             ],
-            space().height(15),
+            row![
+                container(
+                    mouse_area(container(space::horizontal()).width(15).height(15))
+                        .on_press(Message::WindowDragResize(SouthWest))
+                ),
+                container(
+                    mouse_area(container(space::horizontal()).width(Fill).height(15))
+                        .on_press(Message::WindowDragResize(South))
+                ),
+                container(
+                    mouse_area(container(space::horizontal()).width(15).height(15))
+                        .on_press(Message::WindowDragResize(SouthEast))
+                ),
+            ],
         ]
         .into()
     }
