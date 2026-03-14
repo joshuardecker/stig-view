@@ -146,20 +146,6 @@ pub fn good_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
     }
 }
 
-/// A svg with the danger color.
-pub fn bad_svg(theme: &Theme, status: svg::Status) -> svg::Style {
-    let palette = theme.extended_palette();
-
-    match status {
-        svg::Status::Hovered => svg::Style {
-            color: Some(palette.background.base.text),
-        },
-        _ => svg::Style {
-            color: Some(palette.danger.base.color),
-        },
-    }
-}
-
 /// A rounded container to place elements into, lives in the backgound.
 pub fn background_container(theme: &Theme) -> container::Style {
     let palette = theme.extended_palette();

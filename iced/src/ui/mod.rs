@@ -2,7 +2,6 @@ mod styles;
 
 use iced::Alignment::End;
 use iced::Element;
-use iced::alignment::Horizontal::Right;
 use iced::widget::{
     Button, Column, Container, button, column, container, mouse_area, row, rule, scrollable,
     sensor, space, stack, svg, text, text_editor, text_input, tooltip,
@@ -224,18 +223,6 @@ impl App {
             ],
         ]
         .into()
-    }
-
-    /// Stack the main gui with a popup.
-    fn get_stack<'a, Message>(
-        &self,
-        popup: Container<'a, Message>,
-        main_gui: Element<'a, Message>,
-    ) -> Element<'a, Message>
-    where
-        Message: 'a,
-    {
-        stack![main_gui, popup].into()
     }
 
     /// A function that returns the cmd prompt popup ui as a container.
