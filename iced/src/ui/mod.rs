@@ -3,8 +3,8 @@ mod styles;
 use iced::Alignment::End;
 use iced::Element;
 use iced::widget::{
-    Button, Column, Container, button, column, container, mouse_area, row, scrollable, sensor,
-    space, stack, svg, text, text_editor, text_input, tooltip,
+    Button, Column, Container, button, column, container, mouse_area, row, rule, scrollable,
+    sensor, space, stack, svg, text, text_editor, text_input, tooltip,
 };
 use iced::widget::{Id, pick_list};
 use iced::window::Direction::{
@@ -27,6 +27,8 @@ impl App {
 
             let main_col = column![
                 text("Version").size(32),
+                rule::horizontal(2),
+                space().height(15),
                 row![
                     space().width(10),
                     text_editor(&self.contents[0])
@@ -35,6 +37,8 @@ impl App {
                 ],
                 space().height(15),
                 text("Introduction").size(32),
+                rule::horizontal(2),
+                space().height(15),
                 row![
                     space().width(10),
                     text_editor(&self.contents[1])
@@ -43,6 +47,8 @@ impl App {
                 ],
                 space().height(15),
                 text("Description").size(32),
+                rule::horizontal(2),
+                space().height(15),
                 row![
                     space().width(10),
                     text_editor(&self.contents[2])
@@ -51,6 +57,8 @@ impl App {
                 ],
                 space().height(15),
                 text("Check").size(32),
+                rule::horizontal(2),
+                space().height(15),
                 row![
                     space().width(10),
                     text_editor(&self.contents[3])
@@ -59,6 +67,8 @@ impl App {
                 ],
                 space().height(15),
                 text("Fix").size(32),
+                rule::horizontal(2),
+                space().height(15),
                 row![
                     space().width(10),
                     text_editor(&self.contents[4])
@@ -67,6 +77,8 @@ impl App {
                 ],
                 space().height(15),
                 text("Similar Checks").size(32),
+                rule::horizontal(2),
+                space().height(15),
                 row![
                     space().width(10),
                     text_editor(&self.contents[5])
@@ -444,22 +456,27 @@ impl App {
                 Pinned::Not => {
                     not_pin_col.push(Box::new(
                         button(
-                            row![
-                                text(name.to_owned()).center(),
-                                space::horizontal(),
-                                button(
-                                    svg(bookmark_svg_handle.clone())
-                                        .width(32)
-                                        .height(32)
-                                        .style(colored_svg)
-                                )
-                                .padding(2)
-                                .style(no_button)
-                                .on_press(Message::Pin(name.to_owned()))
+                            column![
+                                row![
+                                    text(name.to_owned()).center(),
+                                    space::horizontal(),
+                                    button(
+                                        svg(bookmark_svg_handle.clone())
+                                            .width(32)
+                                            .height(32)
+                                            .style(colored_svg)
+                                    )
+                                    .padding(2)
+                                    .style(no_button)
+                                    .on_press(Message::Pin(name.to_owned()))
+                                ]
+                                .align_y(Center)
+                                .height(Fill),
                             ]
-                            .align_y(Center),
+                            .align_x(Center)
+                            .width(Fill),
                         )
-                        .height(50)
+                        .height(64)
                         .padding(8)
                         .width(Fill)
                         .style(rounded_boring_button)
@@ -469,22 +486,27 @@ impl App {
                 Pinned::ByUser => {
                     user_pin_col.push(Box::new(
                         button(
-                            row![
-                                text(name.to_owned()).center(),
-                                space::horizontal(),
-                                button(
-                                    svg(filled_bookmark_svg_handle.clone())
-                                        .width(32)
-                                        .height(32)
-                                        .style(colored_svg)
-                                )
-                                .padding(2)
-                                .style(no_button)
-                                .on_press(Message::Pin(name.to_owned()))
+                            column![
+                                row![
+                                    text(name.to_owned()).center(),
+                                    space::horizontal(),
+                                    button(
+                                        svg(filled_bookmark_svg_handle.clone())
+                                            .width(32)
+                                            .height(32)
+                                            .style(colored_svg)
+                                    )
+                                    .padding(2)
+                                    .style(no_button)
+                                    .on_press(Message::Pin(name.to_owned()))
+                                ]
+                                .align_y(Center)
+                                .height(Fill),
                             ]
-                            .align_y(Center),
+                            .align_x(Center)
+                            .width(Fill),
                         )
-                        .height(50)
+                        .height(64)
                         .padding(8)
                         .width(Fill)
                         .style(rounded_boring_button)
@@ -494,26 +516,31 @@ impl App {
                 Pinned::ByFilter => {
                     filter_pin_col.push(Box::new(
                         button(
-                            row![
-                                text(name.to_owned()).center(),
-                                space::horizontal(),
-                                svg(filter_svg_handle.clone())
-                                    .width(32)
-                                    .height(32)
-                                    .style(good_svg),
-                                button(
-                                    svg(bookmark_svg_handle.clone())
+                            column![
+                                row![
+                                    text(name.to_owned()).center(),
+                                    space::horizontal(),
+                                    svg(filter_svg_handle.clone())
                                         .width(32)
                                         .height(32)
-                                        .style(colored_svg)
-                                )
-                                .padding(2)
-                                .style(no_button)
-                                .on_press(Message::Pin(name.to_owned()))
+                                        .style(good_svg),
+                                    button(
+                                        svg(bookmark_svg_handle.clone())
+                                            .width(32)
+                                            .height(32)
+                                            .style(colored_svg)
+                                    )
+                                    .padding(2)
+                                    .style(no_button)
+                                    .on_press(Message::Pin(name.to_owned()))
+                                ]
+                                .align_y(Center)
+                                .height(Fill),
                             ]
-                            .align_y(Center),
+                            .align_x(Center)
+                            .width(Fill),
                         )
-                        .height(50)
+                        .height(64)
                         .padding(8)
                         .width(Fill)
                         .style(rounded_boring_button)
@@ -523,26 +550,31 @@ impl App {
                 Pinned::ByFilterAndUser => {
                     filter_user_pin_col.push(Box::new(
                         button(
-                            row![
-                                text(name.to_owned()).center(),
-                                space::horizontal(),
-                                svg(filter_svg_handle.clone())
-                                    .width(32)
-                                    .height(32)
-                                    .style(good_svg),
-                                button(
-                                    svg(filled_bookmark_svg_handle.clone())
+                            column![
+                                row![
+                                    text(name.to_owned()).center(),
+                                    space::horizontal(),
+                                    svg(filter_svg_handle.clone())
                                         .width(32)
                                         .height(32)
-                                        .style(colored_svg)
-                                )
-                                .padding(2)
-                                .style(no_button)
-                                .on_press(Message::Pin(name.to_owned()))
+                                        .style(good_svg),
+                                    button(
+                                        svg(filled_bookmark_svg_handle.clone())
+                                            .width(32)
+                                            .height(32)
+                                            .style(colored_svg)
+                                    )
+                                    .padding(2)
+                                    .style(no_button)
+                                    .on_press(Message::Pin(name.to_owned()))
+                                ]
+                                .align_y(Center)
+                                .height(Fill),
                             ]
-                            .align_y(Center),
+                            .align_x(Center)
+                            .width(Fill),
                         )
-                        .height(50)
+                        .height(64)
                         .padding(8)
                         .width(Fill)
                         .style(rounded_boring_button)
