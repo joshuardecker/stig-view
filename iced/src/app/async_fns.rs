@@ -9,6 +9,7 @@ pub enum FileError {
     FilePick(&'static str),
     NotAStig(&'static str),
     ReadDir(&'static str),
+    DBCacheErr(&'static str),
 }
 
 /// Attempts to open a single file selected by the user using their system file picker.
@@ -32,7 +33,9 @@ pub async fn open_file(db: DB) -> Result<String, FileError> {
 
     let name = stig.version.clone();
 
-    db.insert(name.clone(), Data::new(Arc::new(stig))).await;
+    db.insert(name.clone(), Data::new(Arc::new(stig)))
+        .await
+        .map_err(|_| FileError::DBCacheErr("Error inserting STIG into the DB cache."))?;
 
     Ok(name)
 }
@@ -123,8 +126,14 @@ pub async fn open_folder(db: DB) -> (Option<String>, Option<FileError>) {
                 id = Some(stig.version.clone());
             }
 
-            db.insert(stig.version.clone(), Data::new(Arc::new(stig)))
-                .await;
+            let insert_err = db
+                .insert(stig.version.clone(), Data::new(Arc::new(stig)))
+                .await
+                .map_err(|_| FileError::DBCacheErr("Error inserting STIG into the DB cache."));
+
+            if let Err(insert_err) = insert_err {
+                error = Some(insert_err);
+            }
         }
     }
 

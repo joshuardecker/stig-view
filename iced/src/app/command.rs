@@ -1,5 +1,5 @@
 use regex::Regex;
-use stig_view_core::db::{DB, Data, Pinned};
+use stig_view_core::db::{DB, Pinned};
 
 use crate::app::Command;
 
@@ -50,13 +50,17 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
                             let mut data = data.to_owned();
                             data.set_pin(Pinned::ByFilter);
 
-                            db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data)
+                                .await
+                                .map_err(|_| CommandErr::DBCacheErr)?;
                         }
                         Pinned::ByUser => {
                             let mut data = data.to_owned();
                             data.set_pin(Pinned::ByFilterAndUser);
 
-                            db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data)
+                                .await
+                                .map_err(|_| CommandErr::DBCacheErr)?;
                         }
                         Pinned::ByFilter => (),
                         Pinned::ByFilterAndUser => (),
@@ -71,13 +75,17 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
                             let mut data = data.to_owned();
                             data.set_pin(Pinned::Not);
 
-                            db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data)
+                                .await
+                                .map_err(|_| CommandErr::DBCacheErr)?;
                         }
                         Pinned::ByFilterAndUser => {
                             let mut data = data.to_owned();
                             data.set_pin(Pinned::ByUser);
 
-                            db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data)
+                                .await
+                                .map_err(|_| CommandErr::DBCacheErr)?;
                         }
                     }
                 }
@@ -97,13 +105,17 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
                             let mut data = data.to_owned();
                             data.set_pin(Pinned::ByFilter);
 
-                            db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data)
+                                .await
+                                .map_err(|_| CommandErr::DBCacheErr)?;
                         }
                         Pinned::ByUser => {
                             let mut data = data.to_owned();
                             data.set_pin(Pinned::ByFilterAndUser);
 
-                            db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data)
+                                .await
+                                .map_err(|_| CommandErr::DBCacheErr)?;
                         }
                         Pinned::ByFilter => (),
                         Pinned::ByFilterAndUser => (),
@@ -118,13 +130,17 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
                             let mut data = data.to_owned();
                             data.set_pin(Pinned::Not);
 
-                            db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data)
+                                .await
+                                .map_err(|_| CommandErr::DBCacheErr)?;
                         }
                         Pinned::ByFilterAndUser => {
                             let mut data = data.to_owned();
                             data.set_pin(Pinned::ByUser);
 
-                            db.insert(name.to_owned(), data).await;
+                            db.insert(name.to_owned(), data)
+                                .await
+                                .map_err(|_| CommandErr::DBCacheErr)?;
                         }
                     }
                 }
@@ -141,13 +157,17 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
                         let mut data = data.to_owned();
                         data.set_pin(Pinned::Not);
 
-                        db.insert(name.to_owned(), data).await;
+                        db.insert(name.to_owned(), data)
+                            .await
+                            .map_err(|_| CommandErr::DBCacheErr)?;
                     }
                     Pinned::ByFilterAndUser => {
                         let mut data = data.to_owned();
                         data.set_pin(Pinned::ByUser);
 
-                        db.insert(name.to_owned(), data).await;
+                        db.insert(name.to_owned(), data)
+                            .await
+                            .map_err(|_| CommandErr::DBCacheErr)?;
                     }
                 }
             }

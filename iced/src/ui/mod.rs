@@ -1,7 +1,5 @@
 mod styles;
 
-use std::ops::Shr;
-
 use iced::Alignment::End;
 use iced::Element;
 use iced::widget::{
@@ -12,7 +10,7 @@ use iced::widget::{Id, pick_list};
 use iced::window::Direction::{
     East, North, NorthEast, NorthWest, South, SouthEast, SouthWest, West,
 };
-use iced::{Center, Fill, Left, Shrink};
+use iced::{Center, Fill, Shrink};
 use stig_view_core::db::{DB, Pinned};
 
 use crate::app::*;
@@ -194,85 +192,9 @@ impl App {
     /// A function that returns the cmd prompt popup ui as a container.
     fn command_prompt_popup(&self) -> Container<'_, Message> {
         let right_tick_svg_handle = svg::Handle::from_memory(self.assets.right_tick_svg.clone());
+        let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
 
         let id = Id::new("filter_text_input");
-
-        let prompt_svg: svg::Svg;
-
-        if self.filter_valid {
-            prompt_svg =
-                svg(svg::Handle::from_memory(self.assets.check_svg.clone())).style(good_svg);
-        } else {
-            prompt_svg =
-                svg(svg::Handle::from_memory(self.assets.cross_svg.clone())).style(bad_svg);
-        }
-
-        /*container(
-            sensor(
-                container(
-                    column![
-                        space().height(5),
-                        row![
-                            space().width(1),
-                            text_input(
-                                "Type commands here, then press enter...",
-                                &self.filter_input
-                            )
-                            .on_input(Message::TypeCmd)
-                            .on_submit(Message::ProcessCmd(self.filter_input.clone()))
-                            .id(id.clone()),
-                            space().width(15),
-                            prompt_svg.width(Shrink),
-                        ]
-                        .height(32),
-                        space().height(20),
-                        row![
-                            svg(right_tick_svg_handle.clone())
-                                .style(boring_svg)
-                                .width(Shrink),
-                            space().width(5),
-                            text("(title|name) (...) to filter by title."),
-                        ]
-                        .height(24),
-                        row![
-                            svg(right_tick_svg_handle.clone())
-                                .style(boring_svg)
-                                .width(Shrink),
-                            space().width(5),
-                            text("(search|find) (...) to filter by keywords."),
-                        ]
-                        .height(24),
-                        row![
-                            svg(right_tick_svg_handle.clone())
-                                .style(boring_svg)
-                                .width(Shrink),
-                            space().width(5),
-                            text("(reset) to undo applied filters."),
-                        ]
-                        .height(24),
-                        space().height(15),
-                        row![
-                            svg(right_tick_svg_handle.clone())
-                                .style(boring_svg)
-                                .width(Shrink),
-                            space().width(5),
-                            text("All commands are case sensitive."),
-                        ]
-                        .height(24),
-                        space().height(5),
-                    ]
-                    .align_x(Left),
-                )
-                .width(550)
-                .height(Shrink)
-                .padding(15)
-                .style(cmd_container),
-            )
-            .on_show(move |_| Message::FocusWidget(id.clone())),
-        )
-        .center(Fill);*/
-
-        let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
 
         container(
             sensor(

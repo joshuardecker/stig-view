@@ -1,4 +1,3 @@
-use iced::Element;
 use iced::Subscription;
 use iced::Task;
 use iced::color;
@@ -121,7 +120,8 @@ impl App {
                             FileError::HomeDir(err_msg) => Message::SendErrNotif(err_msg),
                             FileError::FilePick(err_msg) => Message::SendErrNotif(err_msg),
                             FileError::NotAStig(err_msg) => Message::SendErrNotif(err_msg),
-                            _ => unreachable!(),
+                            FileError::ReadDir(_) => Message::DoNothing,
+                            FileError::DBCacheErr(err_msg) => Message::SendErrNotif(err_msg),
                         },
                     }
                 })
@@ -137,14 +137,16 @@ impl App {
                         (Some(id), Some(err)) => match err {
                             FileError::HomeDir(err_msg) => Message::SwitchWithError(id, err_msg),
                             FileError::FilePick(err_msg) => Message::SwitchWithError(id, err_msg),
+                            FileError::NotAStig(_) => Message::DoNothing,
                             FileError::ReadDir(err_msg) => Message::SwitchWithError(id, err_msg),
-                            _ => unreachable!(),
+                            FileError::DBCacheErr(err_msg) => Message::SendErrNotif(err_msg),
                         },
                         (None, Some(err)) => match err {
                             FileError::HomeDir(err_msg) => Message::SendErrNotif(err_msg),
                             FileError::FilePick(err_msg) => Message::SendErrNotif(err_msg),
+                            FileError::NotAStig(_) => Message::DoNothing,
                             FileError::ReadDir(err_msg) => Message::SendErrNotif(err_msg),
-                            _ => unreachable!(),
+                            FileError::DBCacheErr(err_msg) => Message::SendErrNotif(err_msg),
                         },
                         (None, None) => Message::DoNothing,
                     }
@@ -274,7 +276,11 @@ impl App {
                             Pinned::ByFilterAndUser => stig.set_pin(Pinned::ByFilter),
                         }
 
-                        db.insert(id, stig).await;
+                        let insert_err = db.insert(id, stig).await;
+
+                        if let Err(_) = insert_err {
+                            return Message::SendErrNotif("DB cache error when pinning a STIG.");
+                        }
                     }
 
                     Message::DoNothing
