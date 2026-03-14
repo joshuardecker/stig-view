@@ -14,4 +14,4 @@ image = "0.25.9"
 regex = "1.12.2"
 rfd = "0.17.2"
 dirs = "6"
-tokio = { version = "1.49.0", features = ["sync", "rt"]}
+tokio = { version = "1.49.0", features = ["sync", "fs"]}

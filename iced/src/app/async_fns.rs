@@ -76,36 +76,44 @@ pub async fn open_folder(db: DB) -> (Option<String>, Option<FileError>) {
 
     // While there is still a dir to look through.
     while !dirs_to_load.is_empty() {
-        // Remov and read this dir from the list at the same time.
+        // Remove and read this dir from the list at the same time.
         let path = dirs_to_load.swap_remove(0);
-        let read_dir = path.read_dir();
 
-        if let Err(_) = read_dir {
-            error = Some(FileError::ReadDir("Error when reading a directory."));
-            continue;
-        }
-
-        // Go through every entry in this dir.
-        for entry in read_dir.unwrap() {
-            // Safe unwrap call.
-            if let Err(_) = entry {
+        let mut read_dir = match tokio::fs::read_dir(&path).await {
+            Ok(rd) => rd,
+            Err(_) => {
                 error = Some(FileError::ReadDir("Error when reading a directory."));
                 continue;
             }
+        };
 
-            let entry = entry.unwrap(); // Safe unwrap call.
+        // Go through every entry in this dir.
+        loop {
+            match read_dir.next_entry().await {
+                Ok(Some(entry)) => {
+                    let is_dir = entry
+                        .file_type()
+                        .await
+                        .map(|ft| ft.is_dir())
+                        .unwrap_or(false);
 
-            if entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false) {
-                dirs_to_load.push(entry.path());
-                continue;
-            }
+                    if is_dir {
+                        dirs_to_load.push(entry.path());
+                        continue;
+                    }
 
-            let entry_path = entry.path();
+                    let entry_path = entry.path();
 
-            // If its a txt file.
-            if entry_path.extension().unwrap_or_default() == "txt" {
-                txt_files.push(entry_path.as_path().to_path_buf());
-                continue;
+                    // If its a txt file.
+                    if entry_path.extension().unwrap_or_default() == "txt" {
+                        txt_files.push(entry_path);
+                    }
+                }
+                Ok(None) => break,
+                Err(_) => {
+                    error = Some(FileError::ReadDir("Error when reading a directory."));
+                    break;
+                }
             }
         }
     }

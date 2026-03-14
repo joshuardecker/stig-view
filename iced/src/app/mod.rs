@@ -11,6 +11,7 @@ use iced::widget::Id;
 use iced::widget::text_editor::{Action, Content};
 use iced::window;
 use iced::window::Direction;
+use iced::{Task, task::Handle};
 use std::sync::Arc;
 use stig_view_core::db::DB;
 use stig_view_core::stig::Stig;
@@ -27,6 +28,7 @@ pub struct App {
     pub assets: Assets,
     pub window_id: Option<window::Id>,
     pub current_theme: Option<AppTheme>,
+    pub load_handle: Option<Handle>,
 }
 
 #[derive(Debug, Clone)]

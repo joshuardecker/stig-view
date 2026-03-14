@@ -1,5 +1,4 @@
 use iced::Subscription;
-use iced::Task;
 use iced::color;
 use iced::theme::{Custom, Palette, Theme};
 use iced::window::icon::from_file_data;
@@ -32,6 +31,7 @@ impl App {
                 assets: Assets::new(),
                 window_id: None,
                 current_theme: Some(AppTheme::Dark),
+                load_handle: None,
             },
             window::oldest().map(Message::InitWindow),
         )
@@ -96,7 +96,13 @@ impl App {
                     ),
                 ])
             }
-            Message::WindowClose => iced::exit(),
+            Message::WindowClose => {
+                if let Some(handle) = self.load_handle.take() {
+                    handle.abort();
+                }
+
+                iced::exit()
+            }
             Message::WindowMin => window::minimize(self.window_id.unwrap(), true),
             Message::WindowFullscreenToggle => window::toggle_maximize(self.window_id.unwrap()),
             Message::WindowMove => window::drag(self.window_id.unwrap()),
@@ -129,7 +135,19 @@ impl App {
             Message::OpenFolder => {
                 let db = self.db.clone();
 
-                Task::future(async move {
+                if let Some(handle) = self.load_handle.take() {
+                    handle.abort();
+                }
+
+                let (task, handle) = Task::future(async move {
+                    let err = db.clean().await;
+
+                    match err {
+                        Ok(_) => (),
+                        Err(DBErr::CacheErr(err_str)) => return Message::SendErrNotif(err_str),
+                        Err(DBErr::NoFirstEntry(_)) => (),
+                    }
+
                     let (id, error) = open_folder(db).await;
 
                     match (id, error) {
@@ -151,6 +169,11 @@ impl App {
                         (None, None) => Message::DoNothing,
                     }
                 })
+                .abortable();
+
+                self.load_handle = Some(handle);
+
+                task
             }
 
             Message::SelectContent(action, slot) => {
@@ -366,7 +389,7 @@ impl App {
                     modifiers,
                     ..
                 } => match key_smolstr.as_str() {
-                    "q" if modifiers.control() => return iced::exit(),
+                    "q" if modifiers.control() => return Task::done(Message::WindowClose),
                     "i" if modifiers.control() => return Task::done(Message::OpenFile),
                     "o" if modifiers.control() => return Task::done(Message::OpenFolder),
                     "p" if modifiers.control() => {

@@ -1,7 +1,7 @@
 # TODO
 
 ## 0.2
-- [ ] Replace synchronous `std::fs::read_dir` in `iced/src/app/async_fns.rs` with `tokio::fs::read_dir` so the directory scan task is cancellable on shutdown, fixing the app freeze when quitting during a folder load.
+- [x] Replace synchronous `std::fs::read_dir` in `iced/src/app/async_fns.rs` with `tokio::fs::read_dir` so the directory scan task is cancellable on shutdown, fixing the app freeze when quitting during a folder load.
 - [x] Add a settings menu, initially supporting theme switching only.
 - [x] Add error notification display to the GUI (`ErrNotif` state is already set but never rendered).
 - [x] Add window click and drag resizing functionality.
