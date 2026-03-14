@@ -14,6 +14,7 @@ pub struct DB {
 #[derive(Debug, Clone)]
 pub enum DBErr {
     CacheErr(&'static str),
+    NoFirstEntry(&'static str),
 }
 
 impl DB {
@@ -57,6 +58,24 @@ impl DB {
                 DBErr::CacheErr("DB cache error. If this error persists, restart the application.")
             })?
             .clone())
+    }
+
+    /// Get the first item from the data base cache.
+    /// This will result in either the first filtered STIG,
+    /// or just the first STIG sorted by version.
+    pub fn first_snapshot(&self) -> Result<Data, DBErr> {
+        if let Some((_key, value)) = self
+            .cache
+            .read()
+            .map_err(|_| {
+                DBErr::CacheErr("DB cache error. If this error persists, restart the application.")
+            })?
+            .first_key_value()
+        {
+            Ok(value.to_owned())
+        } else {
+            Err(DBErr::NoFirstEntry("No first entry found in the cache."))
+        }
     }
 
     /// Completely clean out the database of all entries.
