@@ -204,6 +204,7 @@ impl App {
                         let snapshot = match maybe_snapshot {
                             Ok(snapshot) => snapshot,
                             Err(DBErr::CacheErr(err_str)) => return Message::SendErrNotif(err_str),
+                            Err(DBErr::NoFirstEntry(_)) => return Message::DoNothing,
                         };
 
                         let mut iter = snapshot.iter();
@@ -307,16 +308,24 @@ impl App {
             }
             Message::ProcessCmd(command_str) => {
                 let db = self.db.clone();
+                let displayed = self.displayed.clone();
 
                 Task::future(async move {
                     let command = parse_command(&command_str);
 
                     match command {
                         Ok(command) => {
-                            let err = run_search_cmd(command, db).await;
+                            let err = run_search_cmd(command.clone(), db.clone()).await;
 
                             if err.is_err() {
                                 return Message::SendErrNotif("Error when running the command.");
+                            }
+
+                            // If the user resets the filter, dont continue with the following logic
+                            // and move the display STIG to a different STIG.
+                            // Only do that when runnning a sort command.
+                            if let Command::Reset = command {
+                                return Message::DoNothing;
                             }
                         }
                         Err(e) => match e {
@@ -327,7 +336,27 @@ impl App {
                         },
                     }
 
-                    Message::DoNothing
+                    // Get the displayed STIG, if its already pinned, dont switch which STIG is viewed.
+                    if let Some(stig) = displayed {
+                        let data = db.get(&stig.version).await;
+
+                        if let Some(data) = data {
+                            match data.get_pin() {
+                                Pinned::ByFilter => return Message::DoNothing,
+                                Pinned::ByFilterAndUser => return Message::DoNothing,
+                                _ => (), // continue if not above options.
+                            }
+                        }
+                    }
+
+                    let stig = db.first_snapshot();
+
+                    // Auto switch to the first STIG pinned by the filter and or user.
+                    match stig {
+                        Ok(stig) => Message::Switch(stig.get_stig().version.clone()),
+                        Err(DBErr::CacheErr(err_str)) => Message::SendErrNotif(err_str),
+                        Err(DBErr::NoFirstEntry(_)) => Message::DoNothing,
+                    }
                 })
             }
 
