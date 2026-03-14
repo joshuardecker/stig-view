@@ -58,3 +58,7 @@ Planned work is tracked in `TODO.md` at the repo root, organized by release vers
 ## Platform Notes
 
 The project is intended to be cross-platform, but currently only builds for Linux due to testing and deployment limitations. macOS and Windows support is planned but not yet actively maintained.
+
+### Windows Code Signing
+
+Preferred signing path (in order): **SignPath Foundation** (free, open-source projects on GitHub) → **Azure Trusted Signing** (~$10/month, Microsoft's own CA, ephemeral certs, good SmartScreen integration) → **SSL.com OV with eSigner** (~$200/yr, traditional CA, cloud signing, no USB token). SSL.com is the last-resort fallback if both of the above are unavailable or insufficient. All three support cloud signing compatible with GitHub Actions hosted runners.
