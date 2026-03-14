@@ -118,7 +118,7 @@ impl App {
                         Ok(id) => Message::Switch(id),
                         Err(e) => match e {
                             FileError::HomeDir(err_msg) => Message::SendErrNotif(err_msg),
-                            FileError::FilePick(err_msg) => Message::SendErrNotif(err_msg),
+                            FileError::UserExitedSelect => Message::DoNothing, // Do nothing when the user backs out of selecting a file.
                             FileError::NotAStig(err_msg) => Message::SendErrNotif(err_msg),
                             FileError::ReadDir(_) => Message::DoNothing,
                             FileError::DBCacheErr(err_msg) => Message::SendErrNotif(err_msg),
@@ -136,14 +136,14 @@ impl App {
                         (Some(id), None) => Message::Switch(id),
                         (Some(id), Some(err)) => match err {
                             FileError::HomeDir(err_msg) => Message::SwitchWithError(id, err_msg),
-                            FileError::FilePick(err_msg) => Message::SwitchWithError(id, err_msg),
+                            FileError::UserExitedSelect => Message::DoNothing, // Do nothing when the user backs out of selecting a file.
                             FileError::NotAStig(_) => Message::DoNothing,
                             FileError::ReadDir(err_msg) => Message::SwitchWithError(id, err_msg),
                             FileError::DBCacheErr(err_msg) => Message::SendErrNotif(err_msg),
                         },
                         (None, Some(err)) => match err {
                             FileError::HomeDir(err_msg) => Message::SendErrNotif(err_msg),
-                            FileError::FilePick(err_msg) => Message::SendErrNotif(err_msg),
+                            FileError::UserExitedSelect => Message::DoNothing, // Do nothing when the user backs out of selecting a file.
                             FileError::NotAStig(_) => Message::DoNothing,
                             FileError::ReadDir(err_msg) => Message::SendErrNotif(err_msg),
                             FileError::DBCacheErr(err_msg) => Message::SendErrNotif(err_msg),
@@ -257,6 +257,11 @@ impl App {
                 if let ErrNotif::None = self.err_notif {
                     self.err_notif = ErrNotif::Err(err_str);
                 }
+
+                Task::none()
+            }
+            Message::ClearErrNotif => {
+                self.err_notif = ErrNotif::None;
 
                 Task::none()
             }

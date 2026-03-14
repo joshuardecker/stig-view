@@ -73,6 +73,7 @@ pub enum Message {
     SwitchPopup(Popup),
 
     SendErrNotif(&'static str),
+    ClearErrNotif,
 
     Pin(String),
 

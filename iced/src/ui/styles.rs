@@ -128,15 +128,6 @@ pub fn colored_svg(theme: &Theme, status: svg::Status) -> svg::Style {
     }
 }
 
-/// A svg with the primary color, just saturated.
-pub fn saturated_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
-    let palette = theme.extended_palette();
-
-    svg::Style {
-        color: Some(palette.primary.strong.color),
-    }
-}
-
 /// A svg with the background color.
 pub fn boring_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
     let palette = theme.extended_palette();
@@ -156,11 +147,16 @@ pub fn good_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
 }
 
 /// A svg with the danger color.
-pub fn bad_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
+pub fn bad_svg(theme: &Theme, status: svg::Status) -> svg::Style {
     let palette = theme.extended_palette();
 
-    svg::Style {
-        color: Some(palette.danger.base.color),
+    match status {
+        svg::Status::Hovered => svg::Style {
+            color: Some(palette.background.base.text),
+        },
+        _ => svg::Style {
+            color: Some(palette.danger.base.color),
+        },
     }
 }
 
@@ -211,6 +207,27 @@ pub fn cmd_container(theme: &Theme) -> container::Style {
         background: Some(palette.background.strong.color.into()),
         border: Border {
             color: palette.background.weak.color,
+            width: 0.0,
+            radius: BORDER_RAD.into(),
+        },
+        shadow: Shadow {
+            color: palette.background.base.color,
+            offset: iced::Vector::ZERO,
+            blur_radius: 8.0,
+        },
+        snap: false,
+    }
+}
+
+/// The container style the err notification has.
+pub fn err_container(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
+    container::Style {
+        text_color: Some(palette.background.base.text),
+        background: Some(palette.danger.base.color.into()),
+        border: Border {
+            color: palette.danger.base.color,
             width: 0.0,
             radius: BORDER_RAD.into(),
         },

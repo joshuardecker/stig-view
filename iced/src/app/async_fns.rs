@@ -6,7 +6,7 @@ use stig_view_core::stig::Stig;
 #[derive(Debug, Clone)]
 pub enum FileError {
     HomeDir(&'static str),
-    FilePick(&'static str),
+    UserExitedSelect,
     NotAStig(&'static str),
     ReadDir(&'static str),
     DBCacheErr(&'static str),
@@ -25,7 +25,7 @@ pub async fn open_file(db: DB) -> Result<String, FileError> {
         .set_title("Stig View - Select File")
         .pick_file()
         .await
-        .ok_or(FileError::FilePick("Error loading selected file."))?;
+        .ok_or(FileError::UserExitedSelect)?;
 
     let stig = Stig::from_xylok_txt(file_handle.path()).ok_or(FileError::NotAStig(
         "Selected file could not be loaded as a STIG.",
@@ -63,10 +63,7 @@ pub async fn open_folder(db: DB) -> (Option<String>, Option<FileError>) {
         .await;
 
     if folder_handle.is_none() {
-        return (
-            None,
-            Some(FileError::FilePick("Error loading selected folder.")),
-        );
+        return (None, Some(FileError::UserExitedSelect));
     }
 
     // Initialize variables that will be modified in the loop:

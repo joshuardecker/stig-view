@@ -2,6 +2,7 @@ mod styles;
 
 use iced::Alignment::End;
 use iced::Element;
+use iced::alignment::Horizontal::Right;
 use iced::widget::{
     Button, Column, Container, button, column, container, mouse_area, row, rule, scrollable,
     sensor, space, stack, svg, text, text_editor, text_input, tooltip,
@@ -92,27 +93,63 @@ impl App {
 
             let main_gui = self.main_gui(self.window_decorations(), list_col, main_col);
 
-            match self.popup {
-                Popup::Filter => self.get_stack(self.command_prompt_popup(), main_gui),
-                Popup::Settings => self.get_stack(self.settings_menu(), main_gui),
-                Popup::None => main_gui,
+            match (self.popup.clone(), self.err_notif.clone()) {
+                (Popup::None, ErrNotif::None) => main_gui,
+                (Popup::Filter, ErrNotif::None) => {
+                    stack![main_gui, self.command_prompt_popup()].into()
+                }
+                (Popup::Settings, ErrNotif::None) => stack![main_gui, self.settings_menu()].into(),
+
+                (Popup::None, ErrNotif::Err(err_str)) => {
+                    stack![main_gui, self.error_notification(err_str.to_owned())].into()
+                }
+                (Popup::Filter, ErrNotif::Err(err_str)) => stack![
+                    main_gui,
+                    self.command_prompt_popup(),
+                    self.error_notification(err_str.to_owned())
+                ]
+                .into(),
+                (Popup::Settings, ErrNotif::Err(err_str)) => stack![
+                    main_gui,
+                    self.settings_menu(),
+                    self.error_notification(err_str.to_owned())
+                ]
+                .into(),
             }
         } else {
             let list_col = column![space::vertical()];
             let main_col = column![
-                space().height(300),
-                text("Open a file or folder to get started.")
-                    .width(Fill)
-                    .center()
-                    .size(24),
-            ];
+                row![text("Open a file or folder to get started.").size(24)]
+                    .align_y(Center)
+                    .height(Fill),
+            ]
+            .align_x(Center)
+            .width(Fill);
 
             let main_gui = self.main_gui(self.window_decorations(), list_col, main_col);
 
-            match self.popup {
-                Popup::Filter => self.get_stack(self.command_prompt_popup(), main_gui),
-                Popup::Settings => self.get_stack(self.settings_menu(), main_gui),
-                Popup::None => main_gui,
+            match (self.popup.clone(), self.err_notif.clone()) {
+                (Popup::None, ErrNotif::None) => main_gui,
+                (Popup::Filter, ErrNotif::None) => {
+                    stack![main_gui, self.command_prompt_popup()].into()
+                }
+                (Popup::Settings, ErrNotif::None) => stack![main_gui, self.settings_menu()].into(),
+
+                (Popup::None, ErrNotif::Err(err_str)) => {
+                    stack![main_gui, self.error_notification(err_str.to_owned())].into()
+                }
+                (Popup::Filter, ErrNotif::Err(err_str)) => stack![
+                    main_gui,
+                    self.command_prompt_popup(),
+                    self.error_notification(err_str.to_owned())
+                ]
+                .into(),
+                (Popup::Settings, ErrNotif::Err(err_str)) => stack![
+                    main_gui,
+                    self.settings_menu(),
+                    self.error_notification(err_str.to_owned())
+                ]
+                .into(),
             }
         }
     }
@@ -324,6 +361,40 @@ impl App {
             .style(cmd_container),
         )
         .center(Fill)
+    }
+
+    fn error_notification(&self, err_str: String) -> Container<'_, Message> {
+        let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
+
+        container(
+            container(
+                column![
+                    row![
+                        space::horizontal(),
+                        space().width(13),
+                        text("Error Occurred"),
+                        space::horizontal(),
+                        button(svg(cross_svg_handle).style(boring_svg).width(25).height(25))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::ClearErrNotif),
+                    ]
+                    .align_y(Center),
+                    space().height(10),
+                    row![text(err_str).size(12).height(Fill)].align_y(Center)
+                ]
+                .align_x(Center),
+            )
+            .width(250)
+            .height(100)
+            .padding(15)
+            .style(err_container),
+        )
+        .align_right(Fill)
+        .align_bottom(Fill)
+        .padding(30)
     }
 
     /// Return the window decorations container.
