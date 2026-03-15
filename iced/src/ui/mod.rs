@@ -336,7 +336,7 @@ impl App {
                     row![
                         text("Theme"),
                         space::horizontal(),
-                        pick_list(themes, self.current_theme, Message::SwitchTheme),
+                        pick_list(themes, Some(self.settings.theme), Message::SwitchTheme),
                     ]
                     .align_y(Center)
                 ]

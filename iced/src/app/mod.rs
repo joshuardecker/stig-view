@@ -12,6 +12,7 @@ use iced::widget::text_editor::{Action, Content};
 use iced::window;
 use iced::window::Direction;
 use iced::{Task, task::Handle};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use stig_view_core::db::DB;
 use stig_view_core::stig::Stig;
@@ -27,7 +28,7 @@ pub struct App {
     pub err_notif: ErrNotif,
     pub assets: Assets,
     pub window_id: Option<window::Id>,
-    pub current_theme: Option<AppTheme>,
+    pub settings: AppSettings,
     pub load_handle: Option<Handle>,
 }
 
@@ -86,6 +87,8 @@ pub enum Message {
 
     KeyPressed(keyboard::Event),
 
+    SaveSettings,
+
     DoNothing,
 }
 
@@ -99,7 +102,7 @@ pub enum ContentSlot {
     SimilarChecks = 5,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub enum AppTheme {
     Dark,
     Light,
@@ -111,5 +114,66 @@ impl std::fmt::Display for AppTheme {
             AppTheme::Dark => "Dark",
             AppTheme::Light => "Light",
         })
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AppSettings {
+    pub theme: AppTheme,
+}
+
+#[derive(Debug, Clone)]
+pub enum AppSettingsErr {
+    CantSave(&'static str),
+}
+
+impl AppSettings {
+    pub fn default() -> Self {
+        Self {
+            theme: AppTheme::Dark,
+        }
+    }
+
+    /// Save app settings in the users config directory.
+    pub fn save(settings: AppSettings) -> Result<(), AppSettingsErr> {
+        use std::fs::File;
+        use std::io::Write;
+
+        let mut save_dir = dirs::config_local_dir().ok_or(AppSettingsErr::CantSave(
+            "Couldn't locate config directory.",
+        ))?;
+
+        save_dir.push("stig-view-settings.toml");
+
+        let settings_str = toml::to_string(&settings)
+            .map_err(|_| AppSettingsErr::CantSave("Couldn't save user settings."))?;
+
+        let mut file = File::create(save_dir)
+            .map_err(|_| AppSettingsErr::CantSave("Error creating settings.toml save file."))?;
+
+        let err = write!(file, "{}", settings_str);
+
+        if err.is_err() {
+            return Err(AppSettingsErr::CantSave(
+                "Error writing settings to settings.toml",
+            ));
+        }
+
+        Ok(())
+    }
+
+    /// Load app settings. No errors, just returns None if it could not find the settings.
+    pub fn load() -> Option<Self> {
+        use std::fs::read_to_string;
+
+        let mut save_dir = dirs::config_local_dir()?;
+
+        save_dir.push("stig-view-settings.toml");
+
+        let settings_str = read_to_string(save_dir).ok()?;
+
+        let settings: AppSettings = toml::from_str(&settings_str).ok()?;
+
+        Some(settings)
     }
 }

@@ -12,6 +12,8 @@ use crate::app::*;
 
 impl App {
     pub fn new() -> (Self, Task<Message>) {
+        let settings = AppSettings::load().unwrap_or(AppSettings::default());
+
         (
             Self {
                 db: DB::new(),
@@ -30,7 +32,7 @@ impl App {
                 err_notif: ErrNotif::None,
                 assets: Assets::new(),
                 window_id: None,
-                current_theme: Some(AppTheme::Dark),
+                settings: settings,
                 load_handle: None,
             },
             window::oldest().map(Message::InitWindow),
@@ -42,16 +44,7 @@ impl App {
     }
 
     pub fn theme(&self) -> Theme {
-        let theme_to_match;
-
-        if let Some(theme) = &self.current_theme {
-            theme_to_match = theme.clone();
-        } else {
-            // Default to dark theme.
-            theme_to_match = AppTheme::Dark;
-        }
-
-        let (palette, name) = match theme_to_match {
+        let (palette, name) = match self.settings.theme {
             AppTheme::Dark => (
                 Palette {
                     background: color!(0x1B1C1C),
@@ -109,9 +102,9 @@ impl App {
             Message::WindowDragResize(dir) => window::drag_resize(self.window_id.unwrap(), dir),
 
             Message::SwitchTheme(theme) => {
-                self.current_theme = Some(theme);
+                self.settings.theme = theme;
 
-                Task::none()
+                Task::done(Message::SaveSettings)
             }
 
             Message::OpenFile => {
@@ -409,6 +402,17 @@ impl App {
 
                 _ => Task::none(),
             },
+
+            Message::SaveSettings => {
+                let err = AppSettings::save(self.settings.clone());
+
+                match err {
+                    Ok(_) => Task::none(),
+                    Err(AppSettingsErr::CantSave(err_str)) => {
+                        Task::done(Message::SendErrNotif(err_str))
+                    }
+                }
+            }
 
             Message::DoNothing => Task::none(),
         }
