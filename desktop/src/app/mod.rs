@@ -23,7 +23,6 @@ pub struct App {
     pub displayed: Option<Arc<Stig>>,
     pub contents: [Content; 6],
     pub filter_input: String,
-    pub filter_valid: bool,
     pub popup: Popup,
     pub err_notif: ErrNotif,
     pub assets: Assets,

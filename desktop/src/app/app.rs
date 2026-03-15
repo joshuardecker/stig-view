@@ -27,7 +27,6 @@ impl App {
                     Content::new(),
                 ],
                 filter_input: String::new(),
-                filter_valid: false,
                 popup: Popup::None,
                 err_notif: ErrNotif::None,
                 assets: Assets::new(),
@@ -96,10 +95,36 @@ impl App {
 
                 iced::exit()
             }
-            Message::WindowMin => window::minimize(self.window_id.unwrap(), true),
-            Message::WindowFullscreenToggle => window::toggle_maximize(self.window_id.unwrap()),
-            Message::WindowMove => window::drag(self.window_id.unwrap()),
-            Message::WindowDragResize(dir) => window::drag_resize(self.window_id.unwrap(), dir),
+            Message::WindowMin => {
+                if let Some(id) = self.window_id {
+                    window::minimize(id, true)
+                } else {
+                    Task::done(Message::SendErrNotif("Cant get window Id to minimize."))
+                }
+            }
+            Message::WindowFullscreenToggle => {
+                if let Some(id) = self.window_id {
+                    window::toggle_maximize(id)
+                } else {
+                    Task::done(Message::SendErrNotif(
+                        "Cant get window Id to toggle fullscreen.",
+                    ))
+                }
+            }
+            Message::WindowMove => {
+                if let Some(id) = self.window_id {
+                    window::drag(id)
+                } else {
+                    Task::done(Message::SendErrNotif("Cant get window Id to move."))
+                }
+            }
+            Message::WindowDragResize(dir) => {
+                if let Some(id) = self.window_id {
+                    window::drag_resize(id, dir)
+                } else {
+                    Task::done(Message::SendErrNotif("Cant get window Id to move."))
+                }
+            }
 
             Message::SwitchTheme(theme) => {
                 self.settings.theme = theme;
@@ -313,12 +338,6 @@ impl App {
 
             Message::TypeCmd(filter_input) => {
                 self.filter_input = filter_input;
-
-                if let Ok(_) = parse_command(&self.filter_input) {
-                    self.filter_valid = true;
-                } else {
-                    self.filter_valid = false;
-                }
 
                 Task::none()
             }

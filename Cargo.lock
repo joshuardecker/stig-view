@@ -3502,18 +3502,6 @@ dependencies = [
 name = "stig-view-desktop"
 version = "0.1.1"
 dependencies = [
- "iced",
- "image",
- "regex",
- "rfd",
- "stig-view-core",
- "tokio",
-]
-
-[[package]]
-name = "stig-view-iced"
-version = "0.1.1"
-dependencies = [
  "dirs",
  "iced",
  "image",

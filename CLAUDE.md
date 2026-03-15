@@ -24,19 +24,20 @@ cargo build
 
 ## Architecture
 
-The repo is a Cargo workspace with three crates:
+The repo is a Cargo workspace with two crates:
 
 - **`core/`** (`stig-view-core`) — Business logic only, no GUI dependencies
   - `stig.rs`: `Stig` struct + `Stig::from_xylok_txt()` regex parser (extracts version, intro, desc, check_text, fix_text, similar_checks)
   - `db.rs`: Async in-memory database (`DB`) using `tokio::sync::RwLock` + `BTreeMap`, keyed by STIG version string. Tracks pinned state per entry.
 
 - **`desktop/`** (`stig-view-desktop`) — The primary application, built with Iced 0.14
-  - `app.rs`: `App` state struct, `Message` enum for all UI events, keyboard shortcuts, file/folder loading (`load_dir()` recursively walks directories), command parsing (`parse_command()`), search/filter logic
-  - `ui.rs`: All Iced view rendering — sidebar STIG list, 6 read-only text editors for STIG content sections, command prompt popup, custom title bar
-  - `styles.rs`: Iced theme overrides (buttons, containers, SVG tinting)
-  - `preload_assets.rs`: SVG icons and app icon embedded as binary via `include_bytes!`
-
-- **`iced/`** — Experimental/alternative implementation, not the primary build target
+  - `app/mod.rs`: `App` state struct, `Message` enum, `AppSettings` (persist/load via `config_local_dir()`), `AppTheme`, `Popup`, `ErrNotif`, `Command` enums
+  - `app/app.rs`: Iced `Application` impl — `update()`, `subscription()`, keyboard shortcuts, file/folder loading
+  - `app/async_fns.rs`: Async directory walk using `tokio::fs::read_dir` (cancellable)
+  - `app/command.rs`: Command parsing (`parse_command()`) for filter/search/reset
+  - `app/assets.rs`: SVG icons and app icon embedded as binary via `include_bytes!`
+  - `ui/mod.rs`: All Iced view rendering — sidebar STIG list, 6 read-only text editors for STIG content sections, command prompt popup, settings menu, error notification, custom title bar with drag-resize support
+  - `ui/styles.rs`: Iced theme overrides (buttons, containers, SVG tinting)
 
 ## Key Behaviors
 

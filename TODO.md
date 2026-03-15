@@ -5,7 +5,7 @@
 - [x] Add a settings menu, initially supporting theme switching only.
 - [x] Add error notification display to the GUI (`ErrNotif` state is already set but never rendered).
 - [x] Add window click and drag resizing functionality.
-- [ ] Remove legacy `/desktop` crate once `/iced` is fully stable and ready to replace it.
+- [x] Remove legacy `/desktop` crate once `/iced` is fully stable and ready to replace it.
 - [x] Fix cancelling the file/folder picker incorrectly triggering an error notification.
 - [x] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
 - [x] Show both the filter icon and bookmark icon simultaneously in the STIG list, rather than replacing the bookmark with the filter icon when a STIG is matched.
