@@ -384,6 +384,7 @@ impl App {
                         }
                     }
 
+                    // TODO: fix this logic. First in the db doesnt mean first filtered STIG.
                     let stig = db.first_snapshot();
 
                     // Auto switch to the first STIG pinned by the filter and or user.

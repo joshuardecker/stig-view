@@ -7,13 +7,13 @@
 - [x] Add window click and drag resizing functionality.
 - [x] Remove legacy `/desktop` crate once `/iced` is fully stable and ready to replace it.
 - [x] Fix cancelling the file/folder picker incorrectly triggering an error notification.
-- [x] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
 - [x] Show both the filter icon and bookmark icon simultaneously in the STIG list, rather than replacing the bookmark with the filter icon when a STIG is matched.
 - [x] Persist user settings (e.g. theme) between sessions using a `config.toml` stored in `{config_dir}/stig-view/`. Use `dirs::config_dir()` for cross-platform and Flatpak-compatible path resolution. Fall back to defaults on first launch and write the config on save.
 - [x] Implement the settings menu (see separate settings menu item above), then remove the `todo!()` panic in `Popup::Settings` match arm in `iced/src/ui/mod.rs`.
 
 ## 0.3
 - [ ] Refactor the STIG loading pipeline in `/core` — decouple `Stig` parsing from the Xylok format so multiple parsers can feed into the same pipeline cleanly before a second format is added.
+- [ ] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
 - [ ] Add file format detection when loading files/folders so the app can route each file to the correct parser. Currently all files are silently skipped if they fail the Xylok regex, which breaks once a second format exists.
 - [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, in addition to the existing Xylok internal format.
 - [ ] Set up a clean pattern for composing multiple time subscriptions in `subscription()` before animations and loading indicators are both active simultaneously.
