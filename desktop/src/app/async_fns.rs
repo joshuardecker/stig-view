@@ -1,7 +1,7 @@
 use rfd::AsyncFileDialog;
 use std::sync::Arc;
 use stig_view_core::db::{DB, Data};
-use stig_view_core::stig::Stig;
+use stig_view_core::stig_dep::Stig;
 
 #[derive(Debug, Clone)]
 pub enum FileError {

@@ -15,7 +15,7 @@ use iced::{Task, task::Handle};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use stig_view_core::db::DB;
-use stig_view_core::stig::Stig;
+use stig_view_core::stig_dep::Stig;
 
 #[derive(Debug, Clone)]
 pub struct App {

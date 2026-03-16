@@ -2,11 +2,13 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 use tokio::sync::RwLock as AsyncRwLock;
 
-use crate::stig_dep::Stig;
+use crate::stig::{Benchmark, Rule};
 
 /// A memory based data base for storing stigs.
 #[derive(Debug, Clone)]
 pub struct DB {
+    benchmark: Arc<AsyncRwLock<Option<Benchmark>>>,
+
     data: Arc<AsyncRwLock<BTreeMap<String, Data>>>,
     cache: Arc<RwLock<BTreeMap<String, Data>>>,
 }
@@ -21,6 +23,8 @@ impl DB {
     /// Create a new memory database.
     pub fn new() -> Self {
         Self {
+            benchmark: Arc::new(AsyncRwLock::new(None)),
+
             data: Arc::new(AsyncRwLock::new(BTreeMap::new())),
             cache: Arc::new(RwLock::new(BTreeMap::new())),
         }
@@ -28,9 +32,9 @@ impl DB {
 
     /// Insert a stig into the database.
     /// Name is equivalent to stig version.
-    pub async fn insert(&self, name: String, data: Data) -> Result<(), DBErr> {
+    pub async fn insert(&self, group_id: String, data: Data) -> Result<(), DBErr> {
         let mut btree = self.data.write().await;
-        btree.insert(name, data);
+        btree.insert(group_id, data);
         *self.cache.write().map_err(|_| {
             DBErr::CacheErr("DB cache error. If this error persists, restart the application.")
         })? = btree.clone();
@@ -39,10 +43,10 @@ impl DB {
     }
 
     /// Get an element from the database.
-    pub async fn get(&self, name: &str) -> Option<Data> {
+    pub async fn get(&self, group_id: &str) -> Option<Data> {
         let btree = self.data.read().await;
 
-        let data = btree.get(name)?;
+        let data = btree.get(group_id)?;
         Some(data.to_owned())
     }
 
@@ -95,15 +99,15 @@ impl DB {
 pub struct Data {
     pub pinned: Pinned,
 
-    stig: Arc<Stig>,
+    rule: Arc<Rule>,
 }
 
 impl Data {
     /// Create data given a stig.
-    pub fn new(stig: Arc<Stig>) -> Self {
+    pub fn new(rule: Arc<Rule>) -> Self {
         Self {
             pinned: Pinned::Not,
-            stig,
+            rule,
         }
     }
 
@@ -118,8 +122,8 @@ impl Data {
     }
 
     /// Get a pointer to the stig.
-    pub fn get_stig(&self) -> Arc<Stig> {
-        self.stig.clone()
+    pub fn get_stig(&self) -> Arc<Rule> {
+        self.rule.clone()
     }
 }
 
