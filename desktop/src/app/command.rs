@@ -1,5 +1,5 @@
 use regex::Regex;
-use stig_view_core::db::{DB, Pinned};
+use stig_view_core::db_dep::{DB, Pinned};
 
 use crate::app::Command;
 

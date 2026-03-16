@@ -4,7 +4,7 @@ use iced::theme::{Custom, Palette, Theme};
 use iced::window::icon::from_file_data;
 use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
-use stig_view_core::db::{DBErr, Data, Pinned};
+use stig_view_core::db_dep::{DBErr, Data, Pinned};
 
 use crate::app::async_fns::{FileError, open_file, open_folder};
 use crate::app::command::{CommandErr, parse_command, run_search_cmd};

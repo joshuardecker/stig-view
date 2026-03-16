@@ -11,7 +11,7 @@ use iced::window::Direction::{
     East, North, NorthEast, NorthWest, South, SouthEast, SouthWest, West,
 };
 use iced::{Center, Fill, Shrink};
-use stig_view_core::db::{DB, Pinned};
+use stig_view_core::db_dep::{DB, Pinned};
 
 use crate::app::*;
 use crate::ui::styles::*;

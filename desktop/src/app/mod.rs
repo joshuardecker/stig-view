@@ -14,7 +14,7 @@ use iced::window::Direction;
 use iced::{Task, task::Handle};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use stig_view_core::db::DB;
+use stig_view_core::db_dep::DB;
 use stig_view_core::stig_dep::Stig;
 
 #[derive(Debug, Clone)]

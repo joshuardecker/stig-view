@@ -1,6 +1,6 @@
 use rfd::AsyncFileDialog;
 use std::sync::Arc;
-use stig_view_core::db::{DB, Data};
+use stig_view_core::db_dep::{DB, Data};
 use stig_view_core::stig_dep::Stig;
 
 #[derive(Debug, Clone)]
