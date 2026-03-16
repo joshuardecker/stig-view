@@ -52,6 +52,16 @@ The repo is a Cargo workspace with two crates:
 
 **Keyboard shortcuts**: Ctrl+Q quit, Ctrl+I open file, Ctrl+O open folder, Ctrl+P toggle command prompt, Ctrl+Tab next STIG.
 
+## Disk Cache Format
+
+When saving a parsed benchmark to disk for fast subsequent loads, the chosen stack is **`rmp-serde` (MessagePack) + `zstd` compression**:
+
+1. Serialize the benchmark with `rmp-serde` → `Vec<u8>`
+2. Compress with `zstd` (statically linked, no runtime dependency)
+3. Prepend a magic byte before writing — on load, check this byte first and discard the file if it doesn't match, so stale or corrupted cache files produce a clean error rather than a cryptic deserialization failure
+
+Compression is always on — no user setting. MessagePack is binary regardless, so uncompressed cache files offer no practical benefit to the user. Cache files live in `{cache_dir}/stig-view/`.
+
 ## TODO
 
 Planned work is tracked in `TODO.md` at the repo root, organized by release version.

@@ -12,10 +12,9 @@
 - [x] Implement the settings menu (see separate settings menu item above), then remove the `todo!()` panic in `Popup::Settings` match arm in `iced/src/ui/mod.rs`.
 
 ## 0.3
-- [ ] Refactor the STIG loading pipeline in `/core` — decouple `Stig` parsing from the Xylok format so multiple parsers can feed into the same pipeline cleanly before a second format is added.
-- [ ] Add file format detection when loading files/folders so the app can route each file to the correct parser. Currently all files are silently skipped if they fail the Xylok regex, which breaks once a second format exists.
+- [ ] Add STIG type detection support, for XccdfV1_1, XccdfV1_2, and Xylok.
 - [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, in addition to the existing Xylok internal format.
-- [ ] Add optional compression setting, which compresses locally stored STIGs on disk, rather than storing them uncompressed.
+- [ ] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Compression is always on — MessagePack is binary regardless, so uncompressed cache offers no benefit to the user. Prepend a magic byte or version byte to detect and reject stale/incompatible cache files gracefully. Cache files live in `{cache_dir}/stig-view/`.
 - [ ] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
 - [ ] Set up a clean pattern for composing multiple time subscriptions in `subscription()` before animations and loading indicators are both active simultaneously.
 - [ ] Add a loading indicator (spinner) when a folder is being loaded or a filter is being processed. Drive via a time subscription active only while loading, using an `is_loading` flag in app state.

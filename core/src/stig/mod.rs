@@ -1,5 +1,8 @@
 mod db;
 
+use std::collections::BTreeMap;
+use std::sync::Arc;
+
 #[derive(Debug, Clone)]
 pub struct Benchmark {
     pub id: String,
@@ -11,9 +14,11 @@ pub struct Benchmark {
     pub source: Option<String>,
     pub status: String,
     pub status_date: Option<String>,
+
+    pub rules: BTreeMap<String, Arc<Rule>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Rule {
     pub group_id: String,
     pub rule_id: String,
@@ -39,7 +44,8 @@ pub enum Severity {
 }
 
 #[derive(Debug, Clone)]
-pub enum XccdfVersion {
-    V1_1,
-    V1_2,
+pub enum Version {
+    XccdfV1_1,
+    XccdfV1_2,
+    Xylok,
 }
