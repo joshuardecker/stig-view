@@ -4,6 +4,7 @@ pub mod stig_dep;
 
 mod db;
 mod detection;
+mod load;
 
 // Re exports.
 pub use crate::db::*;

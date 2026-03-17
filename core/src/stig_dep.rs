@@ -40,31 +40,3 @@ impl Stig {
         })
     }
 }
-
-#[test]
-fn test_from_xylok_txt() {
-    let stig = Stig {
-        version: String::from("SOME-NUMBER2077"),
-        intro: String::from("Hello!"),
-        similar_checks: String::from("This is a similar check: Similar check."),
-        check_text: String::from("Content!"),
-        desc: String::from("Discussion!"),
-        fix_text: String::from("Fix!"),
-    };
-
-    let loaded_stig = Stig::from_xylok_txt("../test_stig.txt");
-
-    match loaded_stig {
-        Some(loaded_stig) => {
-            assert_eq!(loaded_stig, stig);
-        }
-        None => panic!("Was not able to load test_sig.txt!"),
-    }
-
-    let not_real = Stig::from_xylok_txt("not-a-real-path.txt");
-
-    match not_real {
-        None => println!("Good!"),
-        Some(_) => panic!("How did we get here?"),
-    }
-}

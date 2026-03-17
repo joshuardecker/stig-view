@@ -1,7 +1,8 @@
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
+use regex::Regex;
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 use zip::ZipArchive;
 
@@ -23,7 +24,7 @@ pub fn detect_stig_version<P: AsRef<Path>>(path: P) -> Result<Version, DetectErr
             if detect_xylok(path.as_ref()).is_some() {
                 return Ok(Version::Xylok);
             } else {
-                return Err(DetectErr::NotStig("Provided txt is not a valid STIG."));
+                return Err(DetectErr::NotStig("Provided txt could not be loaded."));
             }
         }
         Some("xml") => {
@@ -51,7 +52,19 @@ pub fn detect_stig_version<P: AsRef<Path>>(path: P) -> Result<Version, DetectErr
 
 /// See if the input is a Xylok STIG.
 fn detect_xylok(path: &Path) -> Option<Version> {
-    todo!();
+    let mut file = File::open(path).ok()?;
+    let mut buf = String::new();
+
+    file.read_to_string(&mut buf).ok()?;
+
+    let xylok_format = Regex::new(
+        r"(?s).*# Title\n([\w-]+):(.*)#################\n# Similar checks(.*)#################\n# Content(.*)#################\n# Discussion(.*)#################\n# Fix(.*)",
+    )
+    .unwrap();
+
+    let _captures = xylok_format.captures(&buf)?;
+
+    Some(Version::Xylok)
 }
 
 /// See if the input is an XML STIG.
@@ -111,10 +124,13 @@ fn detect_xccdf_in_zip(path: &Path) -> Option<Version> {
 
 #[test]
 fn test_detection() {
+    let version = detect_stig_version("../test_assets/U_RHEL_8_V2R6_STIG.zip");
+    assert_eq!(version, Ok(Version::XccdfV1_1));
+
     let version =
         detect_stig_version("../test_assets/U_MS_Windows_10_V3R7_STIG_SCAP_1-3_Benchmark.zip");
     assert_eq!(version, Ok(Version::XccdfV1_2));
 
-    let version = detect_stig_version("../test_assets/U_RHEL_8_V2R6_STIG.zip");
-    assert_eq!(version, Ok(Version::XccdfV1_1));
+    let version = detect_stig_version("../test_assets/stig.txt");
+    assert_eq!(version, Ok(Version::Xylok));
 }
