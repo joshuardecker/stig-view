@@ -52,7 +52,7 @@ fn test_from_xylok_txt() {
         fix_text: String::from("Fix!"),
     };
 
-    let loaded_stig = Stig::from_xylok_txt("test_stig.txt");
+    let loaded_stig = Stig::from_xylok_txt("../test_stig.txt");
 
     match loaded_stig {
         Some(loaded_stig) => {

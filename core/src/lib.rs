@@ -3,12 +3,16 @@ pub mod db_dep;
 pub mod stig_dep;
 
 mod db;
+mod detection;
 
+// Re exports.
 pub use crate::db::*;
+pub use crate::detection::detect_stig_version;
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+/// The overarching benchmark.
 #[derive(Debug, Clone)]
 pub struct Benchmark {
     pub id: String,
@@ -24,6 +28,7 @@ pub struct Benchmark {
     pub rules: BTreeMap<String, Arc<Rule>>,
 }
 
+/// Each check / rule of a benchmark.
 #[derive(Debug)]
 pub struct Rule {
     pub group_id: String,
@@ -49,7 +54,9 @@ pub enum Severity {
     Unknown,
 }
 
+/// Different formats a benchmark and rules can be stored in.
 #[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub enum Version {
     XccdfV1_1,
     XccdfV1_2,
