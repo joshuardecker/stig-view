@@ -8,11 +8,10 @@ mod load;
 
 // Re exports.
 pub use crate::db::*;
-pub use crate::detection::detect_stig_version;
+pub use crate::detection::detect_stig_format;
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::sync::Arc;
 
 /// The overarching benchmark.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,9 +21,7 @@ pub struct Benchmark {
     pub version: Option<String>,
     pub release: Option<String>,
     pub description: Option<String>,
-    pub publisher: Option<String>,
-    pub source: Option<String>,
-    pub status: String,
+    pub status: Option<String>,
     pub status_date: Option<String>,
 
     pub rules: BTreeMap<String, Rule>,
@@ -44,14 +41,28 @@ pub struct Rule {
     pub cci_refs: Option<Vec<String>>,
     pub false_positives: Option<String>,
     pub false_negatives: Option<String>,
-    pub documentable: bool,
+    pub documentable: Option<bool>,
 }
 
+/// Xylok toml's can be deserialized into this struct.
 #[derive(Debug, Deserialize)]
 pub struct XylokChecks {
-    checks: Vec<XylokRule>,
+    pub benchmark: XylokBenchmark,
+    pub checks: Vec<XylokRule>,
 }
 
+/// The information I care about from [benchmark].
+/// Fail without these fields, they are required.
+#[derive(Debug, Clone, Deserialize)]
+pub struct XylokBenchmark {
+    benchmark_id: String,
+    title: String,
+}
+
+/// The information I care about from [[checks]].
+/// Wrapping is kept very loose on purpose. Allow fields to be empty,
+/// that way old and new versions (old versions will lack fields) can be read into the program.
+/// Handle parsing after deserialization.
 #[derive(Debug, Clone, Deserialize)]
 pub struct XylokRule {
     // A uuid.
@@ -76,18 +87,6 @@ pub struct XylokRule {
     fix: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     ccis: Option<Vec<u64>>,
-
-    // Fields found in the Xylok rule that I will ignore.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    group_title: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    has_scc_check: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    verified_date: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    expert: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    similar_checks: Option<Vec<String>>,
     //
     // What is not included:
     // - false positives
@@ -121,20 +120,23 @@ impl TryFrom<u64> for Severity {
     }
 }
 
-/// Different formats a benchmark and rules can be stored in.
+/// Different formats a benchmark can be loaded from.
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq, Eq))]
-pub enum Version {
+pub enum Format {
     XccdfV1_1,
     XccdfV1_2,
     Xylok,
 }
 
-#[test]
-fn test_xylok_stig_loading() {
-    use std::fs::read_to_string;
+impl XylokChecks {
+    pub fn convert(&self) -> Option<Benchmark> {
+        todo!()
+    }
+}
 
-    let toml_str = read_to_string("../test_assets/packed.toml").unwrap();
-
-    let xylok_toml: XylokChecks = toml::from_str(&toml_str).unwrap();
+impl XylokRule {
+    pub fn convert(&self) -> Option<Rule> {
+        todo!()
+    }
 }

@@ -1,12 +1,11 @@
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
-use regex::Regex;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 use zip::ZipArchive;
 
-use crate::Version;
+use crate::{Format, XylokChecks};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq, Eq))]
@@ -16,31 +15,31 @@ pub enum DetectErr {
     NotStig(&'static str),
 }
 
-/// Detect the version of STIG the user provided given a path.
+/// Detect the format of STIG the user provided given a path.
 /// If its not a STIG, that is still returned as an error.
-pub fn detect_stig_version<P: AsRef<Path>>(path: P) -> Result<Version, DetectErr> {
+pub fn detect_stig_format<P: AsRef<Path>>(path: P) -> Result<Format, DetectErr> {
     match path.as_ref().extension().and_then(|os_str| os_str.to_str()) {
         Some("toml") => {
             if detect_xylok(path.as_ref()).is_some() {
-                return Ok(Version::Xylok);
+                return Ok(Format::Xylok);
             } else {
                 return Err(DetectErr::NotStig("Provided toml could not be loaded."));
             }
         }
         Some("xml") => {
-            let version = detect_xccdf(
+            let format = detect_xccdf(
                 Reader::from_file(path)
                     .map_err(|_| DetectErr::CantOpenFile("Provided xml could not be loaded."))?,
             );
 
-            return match version {
-                Some(version) => Ok(version),
+            return match format {
+                Some(format) => Ok(format),
                 None => Err(DetectErr::NotStig("Provided xml could not be loaded.")),
             };
         }
         Some("zip") => {
             return match detect_xccdf_in_zip(path.as_ref()) {
-                Some(version) => Ok(version),
+                Some(format) => Ok(format),
                 None => Err(DetectErr::NotStig("Provided zip could not be loaded.")),
             };
         }
@@ -51,17 +50,18 @@ pub fn detect_stig_version<P: AsRef<Path>>(path: P) -> Result<Version, DetectErr
 }
 
 /// See if the input is a Xylok STIG.
-fn detect_xylok(path: &Path) -> Option<Version> {
-    let mut file = File::open(path).ok()?;
-    let mut buf = String::new();
+fn detect_xylok(path: &Path) -> Option<Format> {
+    use std::fs::read_to_string;
 
-    file.read_to_string(&mut buf).ok()?;
+    let toml_str = read_to_string(path).ok()?;
 
-    todo!();
+    let _xylok_toml: XylokChecks = toml::from_str(&toml_str).ok()?;
+
+    Some(Format::Xylok)
 }
 
 /// See if the input is an XML STIG.
-fn detect_xccdf<R: BufRead>(mut xml: Reader<R>) -> Option<Version> {
+fn detect_xccdf<R: BufRead>(mut xml: Reader<R>) -> Option<Format> {
     let mut buf = Vec::new();
 
     loop {
@@ -76,9 +76,9 @@ fn detect_xccdf<R: BufRead>(mut xml: Reader<R>) -> Option<Version> {
                     }
 
                     if value.contains("checklists.nist.gov/xccdf/1.2") {
-                        return Some(Version::XccdfV1_2);
+                        return Some(Format::XccdfV1_2);
                     } else if value.contains("checklists.nist.gov/xccdf/1.1") {
-                        return Some(Version::XccdfV1_1);
+                        return Some(Format::XccdfV1_1);
                     }
                 }
             }
@@ -93,7 +93,7 @@ fn detect_xccdf<R: BufRead>(mut xml: Reader<R>) -> Option<Version> {
 }
 
 /// See if the input zip is a STIG.
-fn detect_xccdf_in_zip(path: &Path) -> Option<Version> {
+fn detect_xccdf_in_zip(path: &Path) -> Option<Format> {
     let mut archive = ZipArchive::new(File::open(path).ok()?).ok()?;
 
     let xml_names: Vec<String> = archive
@@ -105,10 +105,10 @@ fn detect_xccdf_in_zip(path: &Path) -> Option<Version> {
     for name in &xml_names {
         let entry = archive.by_name(name).ok()?;
 
-        let version = detect_xccdf(Reader::from_reader(BufReader::new(entry)));
+        let format = detect_xccdf(Reader::from_reader(BufReader::new(entry)));
 
-        if let Some(version) = version {
-            return Some(version);
+        if let Some(format) = format {
+            return Some(format);
         }
     }
 
@@ -117,13 +117,13 @@ fn detect_xccdf_in_zip(path: &Path) -> Option<Version> {
 
 #[test]
 fn test_detection() {
-    let version = detect_stig_version("../test_assets/U_RHEL_8_V2R6_STIG.zip");
-    assert_eq!(version, Ok(Version::XccdfV1_1));
+    let format = detect_stig_format("../test_assets/U_RHEL_8_V2R6_STIG.zip");
+    assert_eq!(format, Ok(Format::XccdfV1_1));
 
-    let version =
-        detect_stig_version("../test_assets/U_MS_Windows_10_V3R7_STIG_SCAP_1-3_Benchmark.zip");
-    assert_eq!(version, Ok(Version::XccdfV1_2));
+    let format =
+        detect_stig_format("../test_assets/U_MS_Windows_10_V3R7_STIG_SCAP_1-3_Benchmark.zip");
+    assert_eq!(format, Ok(Format::XccdfV1_2));
 
-    let version = detect_stig_version("../test_assets/stig.txt");
-    assert_eq!(version, Ok(Version::Xylok));
+    let format = detect_stig_format("../test_assets/packed.toml");
+    assert_eq!(format, Ok(Format::Xylok));
 }
