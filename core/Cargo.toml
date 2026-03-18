@@ -1,6 +1,6 @@
 [package]
 name = "stig-view-core"
-version = "0.1.1"
+version = "0.3.0"
 edition = "2024"
 
 [lib]
@@ -16,3 +16,4 @@ serde = { version = "1.0.228", features = ["derive"] }
 tokio = { version = "1.49.0", features = ["sync", "rt"]}
 zstd = "0.13.3"
 toml = "1.0.6"
+dirs = "6"
