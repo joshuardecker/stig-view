@@ -1,11 +1,11 @@
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 use zip::ZipArchive;
 
-use crate::{Format, XylokChecks};
+use crate::{Format, XylokToml};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq, Eq))]
@@ -19,13 +19,8 @@ pub enum DetectErr {
 /// If its not a STIG, that is still returned as an error.
 pub fn detect_stig_format<P: AsRef<Path>>(path: P) -> Result<Format, DetectErr> {
     match path.as_ref().extension().and_then(|os_str| os_str.to_str()) {
-        Some("toml") => {
-            if detect_xylok(path.as_ref()).is_some() {
-                return Ok(Format::Xylok);
-            } else {
-                return Err(DetectErr::NotStig("Provided toml could not be loaded."));
-            }
-        }
+        Some("toml") => detect_xylok(path.as_ref())
+            .ok_or(DetectErr::NotStig("Provided toml could not be loaded.")),
         Some("xml") => {
             let format = detect_xccdf(
                 Reader::from_file(path)
@@ -55,9 +50,9 @@ fn detect_xylok(path: &Path) -> Option<Format> {
 
     let toml_str = read_to_string(path).ok()?;
 
-    let _xylok_toml: XylokChecks = toml::from_str(&toml_str).ok()?;
+    let xylok_toml: XylokToml = toml::from_str(&toml_str).ok()?;
 
-    Some(Format::Xylok)
+    Some(Format::Xylok(xylok_toml))
 }
 
 /// See if the input is an XML STIG.
@@ -125,5 +120,5 @@ fn test_detection() {
     assert_eq!(format, Ok(Format::XccdfV1_2));
 
     let format = detect_stig_format("../test_assets/packed.toml");
-    assert_eq!(format, Ok(Format::Xylok));
+    assert!(matches!(format, Ok(Format::Xylok(_))));
 }

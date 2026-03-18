@@ -45,8 +45,9 @@ pub struct Rule {
 }
 
 /// Xylok toml's can be deserialized into this struct.
-#[derive(Debug, Deserialize)]
-pub struct XylokChecks {
+#[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
+pub struct XylokToml {
     pub benchmark: XylokBenchmark,
     pub checks: Vec<XylokRule>,
 }
@@ -54,6 +55,7 @@ pub struct XylokChecks {
 /// The information I care about from [benchmark].
 /// Fail without these fields, they are required.
 #[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct XylokBenchmark {
     benchmark_id: String,
     title: String,
@@ -64,6 +66,7 @@ pub struct XylokBenchmark {
 /// that way old and new versions (old versions will lack fields) can be read into the program.
 /// Handle parsing after deserialization.
 #[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct XylokRule {
     // A uuid.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -95,6 +98,7 @@ pub struct XylokRule {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 #[serde(try_from = "u64")]
 pub enum Severity {
     Unknown,
@@ -126,17 +130,60 @@ impl TryFrom<u64> for Severity {
 pub enum Format {
     XccdfV1_1,
     XccdfV1_2,
-    Xylok,
+    // So easy to parse that passing Xylok toml around is easy
+    // and saves doing redundant work.
+    Xylok(XylokToml),
 }
 
-impl XylokChecks {
-    pub fn convert(&self) -> Option<Benchmark> {
-        todo!()
+impl XylokToml {
+    pub fn convert(self) -> Benchmark {
+        let mut rules = BTreeMap::new();
+
+        self.checks.into_iter().for_each(|xylok_rule| {
+            if let Some(rule) = xylok_rule.convert() {
+                rules.insert(rule.group_id.clone(), rule);
+            }
+        });
+
+        Benchmark {
+            id: self.benchmark.benchmark_id,
+            title: self.benchmark.title,
+            version: None,
+            release: None,
+            description: None,
+            status: None,
+            status_date: None,
+            rules,
+        }
     }
 }
 
 impl XylokRule {
-    pub fn convert(&self) -> Option<Rule> {
-        todo!()
+    pub fn convert(self) -> Option<Rule> {
+        let ccis: Vec<String> = self
+            .ccis
+            .unwrap_or_default()
+            .iter()
+            .map(|cci| cci.to_string())
+            .collect();
+
+        Some(Rule {
+            group_id: self.vulnerability_id?,
+            rule_id: self.rule_id?,
+            stig_id: self.human_id,
+            severity: self.nist_impact?,
+            title: self.title?,
+            vuln_discussion: self.discussion?,
+            check_text: self.content?,
+            fix_text: self.fix?,
+            cci_refs: match ccis.len() {
+                0 => None,
+                _ => Some(ccis),
+            },
+            // Values never saved in Xylok format.
+            false_positives: None,
+            false_negatives: None,
+            documentable: None,
+        })
     }
 }
