@@ -3528,6 +3528,7 @@ dependencies = [
  "rmp-serde",
  "serde",
  "tokio",
+ "toml",
  "zip",
  "zstd",
 ]

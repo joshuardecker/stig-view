@@ -1,0 +1,1154 @@
+format = 1
+tags = []
+
+[benchmark]
+pk = '12a448cc-4741-4c9e-80b6-9b55129c705e'
+benchmark_id = 'cisco_asa_vpn_stig'
+title = 'Cisco ASA VPN Security Technical Implementation Guide'
+short_title = 'Cisco ASA VPN STIG'
+source = 'disa'
+
+[[versions]]
+pk = 'df5c31e5-9105-4eb4-8e49-ad3335e266f1'
+tag = 'v1r0.1'
+date = '2020-12-15T00:00:00Z'
+check_pks = ['dd734c70-f2aa-4636-911f-26ce14f3608d', '4ea6c7a1-593d-4670-9d3e-49089e31b2d3', 'fada56ba-48bf-403e-ace0-5b78fd1a7187', '5d9e7b6c-02a9-47cd-86ff-537264abb61d', '2c8f7fc9-82b6-4e47-acf7-61112dfbd84b', 'efd7945e-3179-448f-926b-b6a7348157f2', 'b8f92be7-54de-43d8-a46c-40998483f8a3', '42a131fa-f1c2-4f7d-b751-76d3e77f74cb', '004f9605-23ae-4220-9057-7e91d6020f81', '471fc0c4-7e75-4f55-9245-d744bf6a8a3b', 'c2a257b0-5547-4b45-b194-3c5f16e1abe6', '67dcc414-971e-478f-be11-217b824bb5b5', 'da695fa4-665c-46e4-9e36-75964256e53a', 'b99f35a3-cb73-42bc-a09b-e15c1fecbd78', '8f0c0437-ae5c-4e26-8bda-ba41ba58d1f2', 'c8819393-d3a5-4aef-82ec-679f23d9f48c', 'b6045010-1b13-43e7-9977-7806b3780f16', '80336c5c-4800-40f2-9255-9eb617b75926', '77cbb9cc-5544-4c42-8b29-43b77a031546', 'd07530de-108c-46c9-933c-9e26a93a3e9c', '0cb0720f-6b2c-447e-9000-7f78a88923b3', '67aeb980-fd7a-407d-a177-c5db37c4da4e', '2e4632a3-bc04-483c-8c85-94b61e1b45ae', '370e976a-0244-469c-874c-366e3a1db060', '431e9da2-618b-42de-985e-d3d33c86c13e', '366928c6-b37e-43ce-95e7-ba11a3f0c6e3', '803c2ccf-f0f6-43be-8214-d193f01d50c7', '6beb3b68-4710-453a-bfb9-6887d986769a', '1a0114c9-cca8-4302-9ebe-e66788f6db05', 'e6b05afa-e9b0-4d04-bb6b-1a9287ec491e', '2a78d8e5-60d7-4841-9f72-e3f064791563', '933a25fd-891c-4f90-bd0d-72255fe459b4', '07492f6a-b818-41c9-8894-8f300c0968e4', '4f308c8e-23f0-4395-be83-fce03798d7ba', '1f504d43-3181-49fd-b020-9315de6794b3', '50f9f0d9-b978-497a-873d-b4f2f0d8a74b', 'a5c80547-a427-4d50-8e58-c50acf754e9b', 'b2c32c9a-0622-4c21-8292-01dfd10e10a7', '4ed8b928-a14f-4ae7-8685-d276f3379051', '3022d481-31eb-4f91-a785-1b529cc6f574', 'bd26a835-68ba-4e92-af53-4f28f1ccc101']
+
+[[versions]]
+pk = 'c6594c33-1130-4333-9367-10d001214c50'
+tag = 'v1r1'
+date = '2021-07-15T06:00:00Z'
+check_pks = ['efe41b2f-310a-4414-b483-560c8235e365', '4ea6c7a1-593d-4670-9d3e-49089e31b2d3', '01e7c2cf-f7bb-469a-a1f0-9cc12bedfb5a', '6eb406fd-c044-448b-9be8-b953f171fc5a', '3eb52daa-49b9-4e56-bcc9-caeffb7c063e', 'a15cf6ba-fa49-4031-94a1-ae04609b30d9', '9550256d-3073-4ed4-aa5d-b0cd2d18b120', '42a131fa-f1c2-4f7d-b751-76d3e77f74cb', '004f9605-23ae-4220-9057-7e91d6020f81', '471fc0c4-7e75-4f55-9245-d744bf6a8a3b', 'c2a257b0-5547-4b45-b194-3c5f16e1abe6', '67dcc414-971e-478f-be11-217b824bb5b5', 'da695fa4-665c-46e4-9e36-75964256e53a', 'b99f35a3-cb73-42bc-a09b-e15c1fecbd78', '913c0e8c-f28e-4a67-9323-4f2e195497b9', 'c8819393-d3a5-4aef-82ec-679f23d9f48c', 'b6045010-1b13-43e7-9977-7806b3780f16', '59101993-0242-46d8-9fc1-50aa867475a3', '77cbb9cc-5544-4c42-8b29-43b77a031546', 'd07530de-108c-46c9-933c-9e26a93a3e9c', '0cb0720f-6b2c-447e-9000-7f78a88923b3', '67aeb980-fd7a-407d-a177-c5db37c4da4e', '2e4632a3-bc04-483c-8c85-94b61e1b45ae', '370e976a-0244-469c-874c-366e3a1db060', 'ed1238e6-6c0d-4bba-bf1c-7be21ab294a1', '366928c6-b37e-43ce-95e7-ba11a3f0c6e3', 'e8876fb2-2c87-42de-ad0b-ad31f376ee7f', '57421c53-711a-4533-9ff4-ce6898bcf16f', '31a0a470-aba0-43b1-a01e-07e5d57eef35', '6cf10209-0b94-46ec-860c-1725d0334897', '8f7c6474-5deb-40d2-982f-0b18ef272c7f', '933a25fd-891c-4f90-bd0d-72255fe459b4', '07492f6a-b818-41c9-8894-8f300c0968e4', '4f308c8e-23f0-4395-be83-fce03798d7ba', '1f504d43-3181-49fd-b020-9315de6794b3', '50f9f0d9-b978-497a-873d-b4f2f0d8a74b', 'c62620b8-ff41-443a-a0e7-ec4016cf9c96', 'b2c32c9a-0622-4c21-8292-01dfd10e10a7', 'a42c4a2f-f12f-4d61-a886-d6a56259e744', '3022d481-31eb-4f91-a785-1b529cc6f574', '5964a594-0137-4ad6-ad12-59a2a6bc32f4']
+
+[[versions]]
+pk = 'ab9c42a9-f736-4515-b9fa-3ba762f90bfc'
+tag = 'v1r2'
+date = '2023-06-07T04:00:00Z'
+check_pks = ['efe41b2f-310a-4414-b483-560c8235e365', '4ea6c7a1-593d-4670-9d3e-49089e31b2d3', '01e7c2cf-f7bb-469a-a1f0-9cc12bedfb5a', '6eb406fd-c044-448b-9be8-b953f171fc5a', '3eb52daa-49b9-4e56-bcc9-caeffb7c063e', 'a15cf6ba-fa49-4031-94a1-ae04609b30d9', '9550256d-3073-4ed4-aa5d-b0cd2d18b120', '42a131fa-f1c2-4f7d-b751-76d3e77f74cb', 'a9debaf4-919a-4146-9676-8dcc2c314086', '471fc0c4-7e75-4f55-9245-d744bf6a8a3b', '8c8d1d26-8901-4f5f-bf0b-202c7aaff929', '5513b165-2f60-40ec-a3a7-902dffa17771', '187f7e46-1857-491d-bc16-33240ee64d5f', 'c565486f-0739-452f-ab07-6d4d5bf0b04f', '913c0e8c-f28e-4a67-9323-4f2e195497b9', 'c8819393-d3a5-4aef-82ec-679f23d9f48c', 'b6045010-1b13-43e7-9977-7806b3780f16', '59101993-0242-46d8-9fc1-50aa867475a3', '77cbb9cc-5544-4c42-8b29-43b77a031546', 'd07530de-108c-46c9-933c-9e26a93a3e9c', '0cb0720f-6b2c-447e-9000-7f78a88923b3', '67aeb980-fd7a-407d-a177-c5db37c4da4e', '2e4632a3-bc04-483c-8c85-94b61e1b45ae', '370e976a-0244-469c-874c-366e3a1db060', 'ed1238e6-6c0d-4bba-bf1c-7be21ab294a1', '366928c6-b37e-43ce-95e7-ba11a3f0c6e3', 'e8876fb2-2c87-42de-ad0b-ad31f376ee7f', '57421c53-711a-4533-9ff4-ce6898bcf16f', '31a0a470-aba0-43b1-a01e-07e5d57eef35', '6cf10209-0b94-46ec-860c-1725d0334897', '8f7c6474-5deb-40d2-982f-0b18ef272c7f', '933a25fd-891c-4f90-bd0d-72255fe459b4', '07492f6a-b818-41c9-8894-8f300c0968e4', '25d24d15-7b03-4db8-bdac-1aec8566c2b0', '7ae59e06-43f6-4202-83e6-7b81817fbdb4', '48ce49f2-eb81-4e31-93dc-1c700f092a12', 'c62620b8-ff41-443a-a0e7-ec4016cf9c96', 'b2c32c9a-0622-4c21-8292-01dfd10e10a7', 'a42c4a2f-f12f-4d61-a886-d6a56259e744', '3022d481-31eb-4f91-a785-1b529cc6f574', '5964a594-0137-4ad6-ad12-59a2a6bc32f4']
+
+[[versions]]
+pk = 'a5818735-f76b-470f-a67f-aeaa6c144e97'
+tag = 'v1r3'
+date = '2023-10-25T04:00:00Z'
+customer_ready = true
+check_pks = ['efe41b2f-310a-4414-b483-560c8235e365', '4ea6c7a1-593d-4670-9d3e-49089e31b2d3', '01e7c2cf-f7bb-469a-a1f0-9cc12bedfb5a', '6eb406fd-c044-448b-9be8-b953f171fc5a', '3eb52daa-49b9-4e56-bcc9-caeffb7c063e', 'a15cf6ba-fa49-4031-94a1-ae04609b30d9', '9550256d-3073-4ed4-aa5d-b0cd2d18b120', '42a131fa-f1c2-4f7d-b751-76d3e77f74cb', 'a9debaf4-919a-4146-9676-8dcc2c314086', '471fc0c4-7e75-4f55-9245-d744bf6a8a3b', '8c8d1d26-8901-4f5f-bf0b-202c7aaff929', '5513b165-2f60-40ec-a3a7-902dffa17771', '187f7e46-1857-491d-bc16-33240ee64d5f', 'c565486f-0739-452f-ab07-6d4d5bf0b04f', '913c0e8c-f28e-4a67-9323-4f2e195497b9', 'c8819393-d3a5-4aef-82ec-679f23d9f48c', 'b6045010-1b13-43e7-9977-7806b3780f16', '59101993-0242-46d8-9fc1-50aa867475a3', '77cbb9cc-5544-4c42-8b29-43b77a031546', 'd07530de-108c-46c9-933c-9e26a93a3e9c', '0cb0720f-6b2c-447e-9000-7f78a88923b3', '67aeb980-fd7a-407d-a177-c5db37c4da4e', '2e4632a3-bc04-483c-8c85-94b61e1b45ae', '370e976a-0244-469c-874c-366e3a1db060', 'c4357146-af23-43c8-8a8d-0542150057aa', '366928c6-b37e-43ce-95e7-ba11a3f0c6e3', 'e8876fb2-2c87-42de-ad0b-ad31f376ee7f', '57421c53-711a-4533-9ff4-ce6898bcf16f', '31a0a470-aba0-43b1-a01e-07e5d57eef35', '6cf10209-0b94-46ec-860c-1725d0334897', '8f7c6474-5deb-40d2-982f-0b18ef272c7f', '933a25fd-891c-4f90-bd0d-72255fe459b4', '07492f6a-b818-41c9-8894-8f300c0968e4', '25d24d15-7b03-4db8-bdac-1aec8566c2b0', '7ae59e06-43f6-4202-83e6-7b81817fbdb4', '48ce49f2-eb81-4e31-93dc-1c700f092a12', 'c62620b8-ff41-443a-a0e7-ec4016cf9c96', '8b7633a7-8ebe-4d59-97e8-be0688a300fe', 'a42c4a2f-f12f-4d61-a886-d6a56259e744', '3022d481-31eb-4f91-a785-1b529cc6f574', '5964a594-0137-4ad6-ad12-59a2a6bc32f4']
+
+[[versions]]
+pk = '170b81c4-30f4-4796-aea3-4103375d379f'
+tag = 'v2r1'
+date = '2024-07-24T00:00:00Z'
+customer_ready = true
+check_pks = ['efe41b2f-310a-4414-b483-560c8235e365', '4ea6c7a1-593d-4670-9d3e-49089e31b2d3', '01e7c2cf-f7bb-469a-a1f0-9cc12bedfb5a', '6eb406fd-c044-448b-9be8-b953f171fc5a', '3eb52daa-49b9-4e56-bcc9-caeffb7c063e', 'a15cf6ba-fa49-4031-94a1-ae04609b30d9', '9550256d-3073-4ed4-aa5d-b0cd2d18b120', '42a131fa-f1c2-4f7d-b751-76d3e77f74cb', 'a9debaf4-919a-4146-9676-8dcc2c314086', '471fc0c4-7e75-4f55-9245-d744bf6a8a3b', '8c8d1d26-8901-4f5f-bf0b-202c7aaff929', '5513b165-2f60-40ec-a3a7-902dffa17771', '187f7e46-1857-491d-bc16-33240ee64d5f', 'c565486f-0739-452f-ab07-6d4d5bf0b04f', '913c0e8c-f28e-4a67-9323-4f2e195497b9', 'c8819393-d3a5-4aef-82ec-679f23d9f48c', 'b6045010-1b13-43e7-9977-7806b3780f16', '59101993-0242-46d8-9fc1-50aa867475a3', '77cbb9cc-5544-4c42-8b29-43b77a031546', 'd07530de-108c-46c9-933c-9e26a93a3e9c', '0cb0720f-6b2c-447e-9000-7f78a88923b3', '67aeb980-fd7a-407d-a177-c5db37c4da4e', '2e4632a3-bc04-483c-8c85-94b61e1b45ae', '370e976a-0244-469c-874c-366e3a1db060', 'c4357146-af23-43c8-8a8d-0542150057aa', '366928c6-b37e-43ce-95e7-ba11a3f0c6e3', 'e8876fb2-2c87-42de-ad0b-ad31f376ee7f', '57421c53-711a-4533-9ff4-ce6898bcf16f', '31a0a470-aba0-43b1-a01e-07e5d57eef35', '6cf10209-0b94-46ec-860c-1725d0334897', '8f7c6474-5deb-40d2-982f-0b18ef272c7f', '933a25fd-891c-4f90-bd0d-72255fe459b4', '07492f6a-b818-41c9-8894-8f300c0968e4', '25d24d15-7b03-4db8-bdac-1aec8566c2b0', '7ae59e06-43f6-4202-83e6-7b81817fbdb4', '48ce49f2-eb81-4e31-93dc-1c700f092a12', 'c62620b8-ff41-443a-a0e7-ec4016cf9c96', '8b7633a7-8ebe-4d59-97e8-be0688a300fe', 'a42c4a2f-f12f-4d61-a886-d6a56259e744', '3022d481-31eb-4f91-a785-1b529cc6f574', '5964a594-0137-4ad6-ad12-59a2a6bc32f4']
+
+[[versions]]
+pk = 'fb4b53b2-29c1-49a5-b02f-0bffe07e1e3c'
+tag = 'v2r2'
+date = '2024-10-24T00:00:00Z'
+customer_ready = true
+check_pks = ['efe41b2f-310a-4414-b483-560c8235e365', '4ea6c7a1-593d-4670-9d3e-49089e31b2d3', '01e7c2cf-f7bb-469a-a1f0-9cc12bedfb5a', '6eb406fd-c044-448b-9be8-b953f171fc5a', '3eb52daa-49b9-4e56-bcc9-caeffb7c063e', 'a15cf6ba-fa49-4031-94a1-ae04609b30d9', '9550256d-3073-4ed4-aa5d-b0cd2d18b120', '42a131fa-f1c2-4f7d-b751-76d3e77f74cb', 'a9debaf4-919a-4146-9676-8dcc2c314086', '471fc0c4-7e75-4f55-9245-d744bf6a8a3b', '8c8d1d26-8901-4f5f-bf0b-202c7aaff929', '5513b165-2f60-40ec-a3a7-902dffa17771', '187f7e46-1857-491d-bc16-33240ee64d5f', 'c565486f-0739-452f-ab07-6d4d5bf0b04f', '913c0e8c-f28e-4a67-9323-4f2e195497b9', 'c8819393-d3a5-4aef-82ec-679f23d9f48c', 'b6045010-1b13-43e7-9977-7806b3780f16', '59101993-0242-46d8-9fc1-50aa867475a3', '77cbb9cc-5544-4c42-8b29-43b77a031546', 'd07530de-108c-46c9-933c-9e26a93a3e9c', '0cb0720f-6b2c-447e-9000-7f78a88923b3', '67aeb980-fd7a-407d-a177-c5db37c4da4e', '2e4632a3-bc04-483c-8c85-94b61e1b45ae', '370e976a-0244-469c-874c-366e3a1db060', 'c4357146-af23-43c8-8a8d-0542150057aa', '366928c6-b37e-43ce-95e7-ba11a3f0c6e3', 'e8876fb2-2c87-42de-ad0b-ad31f376ee7f', '57421c53-711a-4533-9ff4-ce6898bcf16f', '31a0a470-aba0-43b1-a01e-07e5d57eef35', '6cf10209-0b94-46ec-860c-1725d0334897', '8f7c6474-5deb-40d2-982f-0b18ef272c7f', '933a25fd-891c-4f90-bd0d-72255fe459b4', '07492f6a-b818-41c9-8894-8f300c0968e4', '25d24d15-7b03-4db8-bdac-1aec8566c2b0', '7ae59e06-43f6-4202-83e6-7b81817fbdb4', '48ce49f2-eb81-4e31-93dc-1c700f092a12', 'c62620b8-ff41-443a-a0e7-ec4016cf9c96', '8b7633a7-8ebe-4d59-97e8-be0688a300fe', 'a42c4a2f-f12f-4d61-a886-d6a56259e744', '3022d481-31eb-4f91-a785-1b529cc6f574', '5964a594-0137-4ad6-ad12-59a2a6bc32f4']
+
+[[checks]]
+pk = 'dd734c70-f2aa-4636-911f-26ce14f3608d'
+title = 'The Cisco ASA must be configured to generate log records containing information to establish what type of VPN events occurred.'
+human_id = 'CASA-VN-000010'
+group_title = 'SRG-NET-000077-VPN-000280'
+nist_impact = 2
+vulnerability_id = 'CASA-VN-000010'
+rule_id = 'CASA-VN-000010_rule'
+content = "Review the ASA configuration to determine if VPN events are logged as shown in the example below.\n\nlogging class vpn trap notifications\nlogging class vpnc trap notifications\nlogging class vpnfo trap notifications\nlogging class webfo trap notifications\nlogging class webvpn trap notifications\nlogging class svc trap notifications\n\nIf the ASA is not configured to log entries containing information to establish what type of VPN events occurred, this is a finding."
+discussion = "Without establishing what type of event occurred, it would be difficult to establish, correlate, and investigate the events leading up to an outage or attack.\n\nVPN gateways often have a separate audit log for capturing VPN status and other information about the traffic (as opposed to the log capturing administrative and configuration actions). Audit record content that may be necessary to satisfy this requirement includes, for example, time stamps, source and destination addresses, user/process identifiers, event descriptions, success/fail indications, filenames involved, and access control or flow control rules invoked.\n\nAssociating event types with detected events in the VPN gateway logs provides a means of investigating an attack, recognizing resource utilization or capacity thresholds, or identifying an improperly configured VPN gateway."
+fix = "Configure the ASA to generate logs containing information to establish what type of VPN events occurred as shown in the example below.\n\nciscoasa(config)# logging class vpn trap notifications\nciscoasa(config)# logging class vpnc trap notifications\nciscoasa(config)# logging class vpnfo trap notifications\nciscoasa(config)# logging class webvpn trap notifications\nciscoasa(config)# logging class webfo trap notifications\nciscoasa(config)# logging class svc trap notifications\nciscoasa(config)# end"
+ccis = [130]
+
+[[checks]]
+pk = '938cfe08-49c2-4422-a911-ad40fc36536e'
+title = 'The Cisco ASA must be configured to generate log records containing information to establish what type of VPN events occurred.'
+human_id = 'CASA-VN-000010'
+group_title = 'SRG-NET-000077-VPN-000280'
+nist_impact = 2
+vulnerability_id = 'V-239945'
+rule_id = 'SV-239945r666241_rule'
+ccis = [130]
+
+[[checks]]
+pk = 'efe41b2f-310a-4414-b483-560c8235e365'
+title = 'The Cisco ASA must be configured to generate log records containing information to establish what type of VPN events occurred.'
+human_id = 'CASA-VN-000010'
+group_title = 'SRG-NET-000077-VPN-000280'
+nist_impact = 2
+vulnerability_id = 'V-239945'
+rule_id = 'SV-239945r666241_rule'
+content = "Review the ASA configuration to determine if VPN events are logged as shown in the example below.\n\nlogging class vpn trap notifications\nlogging class vpnc trap notifications\nlogging class vpnfo trap notifications\nlogging class webfo trap notifications\nlogging class webvpn trap notifications\nlogging class svc trap notifications\n\nNote: A logging list can be used as an alternative to using class.\n\nIf the ASA is not configured to log entries containing information to establish what type of VPN events occurred, this is a finding."
+discussion = "Without establishing what type of event occurred, it would be difficult to establish, correlate, and investigate the events leading up to an outage or attack.\n\nVPN gateways often have a separate audit log for capturing VPN status and other information about the traffic (as opposed to the log capturing administrative and configuration actions). Audit record content that may be necessary to satisfy this requirement includes, for example, time stamps, source and destination addresses, user/process identifiers, event descriptions, success/fail indications, filenames involved, and access control or flow control rules invoked.\n\nAssociating event types with detected events in the VPN gateway logs provides a means of investigating an attack, recognizing resource utilization or capacity thresholds, or identifying an improperly configured VPN gateway."
+fix = "Configure the ASA to generate logs containing information to establish what type of VPN events occurred as shown in the example below.\n\nciscoasa(config)# logging class vpn trap notifications\nciscoasa(config)# logging class vpnc trap notifications\nciscoasa(config)# logging class vpnfo trap notifications\nciscoasa(config)# logging class webvpn trap notifications\nciscoasa(config)# logging class webfo trap notifications\nciscoasa(config)# logging class svc trap notifications\nciscoasa(config)# end"
+ccis = [130]
+
+[[checks]]
+pk = '4ea6c7a1-593d-4670-9d3e-49089e31b2d3'
+title = 'The Cisco ASA must be configured to generate log records containing information to establish when the events occurred.'
+human_id = 'CASA-VN-000020'
+group_title = 'SRG-NET-000078-VPN-000290'
+nist_impact = 2
+vulnerability_id = 'V-239946'
+rule_id = 'SV-239946r666244_rule'
+content = "Verify that the logging timestamp command has been configured as shown below.\n\nlogging enable\nlogging timestamp\n\nIf the ASA is not configured to generate traffic log entries containing information to establish when the events occurred, this is a finding."
+discussion = "Without establishing when events occurred, it is impossible to establish, correlate, and investigate the events leading up to an outage or attack.\n\nVPN gateways often have a separate audit log for capturing VPN status and other information about the traffic (as opposed to the log capturing administrative and configuration actions).\n\nAssociating event types with detected events in the network audit logs provides a means of investigating an attack, recognizing resource utilization or capacity thresholds, or identifying an improperly configured VPN gateway."
+fix = "Configure the ASA to generate traffic log entries containing information to establish when the events occurred.\n\nASA(config)# logging timestamp"
+ccis = [131]
+
+[[checks]]
+pk = 'fada56ba-48bf-403e-ace0-5b78fd1a7187'
+title = 'The Cisco ASA must be configured to queue log records locally In the event that the central audit server is down or not reachable.'
+human_id = 'CASA-VN-000080'
+group_title = 'SRG-NET-000336-VPN-001280'
+nist_impact = 3
+vulnerability_id = 'CASA-VN-000080'
+rule_id = 'CASA-VN-000080_rule'
+content = "If the ASA is configured to send syslog messages to a TCP-based syslog server, and if the syslog server is down new connections are blocked. To continue to allow new connections and queue log records verify that the logging permit-hostdown and the queue size has been increased (default is 512).\n\nlogging enable\n…\n…\n…\nlogging queue 8192\nlogging host INSIDE 10.1.22.2 6/1470\nlogging permit-hostdown\n\nIf the ASA is not configured to queue log records locally In the event that the central audit server is down or not reachable, this is a finding."
+discussion = "If the system were to continue processing after audit failure, actions can be taken on the system that cannot be tracked and recorded for later forensic analysis.\n\nBecause of the importance of ensuring mission/business continuity, organizations may determine that the nature of the audit failure is not so severe that it warrants a complete shutdown of the application supporting the core organizational missions/business operations. In those instances, partial application shutdowns or operating in a degraded mode with reduced capability may be viable alternatives.\n\nThis requirement only applies to components where this is specific to the function of the device (e.g., IDPS sensor logs, firewall logs). This does not apply to audit logs generated on behalf of the device itself (management)."
+fix = "To continue to allow new connections and queue log records in the event the syslog server is not reachable, configure logging permit-hostdown and increase the queue size.\n\nASA(config)# logging permit-hostdown\nASA(config)# logging queue 8192"
+ccis = [1861]
+
+[[checks]]
+pk = '28fc8f2e-d58c-4e79-90ce-36530c629504'
+title = 'The Cisco ASA must be configured to queue log records locally in the event that the central audit server is down or not reachable.'
+human_id = 'CASA-VN-000080'
+group_title = 'SRG-NET-000336-VPN-001280'
+nist_impact = 3
+vulnerability_id = 'V-239947'
+rule_id = 'SV-239947r666247_rule'
+ccis = [1861]
+
+[[checks]]
+pk = '01e7c2cf-f7bb-469a-a1f0-9cc12bedfb5a'
+title = 'The Cisco ASA must be configured to queue log records locally in the event that the central audit server is down or not reachable.'
+human_id = 'CASA-VN-000080'
+group_title = 'SRG-NET-000336-VPN-001280'
+nist_impact = 3
+vulnerability_id = 'V-239947'
+rule_id = 'SV-239947r1001254_rule'
+content = "If the ASA is configured to send syslog messages to a TCP-based syslog server, and if the syslog server is down new connections are blocked. To continue to allow new connections and queue log records verify that the logging permit-hostdown and the queue size has been increased (default is 512).\n\nlogging enable\n…\n…\n…\nlogging queue 8192\nlogging host NDM_INTERFACE 10.1.22.2 6/1514\nlogging permit-hostdown\n\nIf the ASA is not configured to queue log records locally in the event that the central audit server is down or not reachable, this is a finding."
+discussion = "If the system were to continue processing after audit failure, actions can be taken on the system that cannot be tracked and recorded for later forensic analysis.\n\nBecause of the importance of ensuring mission/business continuity, organizations may determine that the nature of the audit failure is not so severe that it warrants a complete shutdown of the application supporting the core organizational missions/business operations. In those instances, partial application shutdowns or operating in a degraded mode with reduced capability may be viable alternatives.\n\nThis requirement only applies to components where this is specific to the function of the device (e.g., IDPS sensor logs, firewall logs). This does not apply to audit logs generated on behalf of the device itself (management)."
+fix = "To continue to allow new connections and queue log records in the event the syslog server is not reachable, configure logging permit-hostdown and increase the queue size.\n\nASA(config)# logging permit-hostdown\nASA(config)# logging queue 8192"
+ccis = [1861]
+
+[[checks]]
+pk = '5d9e7b6c-02a9-47cd-86ff-537264abb61d'
+title = 'The Cisco ASA must be configured to generate an alert that can be forwarded as an alert to the SCA and ISSO of all log failure events.'
+human_id = 'CASA-VN-000090'
+group_title = 'SRG-NET-000335-VPN-001270'
+nist_impact = 3
+vulnerability_id = 'CASA-VN-000090'
+rule_id = 'CASA-VN-000090_rule'
+content = "Review the Cisco ASA configuration to verify that it is compliant with this requirement as shown in the example below.\n\nlogging trap critical\nlogging host NDM_INTERFACE 10.1.48.10\n\nNote: The parameter \"critical\" can replaced with a lesser severity (i.e., error, warning, notice, informational).\n\nIf the Cisco ASA is not configured to generate an alert that can be forwarded to the SCA and ISSO of all log failure events, this is a finding."
+discussion = "It is critical for the appropriate personnel to be aware if a system is at risk of failing to process audit logs as required. Without a real-time alert, security personnel may be unaware of an impending failure of the audit capability and system operation may be adversely affected.\n\nAlerts provide organizations with urgent messages. Automated alerts can be conveyed in a variety of ways, including, for example, telephonically, via electronic mail, via text message, or via websites. Log processing failures include software/hardware errors, failures in the log capturing mechanisms, and log storage capacity being reached or exceeded.\n\nWhile this requirement also applies to the event monitoring system (e.g., Syslog, Security Information and Event Management [SIEM], or SNMP servers), the VPN Gateway must also be configured to generate a message to the administrator console.\n\nThe VPN daemon facility and log facility are messages in the log, which capture actions performed or errors encountered by system processes."
+fix = "Configure the Cisco ASA to send critical to emergency log messages to the syslog server as shown in the example below.\n\nASA(config)# logging host NDM_INTERFACE 10.1.48.10\nASA(config)# logging trap critical\nASA(config)# end\n\nNote: The parameter \"critical\" can replaced with a lesser severity (i.e., error, warning, notice, informational)."
+ccis = [1858]
+
+[[checks]]
+pk = 'f094db64-89f8-4c0b-a483-5b2f3e03431c'
+title = 'The Cisco ASA must be configured to generate an alert that can be forwarded as an alert to organization-defined personnel and/or firewall administrator of all log failure events.'
+human_id = 'CASA-VN-000090'
+group_title = 'SRG-NET-000335-VPN-001270'
+nist_impact = 3
+vulnerability_id = 'V-239948'
+rule_id = 'SV-239948r666250_rule'
+ccis = [1858]
+
+[[checks]]
+pk = '6eb406fd-c044-448b-9be8-b953f171fc5a'
+title = 'The Cisco ASA must be configured to generate an alert that can be forwarded as an alert to organization-defined personnel and/or firewall administrator of all log failure events.'
+human_id = 'CASA-VN-000090'
+group_title = 'SRG-NET-000335-VPN-001270'
+nist_impact = 3
+vulnerability_id = 'V-239948'
+rule_id = 'SV-239948r878129_rule'
+content = "Review the Cisco ASA configuration to verify that it is compliant with this requirement as shown in the example below.\n\nlogging trap critical\nlogging host NDM_INTERFACE 10.1.48.10 6/1514\n\nNote: The parameter \"critical\" can replaced with a lesser severity (i.e., error, warning, notice, informational). A logging list can be used as an alternative to the severity level.\n\nIf the Cisco ASA is not configured to generate an alert that can be forwarded to organization-defined personnel and/or firewall administrator of all log failure events, this is a finding."
+discussion = "It is critical for the appropriate personnel to be aware if a system is at risk of failing to process audit logs as required. Without a real-time alert, security personnel may be unaware of an impending failure of the audit capability and system operation may be adversely affected.\n\nAlerts provide organizations with urgent messages. Automated alerts can be conveyed in a variety of ways, including, for example, telephonically, via electronic mail, via text message, or via websites. Log processing failures include software/hardware errors, failures in the log capturing mechanisms, and log storage capacity being reached or exceeded.\n\nWhile this requirement also applies to the event monitoring system (e.g., Syslog, Security Information and Event Management [SIEM], or SNMP servers), the VPN Gateway must also be configured to generate a message to the administrator console.\n\nThe VPN daemon facility and log facility are messages in the log, which capture actions performed or errors encountered by system processes. The ISSM or ISSO may designate the firewall/system administrator or other authorized personnel to receive the alert within the specified time, validate the alert, then forward only validated alerts to the ISSM and ISSO."
+fix = "Configure the Cisco ASA to send critical to emergency log messages to the syslog server as shown in the example below.\n\nASA(config)# logging host NDM_INTERFACE 10.1.48.10 6/1514\nASA(config)# logging trap critical\nASA(config)# end\n\nNote: The parameter \"critical\" can replaced with a lesser severity (i.e., error, warning, notice, informational). A logging list can be used as an alternative to the severity level."
+ccis = [1858]
+
+[[checks]]
+pk = '2c8f7fc9-82b6-4e47-acf7-61112dfbd84b'
+title = 'The Cisco ASA must be configured to validate certificates via a trustpoint that identifies a DoD or DoD-approved certificate authority.'
+human_id = 'CASA-VN-000120'
+group_title = 'SRG-NET-000164-VPN-000560'
+nist_impact = 3
+vulnerability_id = 'CASA-VN-000120'
+rule_id = 'CASA-VN-000120_rule'
+content = "If PKI certificates are not implemented on the ASA, this requirement is not applicable.\n\nStep 1: Review the ASA configuration to determine if a CA trust point has been configured as shown in the example below.\n\ncrypto ca trustpoint CA_X\n enrollment terminal\n\nStep 2: Verify the CA is a DoD or DoD-approved service provider by entering the following command: show crypto ca certificates\nThe output will list the following information for each certificate:\n\nAssociated Trustpoints: (will map to a configured trustpoint from Step 1)\nCommon Name (CN) of the issuer\nOrganization Unit (OU) of the issuer\nOrganization (O) of the issuer\nValidity Date\n\nIf the ASA is not configured to obtain its public key certificates from a DoD or DoD-approved service provider, this is a finding."
+discussion = "Without path validation, an informed trust decision by the relying party cannot be made when presented with any certificate not already explicitly trusted. To meet this requirement, the information system must create trusted channels between itself and remote trusted authorized IT product (e.g., syslog server) entities that protect the confidentiality and integrity of communications. The information system must create trusted paths between itself and remote administrators and users that protect the confidentiality and integrity of communications.\n\nA trust anchor is an authoritative entity represented via a public key and associated data. It is most often used in the context of public key infrastructures, X.509 digital certificates, and DNSSEC. However, applications that do not use a trusted path are not approved for non-local and remote management of DoD information systems.\n\nUse of SSHv2 to establish a trusted channel is approved. Use of FTP, TELNET, HTTP, and SNMPV1 is not approved since they violate the trusted channel rule set. Use of web management tools that are not validated by common criteria may also violate the trusted channel rule set.\n\nWhen there is a chain of trust, usually the top entity to be trusted becomes the trust anchor; it can be, for example, a Certification Authority (CA). A certification path starts with the subject certificate and proceeds through a number of intermediate certificates up to a trusted root certificate, typically issued by a trusted CA.\n\nThis requirement verifies that a certification path to an accepted trust anchor is used for certificate validation and that the path includes status information. Path validation is necessary for a relying party to make an informed trust decision when presented with any certificate not already explicitly trusted. Status information for certification paths includes certificate revocation lists or online certificate status protocol responses. Validation of the certificate status information is out of scope for this requirement."
+fix = 'Ensure that certificate requests are only sent to DoD or DoD-approved service providers.'
+ccis = [185]
+
+[[checks]]
+pk = '3f9d3f21-ecce-4a67-9ae7-6376baf8e245'
+title = 'The Cisco ASA must be configured to validate certificates via a trustpoint that identifies a DoD or DoD-approved certificate authority.'
+human_id = 'CASA-VN-000120'
+group_title = 'SRG-NET-000164-VPN-000560'
+nist_impact = 3
+vulnerability_id = 'V-239949'
+rule_id = 'SV-239949r666253_rule'
+ccis = [185]
+
+[[checks]]
+pk = '3eb52daa-49b9-4e56-bcc9-caeffb7c063e'
+title = 'The Cisco ASA must be configured to validate certificates via a trustpoint that identifies a DoD or DoD-approved certificate authority.'
+human_id = 'CASA-VN-000120'
+group_title = 'SRG-NET-000164-VPN-000560'
+nist_impact = 3
+vulnerability_id = 'V-239949'
+rule_id = 'SV-239949r666253_rule'
+content = "If PKI certificates are not implemented on the ASA, this requirement is not applicable.\n\nStep 1: Review the ASA configuration to determine if a CA trust point has been configured as shown in the example below.\n\ncrypto ca trustpoint CA_X\n\nStep 2: Verify the CA is a DoD or DoD-approved service provider by entering the following command: show crypto ca certificates\n\nThe output will list the following information for each certificate:\n\nAssociated Trustpoints: (will map to a configured trustpoint from Step 1)\nCommon Name (CN) of the issuer\nOrganization Unit (OU) of the issuer\nOrganization (O) of the issuer\nValidity Date\n\nIf the ASA is not configured to obtain its public key certificates from a DoD or DoD-approved service provider, this is a finding."
+discussion = "Without path validation, an informed trust decision by the relying party cannot be made when presented with any certificate not already explicitly trusted. To meet this requirement, the information system must create trusted channels between itself and remote trusted authorized IT product (e.g., syslog server) entities that protect the confidentiality and integrity of communications. The information system must create trusted paths between itself and remote administrators and users that protect the confidentiality and integrity of communications.\n\nA trust anchor is an authoritative entity represented via a public key and associated data. It is most often used in the context of public key infrastructures, X.509 digital certificates, and DNSSEC. However, applications that do not use a trusted path are not approved for non-local and remote management of DoD information systems.\n\nWhen there is a chain of trust, usually the top entity to be trusted becomes the trust anchor; it can be, for example, a Certification Authority (CA). A certification path starts with the subject certificate and proceeds through a number of intermediate certificates up to a trusted root certificate, typically issued by a trusted CA.\n\nThis requirement verifies that a certification path to an accepted trust anchor is used for certificate validation and that the path includes status information. Path validation is necessary for a relying party to make an informed trust decision when presented with any certificate not already explicitly trusted. Status information for certification paths includes certificate revocation lists or online certificate status protocol responses. Validation of the certificate status information is out of scope for this requirement."
+fix = 'Ensure that certificate requests are only sent to DoD or DoD-approved service providers.'
+ccis = [185]
+
+[[checks]]
+pk = 'efd7945e-3179-448f-926b-b6a7348157f2'
+title = 'The Cisco ASA must be configured to not accept certificates that have been revoked when using PKI for authentication.'
+human_id = 'CASA-VN-000130'
+group_title = 'SRG-NET-000512-VPN-002230'
+nist_impact = 4
+vulnerability_id = 'CASA-VN-000130'
+rule_id = 'CASA-VN-000130_rule'
+content = "If PKI certificates are not implemented on the ASA, this requirement is not applicable.\n\nVerify the ASA does not accept certificates that have been revoked.\n\nRevocation checking using CRL example:\n\ncrypto ca trustpoint CA_X\n revocation-check crl\n\nNote: By default, the ASA will use the distribution points listed in CDP extension of the certificate that is being validated.\n\nRevocation checking using OCSP example:\n\ncrypto ca trustpoint CA_X\n revocation-check ocsp\n\nNote: By default, the ASA will use the OSCP responder address found in the Authority Information Access (AIA) field of the client's certificate.\n\nIf the ASA accepts certificates that have been revoked, this is a finding."
+discussion = "Situations may arise in which the certificate issued by a Certificate Authority (CA) may need to be revoked before the lifetime of the certificate expires. For example, the certificate is known to have been compromised.\n\nWhen an incoming Internet Key Exchange (IKE) session is initiated for a remote client or peer whose certificate is revoked, the revocation list configured for use by the VPN server is checked to see if the certificate is valid; if the certificate is revoked, IKE will fail and an IPsec security association will not be established for the remote endpoint."
+fix = "Configure the ASA to not accept certificates that have been revoked.\n\nRevocation checking using CRL example:\n\nASA1(config)# crypto ca trustpoint CA_X\nASA1(config-ca-trustpoint)# revocation-check crl\nASA1(config-ca-crl)# end\n\nRevocation checking using OCSP example:\n\nASA1(config)# crypto ca trustpoint CA_X\nASA1(config-ca-trustpoint)# revocation-check ocsp\nASA1(config-ca-crl)# end"
+ccis = [366]
+
+[[checks]]
+pk = '5d6c2e3a-b76a-437e-9a07-c8bb9f55cd37'
+title = 'The Cisco ASA must be configured to not accept certificates that have been revoked when using PKI for authentication.'
+human_id = 'CASA-VN-000130'
+group_title = 'SRG-NET-000512-VPN-002230'
+nist_impact = 4
+vulnerability_id = 'V-239950'
+rule_id = 'SV-239950r666256_rule'
+ccis = [366]
+
+[[checks]]
+pk = 'a15cf6ba-fa49-4031-94a1-ae04609b30d9'
+title = 'The Cisco ASA must be configured to not accept certificates that have been revoked when using PKI for authentication.'
+human_id = 'CASA-VN-000130'
+group_title = 'SRG-NET-000345-VPN-002430'
+nist_impact = 4
+vulnerability_id = 'V-268314'
+rule_id = 'SV-268314r1015320_rule'
+content = "If PKI certificates are not implemented on the ASA, this requirement is not applicable.\n\nVerify the ASA does not accept certificates that have been revoked.\n\nRevocation checking using CRL example:\n\ncrypto ca trustpoint CA_X\n revocation-check crl\n\nNote: By default, the ASA will use the distribution points listed in CDP extension of the certificate that is being validated.\n\nRevocation checking using OCSP example:\n\ncrypto ca trustpoint CA_X\n revocation-check ocsp\n\nNote: By default, the ASA will use the OSCP responder address found in the Authority Information Access (AIA) field of the client's certificate. Deployment with CAC would be an exception.\n\nIf the ASA accepts certificates that have been revoked, this is a finding."
+discussion = "Situations may arise in which the certificate issued by a Certificate Authority (CA) may need to be revoked before the lifetime of the certificate expires. For example, the certificate is known to have been compromised.\n\nWhen an incoming Internet Key Exchange (IKE) session is initiated for a remote client or peer whose certificate is revoked, the revocation list configured for use by the VPN server is checked to see if the certificate is valid; if the certificate is revoked, IKE will fail and an IPsec security association will not be established for the remote endpoint."
+fix = "Configure the ASA to not accept certificates that have been revoked.\n\nRevocation checking using CRL example:\n\nASA1(config)# crypto ca trustpoint CA_X\nASA1(config-ca-trustpoint)# revocation-check crl\nASA1(config-ca-crl)# end\n\nRevocation checking using OCSP example:\n\nASA1(config)# crypto ca trustpoint CA_X\nASA1(config-ca-trustpoint)# revocation-check ocsp\nASA1(config-ca-crl)# end"
+ccis = [4068]
+
+[[checks]]
+pk = 'b8f92be7-54de-43d8-a46c-40998483f8a3'
+title = 'The Cisco ASA must be configured to use Internet Key Exchange (IKE) for all IPsec security associations.'
+human_id = 'CASA-VN-000150'
+group_title = 'SRG-NET-000512-VPN-002220'
+nist_impact = 4
+vulnerability_id = 'CASA-VN-000150'
+rule_id = 'CASA-VN-000150_rule'
+content = "Step 1: Verify that IKE is configured for the IPsec Phase 1 policy and enabled on applicable interfaces.\n\ncrypto ikev2 policy 1\n encryption …\n\ncrypto ikev2 enable OUTSIDE\n\nStep 2: Verify that IKE is configured for the IPsec Phase 2.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption …\n\nIf the IKE is not configured for all IPsec security associations, this is a finding."
+discussion = "Without IKE, the Security Parameter Index (SPI) is manually specified for each security association. IKE peers will negotiate the encryption algorithm and authentication or hashing methods as well as generate the encryption keys.\n\nAn IPsec SA is established using either IKE or manual configuration. When using IKE, the security associations are established when needed and expire after a period of time or volume of traffic threshold. If manually configured, they are established as soon as the configuration is complete at both endpoints and they do not expire. When using IKE, the SPI for each security association is a pseudo-randomly derived number.\n\nWith manual configuration of the IPsec security association, both the cipher key and authentication key are static. Hence, if the keys are compromised, the traffic being protected by the current IPsec tunnel can be decrypted as well as traffic in any future tunnels established by this SA. Furthermore, the peers are not authenticated prior to establishing the SA, which could result in a rogue device establishing an IPsec SA with either of the VPN endpoints.\n\nIKE provides primary authentication to verify the identity of the remote system before negotiation begins. This feature is lost when the IPsec security associations are manually configured, which results in a non-terminating session using static pre-shared keys."
+fix = "Configure the ASA to use IKE for all IPsec VPN SAs.\n\nStep 1: Configure IKE for the IPsec Phase 1 policy and enable it on applicable interfaces.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# encryption …\n\nASA1(config)# crypto ikev2 enable OUTSIDE\n\nStep 2: Configure IKE for the IPsec Phase 2.\n\nASA1(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS"
+ccis = [366]
+
+[[checks]]
+pk = '8f4ecd9f-e01b-4427-9e64-c1e78c6db28d'
+title = 'The Cisco ASA must be configured to use Internet Key Exchange (IKE) for all IPsec security associations.'
+human_id = 'CASA-VN-000150'
+group_title = 'SRG-NET-000512-VPN-002220'
+nist_impact = 4
+vulnerability_id = 'V-239951'
+rule_id = 'SV-239951r666259_rule'
+ccis = [366]
+
+[[checks]]
+pk = '9550256d-3073-4ed4-aa5d-b0cd2d18b120'
+title = 'The Cisco ASA must be configured to use Internet Key Exchange (IKE) for all IPsec security associations.'
+human_id = 'CASA-VN-000150'
+group_title = 'SRG-NET-000512-VPN-002220'
+nist_impact = 4
+vulnerability_id = 'V-239951'
+rule_id = 'SV-239951r666259_rule'
+content = "Step 1: Verify that IKE is configured for the IPsec Phase 1 policy and enabled on applicable interfaces.\n\ncrypto ikev2 policy 1\n encryption …\n\ncrypto ikev2 enable OUTSIDE\n\nStep 2: Verify that IKE is configured for the IPsec Phase 2.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption …\n\nNote: Although IKEv2 is preferred, IKEv1 will meet the intent of this requirement.\n\nIf the IKE is not configured for all IPsec security associations, this is a finding."
+discussion = "Without IKE, the Security Parameter Index (SPI) is manually specified for each security association. IKE peers will negotiate the encryption algorithm and authentication or hashing methods as well as generate the encryption keys.\n\nAn IPsec SA is established using either IKE or manual configuration. When using IKE, the security associations are established when needed and expire after a period of time or volume of traffic threshold. If manually configured, they are established as soon as the configuration is complete at both endpoints and they do not expire. When using IKE, the SPI for each security association is a pseudo-randomly derived number.\n\nWith manual configuration of the IPsec security association, both the cipher key and authentication key are static. Hence, if the keys are compromised, the traffic being protected by the current IPsec tunnel can be decrypted as well as traffic in any future tunnels established by this SA. Furthermore, the peers are not authenticated prior to establishing the SA, which could result in a rogue device establishing an IPsec SA with either of the VPN endpoints.\n\nIKE provides primary authentication to verify the identity of the remote system before negotiation begins. This feature is lost when the IPsec security associations are manually configured, which results in a non-terminating session using static pre-shared keys."
+fix = "Configure the ASA to use IKE for all IPsec VPN SAs.\n\nStep 1: Configure IKE for the IPsec Phase 1 policy and enable it on applicable interfaces.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# encryption …\n\nASA1(config)# crypto ikev2 enable OUTSIDE\n\nStep 2: Configure IKE for the IPsec Phase 2.\n\nASA1(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS"
+ccis = [366]
+
+[[checks]]
+pk = '42a131fa-f1c2-4f7d-b751-76d3e77f74cb'
+title = 'The Cisco ASA must be configured to use Internet Key Exchange v2 (IKEv2) for all IPsec security associations.'
+human_id = 'CASA-VN-000160'
+group_title = 'SRG-NET-000132-VPN-000460'
+nist_impact = 3
+vulnerability_id = 'V-239952'
+rule_id = 'SV-239952r666262_rule'
+content = "Verify the ASA is configured to use IKEv2 for IPsec VPN security associations.\n\nStep 1: Verify that IKE is configured for the IPsec Phase 1 policy and enabled on applicable interfaces.\n\ncrypto ikev2 policy 1\n encryption …\n\ncrypto ikev2 enable OUTSIDE\n\nStep 2: Verify that IKE is configured for the IPsec Phase 2.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption …\n\nIf the ASA is not configured to use IKEv2 for all IPsec VPN security associations, this is a finding."
+discussion = "In order to prevent unauthorized connection of devices, unauthorized transfer of information, or unauthorized tunneling (i.e., embedding of data types within data types); organizations must disable or restrict unused or unnecessary physical and logical ports/protocols on information systems.\n\nUse of IKEv2 leverages DoS protections because of improved bandwidth management and leverages more secure encryption algorithms."
+fix = "Configure the IPsec VPN Gateway to use IKEv2 for all IPsec VPN Security Associations.\n\nStep 1: Configure IKE for the IPsec Phase 1 policy and enable it on applicable interfaces.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# encryption …\n\nASA1(config)# crypto ikev2 enable OUTSIDE\n\nStep 2: Configure IKE for the IPsec Phase 2.\n\nASA1(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS"
+ccis = [382]
+
+[[checks]]
+pk = '004f9605-23ae-4220-9057-7e91d6020f81'
+title = 'The Cisco ASA must be configured to use NIST FIPS-validated cryptography for Internet Key Exchange (IKE) Phase 1.'
+human_id = 'CASA-VN-000170'
+group_title = 'SRG-NET-000510-VPN-002180'
+nist_impact = 3
+vulnerability_id = 'V-239953'
+rule_id = 'SV-239953r666265_rule'
+content = "Verify the ASA uses a NIST FIPS-validated cryptography for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 1\n encryption aes-192\n\nIf the ASA is not configured to use NIST FIPS-validated cryptography for IKE Phase 1, this is a finding."
+discussion = 'Use of weak or untested encryption algorithms undermines the purposes of utilizing encryption to protect data. The VPN gateway must implement cryptographic modules adhering to the higher standards approved by the federal government since this provides assurance they have been tested and validated.'
+fix = "Configure the ASA to use NIST FIPS-validated cryptography for IKE Phase 1.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# encryption aes-192"
+ccis = [2450]
+
+[[checks]]
+pk = 'a9debaf4-919a-4146-9676-8dcc2c314086'
+title = 'The Cisco ASA must be configured to use NIST FIPS-validated cryptography for Internet Key Exchange (IKE) Phase 1.'
+human_id = 'CASA-VN-000170'
+group_title = 'SRG-NET-000510-VPN-002180'
+nist_impact = 3
+vulnerability_id = 'V-239953'
+rule_id = 'SV-239953r916122_rule'
+content = "Verify the ASA uses a NIST FIPS-validated cryptography for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 1\n encryption aes-256\n\nIf the ASA is not configured to use NIST FIPS-validated cryptography for IKE Phase 1, this is a finding."
+discussion = 'Use of weak or untested encryption algorithms undermines the purposes of utilizing encryption to protect data. The VPN gateway must implement cryptographic modules adhering to the higher standards approved by the federal government since this provides assurance they have been tested and validated.'
+fix = "Configure the ASA to use NIST FIPS-validated cryptography for IKE Phase 1.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# encryption aes-256"
+ccis = [2450]
+
+[[checks]]
+pk = '471fc0c4-7e75-4f55-9245-d744bf6a8a3b'
+title = 'The Cisco ASA must be configured to specify Perfect Forward Secrecy (PFS) for the IPsec Security Association (SA) during IKE Phase 2 negotiation.'
+human_id = 'CASA-VN-000180'
+group_title = 'SRG-NET-000371-VPN-001640'
+nist_impact = 3
+vulnerability_id = 'V-239954'
+rule_id = 'SV-239954r916233_rule'
+content = "Review crypto maps that reference an IPsec proposal. Verify the ASA is configured to specify PFS as shown in the example below.\n\ncrypto map IPSEC_CRYPTO_MAP 1 set pfs group5\ncrypto map IPSEC_CRYPTO_MAP 1 set peer x.x.x.x\ncrypto map IPSEC_CRYPTO_MAP 1 set ikev2 ipsec-proposal IPSEC_TRANS\n\nIf the ASA is not configured to specify PFS for the IPsec SA during IKE Phase 2 negotiation, this is a finding."
+discussion = "PFS generates each new encryption key independently from the previous key. Without PFS, compromise of one key will compromise all communications.\n\nThe Phase 2 (Quick Mode) Security Association (SA) is used to create an IPsec session key. Hence, its rekey or key regeneration procedure is very important. The Phase 2 rekey can be performed with or without Perfect Forward Secrecy (PFS). With PFS, every time a new IPsec Security Association is negotiated during the Quick Mode, a new Diffie-Hellman (DH) exchange occurs. The new DH shared secret will be included with original keying material (SYKEID_d, initiator nonce, and responder nonce from Phase 1 for generating a new IPsec session key. If PFS is not used, the IPsec session key will always be completely dependent on the original keying material from Phase 1. Hence, if an older key is compromised at any time, it is possible that all new keys may be compromised.\n\nThe DH exchange is performed in the same manner as was done in Phase 1 (Main or Aggressive Mode). However, the Phase 2 exchange is protected by encrypting the Phase 2 packets with the key derived from the Phase 1 negotiation. Because DH negotiations during Phase 2 are encrypted, the new IPsec session key has an added element of secrecy."
+fix = "Configure the ASA to specify PFS for the IPsec SA during IKE Phase 2 negotiation as shown in the example below.\n\nASA3(config)# crypto map IPSEC_CRYPTO_MAP 1 set pfs group5"
+ccis = [2418]
+
+[[checks]]
+pk = 'c2a257b0-5547-4b45-b194-3c5f16e1abe6'
+title = 'The Cisco ASA must be configured to use a FIPS-validated cryptographic module to generate cryptographic hashes.'
+human_id = 'CASA-VN-000190'
+group_title = 'SRG-NET-000510-VPN-002160'
+nist_impact = 3
+vulnerability_id = 'V-239955'
+rule_id = 'SV-239955r769243_rule'
+content = "Verify the ASA is configured to use a FIPS-validated cryptographic module to generate cryptographic hashes.\n\nStep 1: Verify that a FIPS-validated hash is used for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 1\n…\n…\n…\n integrity sha256\n\nStep 2: Verify that a FIPS-validated hash is used for the IPsec SA.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp integrity sha-256\n\nIf the ASA is not configured to use a FIPS-validated cryptographic module to generate cryptographic hashes, this is a finding."
+discussion = "FIPS 140-2 precludes the use of invalidated cryptography for the cryptographic protection of sensitive or valuable data within Federal systems. Unvalidated cryptography is viewed by NIST as providing no protection to the information or data. In effect, the data would be considered unprotected plain text. If the agency specifies that the information or data be cryptographically protected, then FIPS 140-2 is applicable. In essence, if cryptography is required, it must be validated. Cryptographic modules that have been approved for classified use may be used in lieu of modules that have been validated against the FIPS 140-2 standard.\n\nThe cryptographic module used must have at least one validated hash algorithm. This validated hash algorithm must be used to generate cryptographic hashes for all cryptographic security function within the product being evaluated."
+fix = "Configure the ASA to use a FIPS-validated cryptographic module to generate cryptographic hashes as shown in the examples below.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# integrity sha256\nASA1(config-ikev2-policy)# exit\n\nASA1(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\nASA1(config-ipsec-proposal)# protocol esp integrity sha-256\nASA1(config-ipsec-proposal)# end"
+ccis = [2450]
+
+[[checks]]
+pk = '8c8d1d26-8901-4f5f-bf0b-202c7aaff929'
+title = 'The Cisco ASA must be configured to use a FIPS-validated cryptographic module to generate cryptographic hashes.'
+human_id = 'CASA-VN-000190'
+group_title = 'SRG-NET-000510-VPN-002160'
+nist_impact = 3
+vulnerability_id = 'V-239955'
+rule_id = 'SV-239955r916125_rule'
+content = "Verify the ASA is configured to use a FIPS-validated cryptographic module to generate cryptographic hashes.\n\nStep 1: Verify that a FIPS-validated hash is used for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 1\n…\n…\n…\n integrity sha384\n\nStep 2: Verify that a FIPS-validated hash is used for the IPsec SA.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp integrity sha-384\n\nIf the ASA is not configured to use a FIPS-validated cryptographic module to generate cryptographic hashes, this is a finding."
+discussion = "FIPS 140-2/140-3 precludes the use of invalidated cryptography for the cryptographic protection of sensitive or valuable data within federal systems. Unvalidated cryptography is viewed by NIST as providing no protection to the information or data. In effect, the data would be considered unprotected plain text. If the agency specifies that the information or data be cryptographically protected, then FIPS 140-2/140-3 is applicable. In essence, if cryptography is required, it must be validated. Cryptographic modules that have been approved for classified use may be used in lieu of modules that have been validated against the FIPS 140-2/140-3 standard.\n\nThe cryptographic module used must have at least one validated hash algorithm. This validated hash algorithm must be used to generate cryptographic hashes for all cryptographic security function within the product being evaluated."
+fix = "Configure the ASA to use a FIPS-validated cryptographic module to generate cryptographic hashes as shown in the examples below.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# integrity sha384\nASA1(config-ikev2-policy)# exit\n\nASA1(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\nASA1(config-ipsec-proposal)# protocol esp integrity sha-384\nASA1(config-ipsec-proposal)# end"
+ccis = [2450]
+
+[[checks]]
+pk = '67dcc414-971e-478f-be11-217b824bb5b5'
+title = 'The Cisco ASA must be configured to use a FIPS-validated cryptographic module to implement IPsec encryption services.'
+human_id = 'CASA-VN-000200'
+group_title = 'SRG-NET-000510-VPN-002170'
+nist_impact = 3
+vulnerability_id = 'V-239956'
+rule_id = 'SV-239956r666274_rule'
+content = "Verify the ASA uses a FIPS-validated cryptographic module to implement IPsec encryption services.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption aes-192\n\nIf the ASA is not configured to use a FIPS-validated cryptographic module to implement IPsec encryption services, this is a finding."
+discussion = "FIPS 140-2 precludes the use of invalidated cryptography for the cryptographic protection of sensitive or valuable data within Federal systems. Unvalidated cryptography is viewed by NIST as providing no protection to the information or data. In effect, the data would be considered unprotected plain text. If the agency specifies that the information or data be cryptographically protected, then FIPS 140-2 is applicable. In essence, if cryptography is required, it must be validated. Cryptographic modules that have been approved for classified use may be used in lieu of modules that have been validated against the FIPS 140-2 standard.\n\nThe cryptographic module used must have one FIPS-validated encryption algorithm (i.e., validated Advanced Encryption Standard [AES]). This validated algorithm must be used for encryption for cryptographic security function within the product being evaluated."
+fix = "Configure the ASA to use a FIPS-validated cryptographic module to implement IPsec encryption services as shown in the example below.\n\nASA2(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\nASA2(config-ipsec-proposal)# protocol esp encryption aes-192"
+ccis = [2450]
+
+[[checks]]
+pk = '5513b165-2f60-40ec-a3a7-902dffa17771'
+title = 'The Cisco ASA must be configured to use a FIPS-validated cryptographic module to implement IPsec encryption services.'
+human_id = 'CASA-VN-000200'
+group_title = 'SRG-NET-000510-VPN-002170'
+nist_impact = 3
+vulnerability_id = 'V-239956'
+rule_id = 'SV-239956r916128_rule'
+content = "Verify the ASA uses a FIPS-validated cryptographic module to implement IPsec encryption services.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption aes-256\n\nIf the ASA is not configured to use a FIPS-validated cryptographic module to implement IPsec encryption services, this is a finding."
+discussion = "FIPS 140-2/140-3 precludes the use of invalidated cryptography for the cryptographic protection of sensitive or valuable data within federal systems. Unvalidated cryptography is viewed by NIST as providing no protection to the information or data. In effect, the data would be considered unprotected plain text. If the agency specifies that the information or data be cryptographically protected, then FIPS 140-2/140-3 is applicable. In essence, if cryptography is required, it must be validated. Cryptographic modules that have been approved for classified use may be used in lieu of modules that have been validated against the FIPS 140-2/140-3 standard.\n\nThe cryptographic module used must have one FIPS-validated encryption algorithm (i.e., validated Advanced Encryption Standard [AES]). This validated algorithm must be used for encryption for cryptographic security function within the product being evaluated."
+fix = "Configure the ASA to use a FIPS-validated cryptographic module to implement IPsec encryption services as shown in the example below.\n\nASA2(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\nASA2(config-ipsec-proposal)# protocol esp encryption aes-256"
+ccis = [2450]
+
+[[checks]]
+pk = 'da695fa4-665c-46e4-9e36-75964256e53a'
+title = 'The Cisco ASA must be configured to use a Diffie-Hellman (DH) Group of 14 or greater for Internet Key Exchange (IKE) Phase 1.'
+human_id = 'CASA-VN-000210'
+group_title = 'SRG-NET-000074-VPN-000250'
+nist_impact = 4
+vulnerability_id = 'V-239957'
+rule_id = 'SV-239957r666277_rule'
+content = "Review the ASA configuration to determine if DH Group of 14 or greater has been specified for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 1\n encryption aes-256\n …\n group 24\n\nIf DH Group of 14 or greater has not been specified for IKE Phase 1, this is a finding."
+discussion = 'Use of an approved DH algorithm ensures the Internet Key Exchange (IKE) (Phase 1) proposal uses FIPS-validated key management techniques and processes in the production, storage, and control of private/secret cryptographic keys. The security of the DH key exchange is based on the difficulty of solving the discrete logarithm from which the key was derived. Hence, the larger the modulus, the more secure the generated key is considered to be.'
+fix = "Configure the ASA to use a DH Group of 14 or greater as shown in the example below.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# group 24"
+ccis = [68]
+
+[[checks]]
+pk = '187f7e46-1857-491d-bc16-33240ee64d5f'
+title = 'The Cisco ASA must be configured to use a Diffie-Hellman (DH) Group of 16 or greater for Internet Key Exchange (IKE) Phase 1.'
+human_id = 'CASA-VN-000210'
+group_title = 'SRG-NET-000074-VPN-000250'
+nist_impact = 4
+vulnerability_id = 'V-239957'
+rule_id = 'SV-239957r916149_rule'
+content = "Review the ASA configuration to determine if DH Group of 16 or greater has been specified for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 1\n encryption aes-256\n …\n group 24\n\nIf DH Group of 16 or greater has not been specified for IKE Phase 1, this is a finding."
+discussion = 'Use of an approved DH algorithm ensures the IKE (Phase 1) proposal uses FIPS-validated key management techniques and processes in the production, storage, and control of private/secret cryptographic keys. The security of the DH key exchange is based on the difficulty of solving the discrete logarithm from which the key was derived. Hence, the larger the modulus, the more secure the generated key is considered to be.'
+fix = "Configure the ASA to use a DH Group of 16 or greater as shown in the example below.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# group 24"
+ccis = [68]
+
+[[checks]]
+pk = 'b99f35a3-cb73-42bc-a09b-e15c1fecbd78'
+title = 'The Cisco ASA must be configured to use FIPS-validated SHA-2 or higher for Internet Key Exchange (IKE) Phase 1.'
+human_id = 'CASA-VN-000230'
+group_title = 'SRG-NET-000168-VPN-000600'
+nist_impact = 3
+vulnerability_id = 'V-239958'
+rule_id = 'SV-239958r769246_rule'
+content = "Review the ASA configuration to verify that SHA-2 or higher is specified for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 1\n …\n integrity sha256\n\nIf the ASA is not configured to use SHA-2 or higher for IKE Phase 1, this is a finding."
+discussion = "Without cryptographic integrity protections, information can be altered by unauthorized users without detection.\n\nAlthough allowed by SP800-131Ar2 for some applications, SHA-1 is considered a compromised hashing standard and is being phased out of use by industry and Government standards. Unless required for legacy use, DoD systems should not be configured to use SHA-2 for integrity of remote access sessions."
+fix = "Configure the ASA to use FIPS-validated SHA-2 or higher for IKE Phase 1 as shown in the example below.\n\nASA2(config)# crypto ikev2 policy 1\nASA2(config-ikev2-policy)# integrity sha256"
+ccis = [803]
+
+[[checks]]
+pk = 'c565486f-0739-452f-ab07-6d4d5bf0b04f'
+title = 'The Cisco ASA must be configured to use FIPS-validated SHA-2 at 384 bits or higher for Internet Key Exchange (IKE) Phase 1.'
+human_id = 'CASA-VN-000230'
+group_title = 'SRG-NET-000168-VPN-000600'
+nist_impact = 3
+vulnerability_id = 'V-239958'
+rule_id = 'SV-239958r916134_rule'
+content = "Review the ASA configuration to verify that SHA-2 at 384 bits or higher is specified for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 1\n …\n integrity sha384\n\nIf the ASA is not configured to use SHA-2 at 384 bits or higher for IKE Phase 1, this is a finding."
+discussion = "Without cryptographic integrity protections, information can be altered by unauthorized users without detection.\n\nAlthough allowed by SP800-131Ar2 for some applications, SHA-1 is considered a compromised hashing standard and is being phased out of use by industry and government standards. Unless required for legacy use, DOD systems should not be configured to use SHA-2 for integrity of remote access sessions."
+fix = "Configure the ASA to use FIPS-validated SHA-2 at 384 bits or higher for IKE Phase 1 as shown in the example below.\n\nASA2(config)# crypto ikev2 policy 1\nASA2(config-ikev2-policy)# integrity sha384"
+ccis = [803]
+
+[[checks]]
+pk = '8f0c0437-ae5c-4e26-8bda-ba41ba58d1f2'
+title = 'The Cisco ASA must be configured to use FIPS-validated SHA-1 or higher for Internet Key Exchange (IKE) Phase 2.'
+human_id = 'CASA-VN-000240'
+group_title = 'SRG-NET-000230-VPN-000780'
+nist_impact = 4
+vulnerability_id = 'CASA-VN-000240'
+rule_id = 'CASA-VN-000240_rule'
+content = "Review the ASA configuration to verify that SHA-2 or higher is specified for IKE Phase 2 as shown in the example below.\n\nStep 1: Review the crypto map for IKE Phase 2.\n\ncrypto map IPSEC_MAP 10 set ikev2 ipsec-proposal AES_SHA\n\nStep 2: Verify that the proposal specifies SHA-1 or higher.\n\ncrypto ipsec ikev2 ipsec-proposal AES_SHA\n protocol esp encryption …\n protocol esp integrity sha-384 sha-256\n\nIf the ASA is not configured to use SHA-1 or higher for IKE Phase 2, this is a finding."
+discussion = "Authenticity protection provides protection against man-in-the-middle attacks/session hijacking and the insertion of false information into sessions.\n\nAlthough allowed by SP800-131Ar1 for some applications, SHA-1 is considered a compromised hashing standard and is being phased out of use by industry and Government standards. Unless required for legacy use, DoD systems should not be configured to use SHA-1 for integrity of remote access sessions. For digital signature verification, SHA-1 is allowed for legacy use. For all other hash function applications (e.g., HMAC, KDFs, RBG, password hashing, checksum integrity checks), the use of SHA-1 is acceptable, but discouraged in DoD.\n\nThis requirement focuses on communications protection for the application session rather than for the network packet and establishes grounds for confidence at both ends of communications sessions in ongoing identities of other parties and in the validity of information transmitted. Depending on the required degree of confidentiality and integrity, web services/SOA will require the use of mutual authentication (two-way/bidirectional).\n\nAn IPsec Security Associations (SA) is established using either IKE or manual configuration."
+fix = "Configure the ASA to use FIPS-validated SHA-2 or higher for IKE Phase 2.\n\nStep 1: Configure the IKE Phase 2 proposal as shown in the example below.\n\nASA1(config)# crypto ipsec ikev2 ipsec-proposal AES_SHA\nASA1(config-ipsec-proposal)# protocol esp integrity sha-384 sha-256\nASA1(config-ipsec-proposal)# exit\n\nStep 2: Configure the crypto map using the configured proposal.\n\nASA1(config)# crypto map IPSEC_MAP 10 set ikev2 ipsec-proposal\nASA1(config)# end"
+ccis = [1184]
+
+[[checks]]
+pk = 'c68f8642-166e-4c6f-ae6d-1b6799629f8c'
+title = 'The Cisco ASA must be configured to use FIPS-validated SHA-2 or higher for Internet Key Exchange (IKE) Phase 2.'
+human_id = 'CASA-VN-000240'
+group_title = 'SRG-NET-000230-VPN-000780'
+nist_impact = 4
+vulnerability_id = 'V-239959'
+rule_id = 'SV-239959r770426_rule'
+ccis = [1184]
+
+[[checks]]
+pk = '913c0e8c-f28e-4a67-9323-4f2e195497b9'
+title = 'The Cisco ASA must be configured to use FIPS-validated SHA-2 or higher for Internet Key Exchange (IKE) Phase 2.'
+human_id = 'CASA-VN-000240'
+group_title = 'SRG-NET-000230-VPN-000780'
+nist_impact = 4
+vulnerability_id = 'V-239959'
+rule_id = 'SV-239959r1005430_rule'
+content = "Review the ASA configuration to verify that SHA-2 or higher is specified for IKE Phase 2 as shown in the example below.\n\nStep 1: Review the crypto map for IKE Phase 2.\n\ncrypto map IPSEC_MAP 10 set ikev2 ipsec-proposal AES_SHA\n\nStep 2: Verify that the proposal specifies SHA-2 or higher.\n\ncrypto ipsec ikev2 ipsec-proposal AES_SHA\n protocol esp encryption …\n protocol esp integrity sha-384 sha-256\n\nIf the ASA is not configured to use SHA-2 or higher for IKE Phase 2, this is a finding."
+discussion = "Authenticity protection provides protection against man-in-the-middle attacks/session hijacking and the insertion of false information into sessions.\n\nAlthough allowed by SP800-131Ar2 for some applications, SHA-1 is considered a compromised hashing standard and is being phased out of use by industry and government standards. Unless required for legacy use, DOD systems should not be configured to use SHA-1 for integrity of remote access sessions.\n\nThis requirement focuses on communications protection for the application session rather than for the network packet and establishes grounds for confidence at both ends of communications sessions in ongoing identities of other parties and in the validity of information transmitted. Depending on the required degree of confidentiality and integrity, web services/SOA will require the use of mutual authentication (two-way/bidirectional).\n\nAn IPsec Security Association (SA) is established using either IKE or manual configuration."
+fix = "Configure the ASA to use FIPS-validated SHA-2 or higher for IKE Phase 2.\n\nStep 1: Configure the IKE Phase 2 proposal as shown in the example below.\n\nASA1(config)# crypto ipsec ikev2 ipsec-proposal AES_SHA\nASA1(config-ipsec-proposal)# protocol esp integrity sha-384 sha-256\nASA1(config-ipsec-proposal)# exit\n\nStep 2: Configure the crypto map using the configured proposal.\n\nASA1(config)# crypto map IPSEC_MAP 10 set ikev2 ipsec-proposal\nASA1(config)# end"
+ccis = [1184]
+
+[[checks]]
+pk = 'c8819393-d3a5-4aef-82ec-679f23d9f48c'
+title = 'The Cisco ASA VPN gateway must be configured to restrict what traffic is transported via the IPsec tunnel according to flow control policies.'
+human_id = 'CASA-VN-000300'
+group_title = 'SRG-NET-000019-VPN-000040'
+nist_impact = 3
+vulnerability_id = 'V-239960'
+rule_id = 'SV-239960r666286_rule'
+content = "Step 1: Determine the ACL that is used to define what traffic will be transported via the IPsec tunnel.\n\ncrypto map IPSEC_MAP 10 match address SITE1_SITE2\ncrypto map IPSEC_MAP 10 set peer x.x.x.x\n\nStep 2: Verify that the traffic defined in the ACL is in accordance with flow control policies.\n\naccess-list SITE1_SITE2 extended permit ip 192.168.1.0 255.255.255.0 192.168.2.0 255.255.255.0\n\nIf the VPN gateway is not configured to restrict what traffic is transported via the IPsec tunnel, this is a finding."
+discussion = "Unrestricted traffic may contain malicious traffic which poses a threat to an enclave or to other connected networks. Additionally, unrestricted traffic may transit a network, which uses bandwidth and other resources.\n\nVPN traffic received from another enclave with different security policy or level of trust must not bypass being inspected by the firewall before being forwarded to the private network."
+fix = "Step 1: Define what traffic will be transported via the IPsec tunnel as shown in the example below.\n\nASA1(config)# access-list SITE1_SITE2 extended permit ip 192.168.1.0 255.255.255.0 192.168.2.0 255.255.255.0\n\nStep 2: Apply the ACL to the IPsec crypto map.\n\nASA1(config)# crypto map IPSEC_MAP 10 match address SITE1_SITE2"
+ccis = [1414]
+
+[[checks]]
+pk = 'b6045010-1b13-43e7-9977-7806b3780f16'
+title = 'The Cisco ASA VPN gateway must be configured to identify all peers before establishing a connection.'
+human_id = 'CASA-VN-000310'
+group_title = 'SRG-NET-000148-VPN-000540'
+nist_impact = 3
+vulnerability_id = 'V-239961'
+rule_id = 'SV-239961r666289_rule'
+content = "Verify the VPN Gateway authenticate all peers before establishing a connection as shown in the example below.\n\ntunnel-group x.x.x.x type ipsec-l2l\ntunnel-group x.x.x.x ipsec-attributes\n ikev2 remote-authentication pre-shared-key *****\n ikev2 local-authentication pre-shared-key *****\n\nNote: Authentication can be either pre-shared key or certificate.\n\nIf the VPN Gateway does not uniquely identify and authenticate all peers establishing a connection, this is a finding."
+discussion = "Without identifying devices, unidentified or unknown devices may be introduced, thereby facilitating malicious activity.\n\nFor distributed architectures (e.g., service-oriented architectures), the decisions regarding the validation of identification claims may be made by services separate from the services acting on those decisions. In such situations, it is necessary to provide the identification decisions (as opposed to the actual identifiers) to the services that need to act on those decisions.\n\nThis requirement applies to applications that connect either locally, remotely, or through a network to an endpoint device (including, but not limited to, workstations, printers, servers (outside a datacenter), VoIP Phones, and VTC CODECs). Gateways and SOA applications are examples of where this requirement would apply."
+fix = "Configure the VPN Gateway to authenticate all peers before establishing a connection.\n\nASA1(config)# tunnel-group x.x.x.x type ipsec-l2l\nASA1(config)# tunnel-group x.x.x.x ipsec-attributes\nASA1(config-tunnel-ipsec)# ikev2 remote-authentication pre-shared-key xxxxxxx\nASA1(config-tunnel-ipsec)# ikev2 local-authentication pre-shared-key xxxxxxx\nASA1(config-tunnel-ipsec)# end\n\nNote: The password complexity of pre-shared keys must be in compliance with NIST SP 800-53 control IA-5."
+ccis = [778]
+
+[[checks]]
+pk = '80336c5c-4800-40f2-9255-9eb617b75926'
+title = 'The Cisco ASA VPN gateway must be configured to use cryptography that is compliant with Suite B parameters when transporting classified traffic across an unclassified network.'
+human_id = 'CASA-VN-000340'
+group_title = 'SRG-NET-000565-VPN-002400'
+nist_impact = 4
+vulnerability_id = 'CASA-VN-000340'
+rule_id = 'CASA-VN-000340_rule'
+content = "Verify the VPN gateway is configured to use cryptography that is compliant with Suite B parameters when transporting classified traffic across an unclassified network.\n\nStep 1: Verify that Suite B parameters have been configured for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 2\n encryption aes-gcm-256\n integrity null\n group 19\n prf sha384\n\nStep 2: Determine the crypto map for IKE Phase 2 used for Suite B.\n\ncrypto map SUITE_B_MAP 10 set ikev2 ipsec-proposal AES-GCM-256\n\nStep 3: Verify the proposal specifies Suite B parameters.\n\ncrypto ipsec ikev2 ipsec-proposal AES-GCM-256\n protocol esp encryption aes-gcm-256\n\nNote: GCM is an authenticated encryption algorithm; hence any integrity configuration is ignored.\n\nIf the VPN gateway is not configured to use cryptography that is compliant with Suite B parameters when transporting classified traffic across an unclassified network, this is a finding."
+discussion = "Use of weak or untested encryption algorithms undermines the purposes of utilizing encryption to protect data. The VPN gateway must implement cryptographic modules adhering to the higher standards approved by the Federal Government since this provides assurance they have been tested and validated.\n\nRFC 6379 Suite B Cryptographic Suites for IPsec defines four cryptographic user interface suites for deploying IPsec. Each suite provides choices for Encapsulating Security Payload (ESP) and IKE. The four suites are differentiated by the choice of IKE authentication and key exchange, cryptographic algorithm strengths, and whether ESP is to provide both confidentiality and integrity or integrity only. The suite names are based on the Advanced Encryption Standard (AES) mode and AES key length specified for ESP. Two suites are defined for transporting classified information up to SECRET level—one for both confidentiality and integrity and one for integrity only. There are also two suites defined for transporting classified information up to TOP SECRET level."
+fix = "Configure the VPN gateway to use cryptography that is compliant with Suite B parameters when transporting classified traffic across an unclassified network as shown in the example below.\n\nStep 1: Configure the IKE Phase 1.\n\nASA2(config)# crypto ikev2 policy 2\nASA2(config-ikev2-policy)# encryption aes-gcm-256\nASA2(config-ikev2-policy)# integrity null\nASA2(config-ikev2-policy)# group 20\nASA2(config-ikev2-policy)# prf sha384\nASA2(config-ikev2-policy)# exit\n\nStep 2: Configure the IPsec proposal for Suite B and apply to a crypto map as shown in the example below.\n\nASA2(config-ipsec-proposal)# protocol esp encryption aes-gcm-256\nASA2(config-ipsec-proposal)# exit\nASA2(config)# crypto map SUITE_B_MAP 10 set ikev2 ipsec-proposal AES-GCM-256\nASA2(config)# end"
+ccis = [2450]
+
+[[checks]]
+pk = '6ab43258-bd47-413e-94af-cbbcb5c7a0d8'
+title = 'The Cisco ASA VPN gateway must use cryptographic algorithms approved by NSA to protect NSS when transporting classified traffic across an unclassified network.'
+human_id = 'CASA-VN-000340'
+group_title = 'SRG-NET-000565-VPN-002400'
+nist_impact = 4
+vulnerability_id = 'V-239962'
+rule_id = 'SV-239962r792463_rule'
+ccis = [2450]
+
+[[checks]]
+pk = '59101993-0242-46d8-9fc1-50aa867475a3'
+title = 'The Cisco ASA VPN gateway must use cryptographic algorithms approved by NSA to protect NSS when transporting classified traffic across an unclassified network.'
+human_id = 'CASA-VN-000340'
+group_title = 'SRG-NET-000565-VPN-002400'
+nist_impact = 4
+vulnerability_id = 'V-239962'
+rule_id = 'SV-239962r878134_rule'
+content = "Verify the VPN gateway is configured to use cryptography that is compliant with CSNA/CNSSP when transporting classified traffic across an unclassified network.\n\nStep 1: Verify CSNA/CNSSP-15 parameters have been configured for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 2\n encryption aes-256\n integrity null\n group 19\n prf sha384\n\nStep 2: Determine the crypto map for IKE Phase 2 used in compliance with CSNA/CNSSP-15.\n\ncrypto map CSNA_MAP 10 set ikev2 ipsec-proposal aes-256\n\nStep 3: Verify the proposal specifies AES 256 parameters.\n\ncrypto ipsec ikev2 ipsec-proposal AES-256\n protocol esp encryption aes-256\n\nIf the VPN gateway is not configured to use cryptography that is compliant with CSNA/CNSSP-15 parameters when transporting classified traffic across an unclassified network, this is a finding."
+discussion = "Use of weak or untested encryption algorithms undermines the purposes of utilizing encryption to protect data. The VPN gateway must implement cryptographic modules adhering to the higher standards approved by the Federal Government since this provides assurance they have been tested and validated.\n\nNIST cryptographic algorithms are approved by NSA to protect NSS. Based on an analysis of the impact of quantum computing, cryptographic algorithms specified by CNSSP-15 and approved for use in products in the CSfC program have been changed to more stringent protocols and configured with increased bit sizes and other secure characteristics to protect against quantum computing threats. The Commercial National Security Algorithm Suite (CNSA Suite) replaces Suite B."
+fix = "Configure the VPN gateway to use cryptography that is compliant with CSNA/CNSSP-15 parameters when transporting classified traffic across an unclassified network as shown in the example below.\n\nStep 1: Configure the IKE Phase 1.\n\nASA2(config)# crypto ikev2 policy 2\nASA2(config-ikev2-policy)# encryption aes-256\nASA2(config-ikev2-policy)# integrity null\nASA2(config-ikev2-policy)# group 20\nASA2(config-ikev2-policy)# prf sha384\nASA2(config-ikev2-policy)# exit\n\nStep 2: Configure the IPsec proposal for AES 256 and apply to a crypto map as shown in the example below.\n\nASA2(config-ipsec-proposal)# protocol esp encryption aes-256\nASA2(config-ipsec-proposal)# exit\nASA2(config)# crypto map CSNA_MAP 10 set ikev2 ipsec-proposal AES-256\nASA2(config)# end"
+ccis = [2450]
+
+[[checks]]
+pk = '77cbb9cc-5544-4c42-8b29-43b77a031546'
+title = 'The Cisco ASA VPN gateway must be configured to renegotiate the IPsec Security Association after eight hours or less.'
+human_id = 'CASA-VN-000350'
+group_title = 'SRG-NET-000337-VPN-001290'
+nist_impact = 3
+vulnerability_id = 'V-239963'
+rule_id = 'SV-239963r1015263_rule'
+content = "Verify the VPN gateway renegotiates the security association after eight hours or less as shown in the example below.\n\ncrypto map IPSEC_MAP 10 match address SITE1_SITE2\ncrypto map IPSEC_MAP 10 set peer x.x.x.x\n…\n…\n…\ncrypto map IPSEC_MAP 10 set security-association lifetime seconds 3600\n\nIf the VPN Gateway does not renegotiate the security association after eight hours or less, this is a finding."
+discussion = "The IPsec security association (SA) and its corresponding key will expire either after the number of seconds or amount of traffic volume has exceeded the configured limit. A new SA is negotiated before the lifetime threshold of the existing SA is reached to ensure that a new SA is ready for use when the old one expires. The longer the lifetime of the IPsec SA, the longer the lifetime of the session key used to protect IP traffic. The SA is less secure with a longer lifetime because an attacker has a greater opportunity to collect traffic encrypted by the same key and subject it to cryptanalysis. However, a shorter lifetime causes IPsec peers to renegotiate Phase 2, more often resulting in the expenditure of additional resources.\n\nSpecify the lifetime (in seconds) of an Internet Key Exchange (IKE) SA. When the SA expires, it is replaced by a new SA, the Security Parameter Index (SPI), or terminated if the peer cannot be contacted for renegotiation."
+fix = "Configure the VPN gateway to renegotiate the security association after eight hours or less as shown in the example below.\n\nASA1(config)# crypto map IPSEC_MAP 10 set security-association lifetime seconds 28800\nASA1(config)# end"
+ccis = [2038, 4895]
+
+[[checks]]
+pk = 'd07530de-108c-46c9-933c-9e26a93a3e9c'
+title = 'The Cisco ASA VPN gateway must be configured to renegotiate the IKE security association after 24 hours or less.'
+human_id = 'CASA-VN-000360'
+group_title = 'SRG-NET-000337-VPN-001300'
+nist_impact = 3
+vulnerability_id = 'V-239964'
+rule_id = 'SV-239964r1015264_rule'
+content = "Verify the VPN gateway renegotiates the IKE security association after 24 hours or less as shown in the example below.\n\ncrypto ikev2 policy 2\n encryption …\n …\n …\n …\n lifetime seconds 86400\n\nIf the VPN gateway does not renegotiate the IKE security association after 24 hours or less, this is a finding."
+discussion = 'When a VPN gateway creates an IPsec security association (SA), resources must be allocated to maintain the SA. These resources are wasted during periods of IPsec endpoint inactivity, which could result in the gateway’s inability to create new SAs for other endpoints, thereby preventing new sessions from connecting. The Internet Key Exchange (IKE) idle timeout may also be set to allow SAs associated with inactive endpoints to be deleted before the SA lifetime has expired, although this setting is not recommended at this time. The value of one hour or less is a common best practice.'
+fix = "Configure the VPN gateway to renegotiate the IKE security association after 24 hours or less as shown in the example below.\n\nASA2(config)# crypto ikev2 policy 2\nASA2(config-ikev2-policy)# lifetime seconds 86400\nASA2(config-ikev2-policy)# end"
+ccis = [2038, 4895]
+
+[[checks]]
+pk = '0cb0720f-6b2c-447e-9000-7f78a88923b3'
+title = 'The Cisco ASA remote access VPN server must be configured to use a separate authentication server than that used for administrative access.'
+human_id = 'CASA-VN-000390'
+group_title = 'SRG-NET-000166-VPN-000580'
+nist_impact = 3
+vulnerability_id = 'V-239965'
+rule_id = 'SV-239965r666301_rule'
+content = "In the example below, radius server at 10.1.1.2 is used for administrative access authentication while the LDAP server will be used for granting remote access to the network.\n\naaa-server LDAP protocol ldap\naaa-server LDAP (INSIDE) host 10.1.1.1\n…\n…\n…\naaa-server RADIUS_GROUP protocol radius\naaa-server RADIUS_GROUP (INSIDE) host 10.1.1.2\n key *****\n…\n…\n…\naaa authentication serial console RADIUS_GROUP LOCAL\naaa authentication ssh console RADIUS_GROUP LOCAL\n\nIf the ASA is not configured to use a separate authentication server than that used for administrative access, this is a finding."
+discussion = 'The VPN interacts directly with public networks and devices and should not contain user authentication information for all users. AAA network security services provide the primary framework through which a network administrator can set up access control and authorization on network points of entry or network access servers. It is not advisable to configure access control on the VPN gateway or remote access server. Separation of services provides added assurance to the network if the access control server is compromised.'
+fix = "Configure the ASA to use a separate authentication server as shown in the example below.\n\nASA2(config)# aaa-server LDAP protocol ldap\nASA2(config)# aaa-server LDAP (INSIDE) host 10.1.1.1"
+ccis = [187]
+
+[[checks]]
+pk = '67aeb980-fd7a-407d-a177-c5db37c4da4e'
+title = 'The Cisco ASA remote access VPN server must be configured to use LDAP over SSL to determine authorization for granting access to the network.'
+human_id = 'CASA-VN-000400'
+group_title = 'SRG-NET-000320-VPN-001120'
+nist_impact = 3
+vulnerability_id = 'V-239966'
+rule_id = 'SV-239966r1001252_rule'
+content = "Step 1: Verify that authorization is enforced as shown in the example below.\n\ntunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT general-attributes\n authorization-server-group LDAP\n authorization-required\n\nStep 2: Verify that LDAP over SSL has been enabled.\n\naaa-server LDAP protocol ldap\naaa-server LDAP (INSIDE) host 10.1.1.1\n ldap-over-ssl enable\n\nIf the ASA is not configured to use LDAP over SSL to determine authorization for granting access to the network, this is a finding."
+discussion = "Protecting authentication communications between the client, the VPN Gateway, and the authentication server keeps this critical information from being exploited.\n\nIn distributed information systems, authorization processes and access control decisions may occur in separate parts of the systems. In such instances, authorization information is transmitted securely so timely access control decisions can be enforced at the appropriate locations. To support the access control decisions, it may be necessary to transmit as part of the access authorization information, supporting security attributes. This is due to the fact that in distributed information systems, there are various access control decisions that need to be made and different entities (e.g., services) make these decisions in a serial fashion, each requiring some security attributes to make the decisions.\n\nThis applies to VPN gateways that have the concept of a user account and have the login function residing on the VPN gateway."
+fix = "Step 1: Configure the ASA to use LDAP over SSL as shown in the example below.\n\nASA2(config)# aaa-server LDAP protocol ldap\nASA2(config)# aaa-server LDAP (INSIDE) host 10.1.1.1\nASA2(config-aaa-server-host)# ldap-over-ssl enable\nASA2(config-aaa-server-host)# exit\n\nStep 2: Configure the ASA to enforce authorization using the common name (CN) from the user’s certificate.\n\nASA2(config)# tunnel-group ANY_CONNECT general-attributes\nASA2(config-tunnel-general)# authorization-required\nASA2(config-tunnel-general)# authorization-server-group LDAP\nASA2(config-tunnel-general)# end"
+ccis = [2353]
+
+[[checks]]
+pk = '2e4632a3-bc04-483c-8c85-94b61e1b45ae'
+title = 'The Cisco ASA remote access VPN server must be configured to identify and authenticate users before granting access to the network.'
+human_id = 'CASA-VN-000410'
+group_title = 'SRG-NET-000138-VPN-000490'
+nist_impact = 3
+vulnerability_id = 'V-239967'
+rule_id = 'SV-239967r666307_rule'
+content = "Verify the ASA is configured to uniquely identify and authenticate users before granting access to the network as shown in the example below.\n\ntunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT webvpn-attributes\n authentication certificate\n\nIf the ASA is not configured to identify and authenticate users before granting access to the network, this is a finding."
+discussion = "To assure accountability and prevent unauthenticated access, organizational users must be identified and authenticated to prevent potential misuse and compromise of the system.\n\nOrganizational users include organizational employees or individuals the organization deems to have equivalent status of employees (e.g., contractors). Organizational users (and any processes acting on behalf of users) must be uniquely identified and authenticated for all accesses except the following:\n\n(i) Accesses explicitly identified and documented by the organization. Organizations document specific user actions that can be performed on the information system without identification or authentication; and\n\n(ii) Accesses that occur through authorized use of group authenticators without individual authentication. Organizations may require unique identification of individuals' in-group accounts (e.g., shared privilege accounts) or for detailed accountability of individual activity.\n\nThis requirement only applies to components where this is specific to the function of the device or has the concept of an organizational user (e.g., VPN or proxy capability). This does not apply to authentication for the purpose of configuring the device itself (i.e., device management)."
+fix = "Configure the ASA to uniquely identify and authenticate users before granting access to the network.\n\nASA1(config)# tunnel-group ANY_CONNECT webvpn-attributes\nASA1(config-tunnel-webvpn)# authentication certificate\nASA1(config-tunnel-webvpn)# end"
+ccis = [764]
+
+[[checks]]
+pk = '370e976a-0244-469c-874c-366e3a1db060'
+title = 'The Cisco ASA remote access VPN server must be configured to enforce certificate-based authentication before granting access to the network.'
+human_id = 'CASA-VN-000440'
+group_title = 'SRG-NET-000140-VPN-000500'
+nist_impact = 4
+vulnerability_id = 'V-239968'
+rule_id = 'SV-239968r954210_rule'
+content = "Review the ASA configuration to verify that it enforces certificate-based authentication before granting access to the network as shown in the example below.\n\ntunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT webvpn-attributes\n authentication certificate\n\nIf the ASA configuration does not enforce certificate-based authentication before granting access to the network, this is a finding."
+discussion = "To assure accountability and prevent unauthenticated access, non-privileged users must utilize multifactor authentication to prevent potential misuse and compromise of the system.\n\nMultifactor authentication uses two or more factors to achieve authentication. Use of password for user remote access for non-privileged account is not authorized.\n\nFactors include:\n(i) Something you know (e.g., password/PIN);\n(ii) Something you have (e.g., cryptographic identification device, token); or\n(iii) Something you are (e.g., biometric).\n\nA non-privileged account is any information system account with authorizations of a non-privileged user.\n\nNetwork access is any access to a network element by a user (or a process acting on behalf of a user) communicating through a network.\n\nThe DoD CAC with DoD-approved PKI is an example of multifactor authentication."
+fix = "Configure the ASA to enforce certificate-based authentication before granting access to the network as shown in the example below.\n\nASA1(config)# tunnel-group ANY_CONNECT webvpn-attributes\nASA1(config-tunnel-webvpn)# authentication certificate\nASA1(config-tunnel-webvpn)# end"
+ccis = [766]
+
+[[checks]]
+pk = '431e9da2-618b-42de-985e-d3d33c86c13e'
+title = 'The Cisco ASA remote access VPN server must be configured to map the distinguished name (DN) from the client’s certificate to entries in the authentication server to determine authorization to access the network.'
+human_id = 'CASA-VN-000450'
+group_title = 'SRG-NET-000166-VPN-000590'
+nist_impact = 3
+vulnerability_id = 'CASA-VN-000450'
+rule_id = 'CASA-VN-000450_rule'
+content = "Review the tunnel group configured for remote access and verify that the DN from the client’s certificate is used to map to entries in the authentication server to determine authorization as shown in the example below.\n\ntunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT general-attributes\n authorization-server-group LDAP\n authorization-required\n username-from-certificate use-entire-name\n\nIf the ASA is not configured to map the distinguished name from the client’s certificate to entries in the authentication server to determine authorization, this is a finding."
+discussion = "Without mapping the certificate used to authenticate to the user account, the ability to determine the identity of the individual user or group will not be available for forensic analysis.\n\nThis requirement only applies to components where this is specific to the function of the device or has the concept of a user (e.g., VPN or ALG. This does not apply to authentication for the purpose of configuring the device itself (i.e., device management)."
+fix = "Configure the ASA to map the distinguished name from the client’s certificate to entries in the authentication server to determine authorization as shown in the example.\n\nASA2(config)# tunnel-group ANY_CONNECT general-attributes\nASA2(config-tunnel-general)# authorization-required\nASA2(config-tunnel-general)# authorization-server-group LDAP\nASA2(config-tunnel-general)# username-from-certificate username-from-certificate use-entire-name\nASA2(config-tunnel-general)# end"
+ccis = [187]
+
+[[checks]]
+pk = '41900014-ac40-47e1-a124-aeecb71cb2db'
+title = 'The Cisco ASA remote access VPN server must be configured to map the distinguished name (DN) from the client’s certificate to entries in the authentication server to determine authorization to access the network.'
+human_id = 'CASA-VN-000450'
+group_title = 'SRG-NET-000166-VPN-000590'
+nist_impact = 3
+vulnerability_id = 'V-239969'
+rule_id = 'SV-239969r666313_rule'
+ccis = [187]
+
+[[checks]]
+pk = 'ed1238e6-6c0d-4bba-bf1c-7be21ab294a1'
+title = 'The Cisco ASA remote access VPN server must be configured to map the distinguished name (DN) from the client’s certificate to entries in the authentication server to determine authorization to access the network.'
+human_id = 'CASA-VN-000450'
+group_title = 'SRG-NET-000166-VPN-000590'
+nist_impact = 3
+vulnerability_id = 'V-239969'
+rule_id = 'SV-239969r666313_rule'
+content = "Review the tunnel group configured for remote access and verify that the DN or UPN from the client’s certificate is used to map to entries in the authentication server to determine authorization as shown in the example below.\n\ntunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT general-attributes\n authorization-server-group LDAP\n authorization-required\n username-from-certificate use-entire-name\n\nIf the ASA is not configured to map the distinguished name from the client’s certificate to entries in the authentication server to determine authorization, this is a finding."
+discussion = "Without mapping the certificate used to authenticate to the user account, the ability to determine the identity of the individual user or group will not be available for forensic analysis.\n\nThis requirement only applies to components where this is specific to the function of the device or has the concept of a user (e.g., VPN or ALG). This does not apply to authentication for the purpose of configuring the device itself (i.e., device management)."
+fix = "Configure the ASA to map the distinguished name from the client’s certificate to entries in the authentication server to determine authorization as shown in the example.\n\nASA2(config)# tunnel-group ANY_CONNECT general-attributes\nASA2(config-tunnel-general)# authorization-required\nASA2(config-tunnel-general)# authorization-server-group LDAP\nASA2(config-tunnel-general)# username-from-certificate username-from-certificate use-entire-name\nASA2(config-tunnel-general)# end"
+ccis = [187]
+
+[[checks]]
+pk = 'c4357146-af23-43c8-8a8d-0542150057aa'
+title = 'The Cisco ASA remote access VPN server must be configured to map the distinguished name (DN) from the client’s certificate to entries in the authentication server to determine authorization to access the network.'
+human_id = 'CASA-VN-000450'
+group_title = 'SRG-NET-000166-VPN-000590'
+nist_impact = 3
+vulnerability_id = 'V-239969'
+rule_id = 'SV-239969r929014_rule'
+content = "Review the tunnel group configured for remote access and verify that the DN or UPN from the client’s certificate is used to map to entries in the authentication server to determine authorization as shown in the example below.\n\ntunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT general-attributes\n authorization-server-group LDAP\n authorization-required\n username-from-certificate use-entire-name\n\nIf the ASA is not configured to map the distinguished name or UPN from the client’s certificate to entries in the authentication server to determine authorization, this is a finding."
+discussion = "Without mapping the certificate used to authenticate to the user account, the ability to determine the identity of the individual user or group will not be available for forensic analysis.\n\nThis requirement only applies to components where this is specific to the function of the device or has the concept of a user (e.g., VPN or ALG). This does not apply to authentication for the purpose of configuring the device itself (i.e., device management)."
+fix = "Configure the ASA to map the DN or UPN from the client’s certificate to entries in the authentication server to determine authorization as shown in the example.\n\nASA2(config)# tunnel-group ANY_CONNECT general-attributes\nASA2(config-tunnel-general)# authorization-required\nASA2(config-tunnel-general)# authorization-server-group LDAP\nASA2(config-tunnel-general)# username-from-certificate username-from-certificate use-entire-name\nASA2(config-tunnel-general)# end"
+ccis = [187]
+
+[[checks]]
+pk = '366928c6-b37e-43ce-95e7-ba11a3f0c6e3'
+title = 'The Cisco ASA remote access VPN server must be configured to display the Standard Mandatory DoD Notice and Consent Banner before granting access to the network.'
+human_id = 'CASA-VN-000460'
+group_title = 'SRG-NET-000041-VPN-000110'
+nist_impact = 3
+vulnerability_id = 'V-239970'
+rule_id = 'SV-239970r666316_rule'
+content = "Verify that the ASA is configured to display the Standard Mandatory DoD Notice and Consent Banner before granting remote access to the network as shown in the example below.\n\ngroup-policy GROUP_POLICY_ANYCONNECT attributes\n banner value I've read & consent to terms in IS user agreem't.\n\nIf the ASA is not configured to display the Standard Mandatory DoD Notice and Consent Banner before granting remote access to the network, this is a finding."
+discussion = "Display of a standardized and approved use notification before granting access to the network ensures privacy and security notification verbiage used is consistent with applicable federal laws, Executive Orders, directives, policies, regulations, standards, and guidance.\n\nIn most VPN implementations, the banner is configured in the management backplane (NDM SRG) and serves as the presentation for the VPN client connection as well as for administrator logon to the device management tool/backplane.\n\nSystem use notifications are required only for access via logon interfaces with human users and are not required when such human interfaces do not exist. This requirement applies to VPN gateways that have the concept of a user account and have the logon function residing on the VPN gateway.\n\nThe banner must be formatted in accordance with applicable DoD policy. Use the following verbiage for VPN gateways that can accommodate banners of 1300 characters:\n\n\"You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only.\n\nBy using this IS (which includes any device attached to this IS), you consent to the following conditions:\n\n-The USG routinely intercepts and monitors communications on this IS for purposes including, but not limited to, penetration testing, COMSEC monitoring, network operations and defense, personnel misconduct (PM), law enforcement (LE), and counterintelligence (CI) investigations.\n\n-At any time, the USG may inspect and seize data stored on this IS.\n\n-Communications using, or data stored on, this IS are not private, are subject to routine monitoring, interception, and search, and may be disclosed or used for any USG-authorized purpose.\n\n-This IS includes security measures (e.g., authentication and access controls) to protect USG interests--not for your personal benefit or privacy.\n\n-Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI investigative searching or monitoring of the content of privileged communications, or work product, related to personal representation or services by attorneys, psychotherapists, or clergy, and their assistants. Such communications and work product are private and confidential. See User Agreement for details.\"\n\nUse the following verbiage for operating systems that have severe limitations on the number of characters that can be displayed in the banner:\n\n\"I've read & consent to terms in IS user agreem't.\""
+fix = "Configure the ASA to display the Standard Mandatory DoD Notice and Consent Banner before granting access to the network as shown in the example below.\n\nASA3(config)# group-policy GROUP_POLICY_ANYCONNECT attributes\nASA3(config-group-policy)# banner value I've read & consent to terms in IS user agreem't.\nASA3(config-group-policy)# end"
+ccis = [48]
+
+[[checks]]
+pk = '803c2ccf-f0f6-43be-8214-d193f01d50c7'
+title = 'The Cisco ASA remote access VPN server must be configured to generate log records containing information that establishes the identity of any individual or process associated with the event.'
+human_id = 'CASA-VN-000500'
+group_title = 'SRG-NET-000079-VPN-000300'
+nist_impact = 3
+vulnerability_id = 'CASA-VN-000500'
+rule_id = 'CASA-VN-000500_rule'
+content = "Review the ASA configuration to determine if VPN events are logged as shown in the example below.\n\nlogging class vpn trap notifications\nlogging class vpnc trap notifications\nlogging class vpnfo trap notifications\nlogging class webfo trap notifications\nlogging class webvpn trap notifications\nlogging class svc trap notifications\n\nIf the ASA is not configured to log entries containing information to establish the identity of any individual or process associated with the event, this is a finding."
+discussion = 'Without information that establishes the identity of the subjects (i.e., users or processes acting on behalf of users) associated with the events, security personnel cannot determine responsibility for the potentially harmful event.'
+fix = "Configure the ASA to generate logs containing information to establish the identity of any individual or process associated with the event as shown in the example below.\n\nciscoasa(config)# logging class vpn trap notifications\nciscoasa(config)# logging class vpnc trap notifications\nciscoasa(config)# logging class vpnfo trap notifications\nciscoasa(config)# logging class webvpn trap notifications\nciscoasa(config)# logging class webfo trap notifications\nciscoasa(config)# logging class svc trap notifications\nciscoasa(config)# end"
+ccis = [1487]
+
+[[checks]]
+pk = 'f120b06b-6d1f-4129-9199-891ded6fdc20'
+title = 'The Cisco ASA remote access VPN server must be configured to generate log records containing information that establishes the identity of any individual or process associated with the event.'
+human_id = 'CASA-VN-000500'
+group_title = 'SRG-NET-000079-VPN-000300'
+nist_impact = 3
+vulnerability_id = 'V-239971'
+rule_id = 'SV-239971r666319_rule'
+ccis = [1487]
+
+[[checks]]
+pk = 'e8876fb2-2c87-42de-ad0b-ad31f376ee7f'
+title = 'The Cisco ASA remote access VPN server must be configured to generate log records containing information that establishes the identity of any individual or process associated with the event.'
+human_id = 'CASA-VN-000500'
+group_title = 'SRG-NET-000079-VPN-000300'
+nist_impact = 3
+vulnerability_id = 'V-239971'
+rule_id = 'SV-239971r666319_rule'
+content = "Review the ASA configuration to determine if VPN events are logged as shown in the example below.\n\nlogging class vpn trap notifications\nlogging class vpnc trap notifications\nlogging class vpnfo trap notifications\nlogging class webfo trap notifications\nlogging class webvpn trap notifications\nlogging class svc trap notifications\n\nNote: A logging list can be used as an alternative to using class.\n\nIf the ASA is not configured to log entries containing information to establish the identity of any individual or process associated with the event, this is a finding."
+discussion = 'Without information that establishes the identity of the subjects (i.e., users or processes acting on behalf of users) associated with the events, security personnel cannot determine responsibility for the potentially harmful event.'
+fix = "Configure the ASA to generate logs containing information to establish the identity of any individual or process associated with the event as shown in the example below.\n\nciscoasa(config)# logging class vpn trap notifications\nciscoasa(config)# logging class vpnc trap notifications\nciscoasa(config)# logging class vpnfo trap notifications\nciscoasa(config)# logging class webvpn trap notifications\nciscoasa(config)# logging class webfo trap notifications\nciscoasa(config)# logging class svc trap notifications\nciscoasa(config)# end"
+ccis = [1487]
+
+[[checks]]
+pk = '6beb3b68-4710-453a-bfb9-6887d986769a'
+title = 'The Cisco ASA remote access VPN server must be configured to generate log records containing information to establish where the events occurred.'
+human_id = 'CASA-VN-000510'
+group_title = 'SRG-NET-000088-VPN-000310'
+nist_impact = 3
+vulnerability_id = 'CASA-VN-000510'
+rule_id = 'CASA-VN-000510_rule'
+content = "Review the ASA configuration to determine if VPN events are logged as shown in the example below.\n\nlogging class vpn trap notifications\nlogging class vpnc trap notifications\nlogging class vpnfo trap notifications\nlogging class webfo trap notifications\nlogging class webvpn trap notifications\nlogging class svc trap notifications\n\nIf the ASA does not generate log records containing information to establish where the events occurred, this is a finding."
+discussion = "Without establishing where events occurred, it is impossible to establish, correlate, and investigate the events leading up to an outage or attack.\n\nIn order to compile an accurate risk assessment, and provide forensic analysis, it is essential for security personnel to know where events occurred, such as VPN gateway components, modules, device identifiers, node names, and functionality.\n\nAssociating information about where the event occurred within the network provides a means of investigating an attack, recognizing resource utilization or capacity thresholds, or identifying an improperly configured VPN gateway."
+fix = "Configure the ASA to generate log records containing information to establish where the events occurred as shown in the example below.\n\nciscoasa(config)# logging class vpn trap notifications\nciscoasa(config)# logging class vpnc trap notifications\nciscoasa(config)# logging class vpnfo trap notifications\nciscoasa(config)# logging class webvpn trap notifications\nciscoasa(config)# logging class webfo trap notifications\nciscoasa(config)# logging class svc trap notifications\nciscoasa(config)# end"
+ccis = [132]
+
+[[checks]]
+pk = '2bb61a86-9a03-4c97-ab84-c22fe2fb4ea8'
+title = 'The Cisco ASA remote access VPN server must be configured to generate log records containing information to establish where the events occurred.'
+human_id = 'CASA-VN-000510'
+group_title = 'SRG-NET-000088-VPN-000310'
+nist_impact = 3
+vulnerability_id = 'V-239972'
+rule_id = 'SV-239972r666322_rule'
+ccis = [132]
+
+[[checks]]
+pk = '57421c53-711a-4533-9ff4-ce6898bcf16f'
+title = 'The Cisco ASA remote access VPN server must be configured to generate log records containing information to establish where the events occurred.'
+human_id = 'CASA-VN-000510'
+group_title = 'SRG-NET-000088-VPN-000310'
+nist_impact = 3
+vulnerability_id = 'V-239972'
+rule_id = 'SV-239972r666322_rule'
+content = "Review the ASA configuration to determine if VPN events are logged as shown in the example below.\n\nlogging class vpn trap notifications\nlogging class vpnc trap notifications\nlogging class vpnfo trap notifications\nlogging class webfo trap notifications\nlogging class webvpn trap notifications\nlogging class svc trap notifications\n\nNote: A logging list can be used as an alternative to using class.\n\nIf the ASA does not generate log records containing information to establish where the events occurred, this is a finding."
+discussion = "Without establishing where events occurred, it is impossible to establish, correlate, and investigate the events leading up to an outage or attack.\n\nIn order to compile an accurate risk assessment, and provide forensic analysis, it is essential for security personnel to know where events occurred, such as VPN gateway components, modules, device identifiers, node names, and functionality.\n\nAssociating information about where the event occurred within the network provides a means of investigating an attack, recognizing resource utilization or capacity thresholds, or identifying an improperly configured VPN gateway."
+fix = "Configure the ASA to generate log records containing information to establish where the events occurred as shown in the example below.\n\nciscoasa(config)# logging class vpn trap notifications\nciscoasa(config)# logging class vpnc trap notifications\nciscoasa(config)# logging class vpnfo trap notifications\nciscoasa(config)# logging class webvpn trap notifications\nciscoasa(config)# logging class webfo trap notifications\nciscoasa(config)# logging class svc trap notifications\nciscoasa(config)# end"
+ccis = [132]
+
+[[checks]]
+pk = '1a0114c9-cca8-4302-9ebe-e66788f6db05'
+title = 'The Cisco ASA remote access VPN server must be configured to generate log records containing information to establish the source of the events.'
+human_id = 'CASA-VN-000520'
+group_title = 'SRG-NET-000089-VPN-000330'
+nist_impact = 2
+vulnerability_id = 'CASA-VN-000520'
+rule_id = 'CASA-VN-000520_rule'
+content = "Verify the ASA generates log records containing information to establish the source of the events as shown in the example below.\n\nlogging class vpn trap notifications\nlogging class vpnc trap notifications\nlogging class vpnfo trap notifications\nlogging class webfo trap notifications\nlogging class webvpn trap notifications\nlogging class svc trap notifications\n\nIf the ASA does not generate log records containing information to establish the source of the events, this is a finding."
+discussion = "Without establishing the source of the event, it is impossible to establish, correlate, and investigate the events leading up to an outage or attack. In order to compile an accurate risk assessment and provide forensic analysis, security personnel need to know the source of the event.\n\nIn addition to logging where events occur within the network, the log records must also identify sources of events such as IP addresses, processes, and node or device names."
+fix = "Configure the ASA to generate log records containing information to establish the source of the events as shown in the example below.\n\nciscoasa(config)# logging class vpn trap notifications\nciscoasa(config)# logging class vpnc trap notifications\nciscoasa(config)# logging class vpnfo trap notifications\nciscoasa(config)# logging class webvpn trap notifications\nciscoasa(config)# logging class webfo trap notifications\nciscoasa(config)# logging class svc trap notifications\nciscoasa(config)# end"
+ccis = [133]
+
+[[checks]]
+pk = 'ab5caa4a-af38-4640-94c2-150cd4377346'
+title = 'The Cisco ASA remote access VPN server must be configured to generate log records containing information to establish the source of the events.'
+human_id = 'CASA-VN-000520'
+group_title = 'SRG-NET-000089-VPN-000330'
+nist_impact = 2
+vulnerability_id = 'V-239973'
+rule_id = 'SV-239973r666325_rule'
+ccis = [133]
+
+[[checks]]
+pk = '31a0a470-aba0-43b1-a01e-07e5d57eef35'
+title = 'The Cisco ASA remote access VPN server must be configured to generate log records containing information to establish the source of the events.'
+human_id = 'CASA-VN-000520'
+group_title = 'SRG-NET-000089-VPN-000330'
+nist_impact = 2
+vulnerability_id = 'V-239973'
+rule_id = 'SV-239973r666325_rule'
+content = "Verify the ASA generates log records containing information to establish the source of the events as shown in the example below.\n\nlogging class vpn trap notifications\nlogging class vpnc trap notifications\nlogging class vpnfo trap notifications\nlogging class webfo trap notifications\nlogging class webvpn trap notifications\nlogging class svc trap notifications\n\nNote: A logging list can be used as an alternative to using class.\n\nIf the ASA does not generate log records containing information to establish the source of the events, this is a finding."
+discussion = "Without establishing the source of the event, it is impossible to establish, correlate, and investigate the events leading up to an outage or attack. In order to compile an accurate risk assessment and provide forensic analysis, security personnel need to know the source of the event.\n\nIn addition to logging where events occur within the network, the log records must also identify sources of events such as IP addresses, processes, and node or device names."
+fix = "Configure the ASA to generate log records containing information to establish the source of the events as shown in the example below.\n\nciscoasa(config)# logging class vpn trap notifications\nciscoasa(config)# logging class vpnc trap notifications\nciscoasa(config)# logging class vpnfo trap notifications\nciscoasa(config)# logging class webvpn trap notifications\nciscoasa(config)# logging class webfo trap notifications\nciscoasa(config)# logging class svc trap notifications\nciscoasa(config)# end"
+ccis = [133]
+
+[[checks]]
+pk = 'e6b05afa-e9b0-4d04-bb6b-1a9287ec491e'
+title = 'The Cisco ASA remote access VPN server must be configured to produce log records containing information to establish the outcome of the events.'
+human_id = 'CASA-VN-000530'
+group_title = 'SRG-NET-000091-VPN-000350'
+nist_impact = 3
+vulnerability_id = 'CASA-VN-000530'
+rule_id = 'CASA-VN-000530_rule'
+content = "Verify the ASA generates log records containing information to establish the outcome of the events as shown in the example below.\n\nlogging class vpn trap notifications\nlogging class vpnc trap notifications\nlogging class vpnfo trap notifications\nlogging class webfo trap notifications\nlogging class webvpn trap notifications\nlogging class svc trap notifications\n\nIf the ASA does not generate log records containing information to establish the source of the events, this is a finding."
+discussion = "Without information about the outcome of events, security personnel cannot make an accurate assessment as to whether an attack was successful or if changes were made to the security state of the network.\n\nEvent outcomes can include indicators of event success or failure and event-specific results (e.g., the security state of the network after the event occurred). As such, they also provide a means to measure the impact of an event and help authorized personnel to determine the appropriate response."
+fix = "Configure the ASA to generate log entries containing information to establish the outcome of the events as shown in the example below.\n\nciscoasa(config)# logging class vpn trap notifications\nciscoasa(config)# logging class vpnc trap notifications\nciscoasa(config)# logging class vpnfo trap notifications\nciscoasa(config)# logging class webvpn trap notifications\nciscoasa(config)# logging class webfo trap notifications\nciscoasa(config)# logging class svc trap notifications\nciscoasa(config)# end"
+ccis = [134]
+
+[[checks]]
+pk = '130107b8-f830-4148-9814-517be86a0950'
+title = 'The Cisco ASA remote access VPN server must be configured to produce log records containing information to establish the outcome of the events.'
+human_id = 'CASA-VN-000530'
+group_title = 'SRG-NET-000091-VPN-000350'
+nist_impact = 3
+vulnerability_id = 'V-239974'
+rule_id = 'SV-239974r666328_rule'
+ccis = [134]
+
+[[checks]]
+pk = '6cf10209-0b94-46ec-860c-1725d0334897'
+title = 'The Cisco ASA remote access VPN server must be configured to produce log records containing information to establish the outcome of the events.'
+human_id = 'CASA-VN-000530'
+group_title = 'SRG-NET-000091-VPN-000350'
+nist_impact = 3
+vulnerability_id = 'V-239974'
+rule_id = 'SV-239974r666328_rule'
+content = "Verify the ASA generates log records containing information to establish the outcome of the events as shown in the example below.\n\nlogging class vpn trap notifications\nlogging class vpnc trap notifications\nlogging class vpnfo trap notifications\nlogging class webfo trap notifications\nlogging class webvpn trap notifications\nlogging class svc trap notifications\n\nNote: A logging list can be used as an alternative to using class.\n\nIf the ASA does not generate log records containing information to establish the source of the events, this is a finding."
+discussion = "Without information about the outcome of events, security personnel cannot make an accurate assessment as to whether an attack was successful or if changes were made to the security state of the network.\n\nEvent outcomes can include indicators of event success or failure and event-specific results (e.g., the security state of the network after the event occurred). As such, they also provide a means to measure the impact of an event and help authorized personnel to determine the appropriate response."
+fix = "Configure the ASA to generate log entries containing information to establish the outcome of the events as shown in the example below.\n\nciscoasa(config)# logging class vpn trap notifications\nciscoasa(config)# logging class vpnc trap notifications\nciscoasa(config)# logging class vpnfo trap notifications\nciscoasa(config)# logging class webvpn trap notifications\nciscoasa(config)# logging class webfo trap notifications\nciscoasa(config)# logging class svc trap notifications\nciscoasa(config)# end"
+ccis = [134]
+
+[[checks]]
+pk = '2a78d8e5-60d7-4841-9f72-e3f064791563'
+title = 'The Cisco ASA remote access VPN server must be configured to use TLS 1.2 or higher to protect the confidentiality of remote access connections.'
+human_id = 'CASA-VN-000550'
+group_title = 'SRG-NET-000062-VPN-000200'
+nist_impact = 4
+vulnerability_id = 'CASA-VN-000550'
+rule_id = 'CASA-VN-000550_rule'
+content = "Verify the TLS ASA is configured to use TLS 1.2 or higher as shown in the example below.\n\nssl server-version tlsv1.2\n\nNote: ASA supports TLS version 1.2 starting from software version 9.3.1 for secure message transmission for Clientless SSL VPN and AnyConnect VPN.\n\nIf the ASA is not configured to use TLS 1.2 or higher to protect the confidentiality of sensitive data during transmission, this is a finding."
+discussion = "Using older unauthorized versions or incorrectly configuring protocol negotiation makes the gateway vulnerable to known and unknown attacks that exploit vulnerabilities in this protocol.\n\nNIST SP 800-52 provides guidance for client negotiation on either DoD-only or public-facing servers."
+fix = "Configure the ASA to use TLS 1.2 or higher as shown in the example below.\n\nASA1(config)# ssl server-version tlsv1.2"
+ccis = [68]
+
+[[checks]]
+pk = '6dddca24-57bb-48fe-b085-76445749694a'
+title = 'The Cisco ASA remote access VPN server must be configured to use TLS 1.2 or higher to protect the confidentiality of remote access connections.'
+human_id = 'CASA-VN-000550'
+group_title = 'SRG-NET-000062-VPN-000200'
+nist_impact = 4
+vulnerability_id = 'V-239975'
+rule_id = 'SV-239975r666331_rule'
+ccis = [68]
+
+[[checks]]
+pk = '8f7c6474-5deb-40d2-982f-0b18ef272c7f'
+title = 'The Cisco ASA remote access VPN server must be configured to use TLS 1.2 or higher to protect the confidentiality of remote access connections.'
+human_id = 'CASA-VN-000550'
+group_title = 'SRG-NET-000062-VPN-000200'
+nist_impact = 4
+vulnerability_id = 'V-239975'
+rule_id = 'SV-239975r666331_rule'
+content = "Verify the TLS ASA is configured to use TLS 1.2 or higher as shown in the example below.\n\nssl server-version tlsv1.2 dtlsv1.2\n\nNote: ASA supports TLS version 1.2 starting from software version 9.3.1 for secure message transmission for Clientless SSL VPN and AnyConnect VPN.\n\nIf the ASA is not configured to use TLS 1.2 or higher to protect the confidentiality of sensitive data during transmission, this is a finding."
+discussion = "Using older unauthorized versions or incorrectly configuring protocol negotiation makes the gateway vulnerable to known and unknown attacks that exploit vulnerabilities in this protocol.\n\nNIST SP 800-52 provides guidance for client negotiation on either DoD-only or public-facing servers."
+fix = "Configure the ASA to use TLS 1.2 or higher as shown in the example below.\n\nASA1(config)# ssl server-version tlsv1.2 dtlsv1.2"
+ccis = [68]
+
+[[checks]]
+pk = '933a25fd-891c-4f90-bd0d-72255fe459b4'
+title = 'The Cisco ASA remote access VPN server must be configured to use a FIPS-validated algorithm and hash function to protect the integrity of TLS remote access sessions.'
+human_id = 'CASA-VN-000560'
+group_title = 'SRG-NET-000063-VPN-000210'
+nist_impact = 3
+vulnerability_id = 'V-239976'
+rule_id = 'SV-239976r769253_rule'
+content = "Verify the remote access ASA uses a FIPS-validated algorithms and hash function as shown in the example below.\n\nssl server-version tlsv1.2\nssl cipher tlsv1.2 fips\n\nIf the remote access ASA does not use a digital signature generated using FIPS-validated algorithms and hash function, this is a finding."
+discussion = "Without integrity protection, unauthorized changes may be made to the log files and reliable forensic analysis and discovery of the source of malicious system activity may be degraded.\n\nRemote access (e.g., RDP) is access to DoD nonpublic information systems by an authorized user (or an information system) communicating through an external, non-organization-controlled network. Remote access methods include broadband and wireless.\n\nIntegrity checks include cryptographic checksums, digital signatures, or hash functions. Federal Information Processing Standard (FIPS) 186-4, Digital Signature Standard (DSS), specifies three NIST-approved algorithms: DSA, RSA, and ECDSA. All three are used to generate and verify digital signatures in conjunction with an approved hash function."
+fix = "Configure the remote access ASA to use a digital signature generated using FIPS-validated algorithms and an approved hash.\n\nASA1(config)# ssl cipher tlsv1.2 fips\nASA1(config)# end"
+ccis = [1453]
+
+[[checks]]
+pk = '07492f6a-b818-41c9-8894-8f300c0968e4'
+title = 'The Cisco ASA remote access VPN server must be configured to generate unique session identifiers using a FIPS-validated Random Number Generator (RNG) based on the Deterministic Random Bit Generators (DRBG) algorithm.'
+human_id = 'CASA-VN-000610'
+group_title = 'SRG-NET-000234-VPN-000810'
+nist_impact = 3
+vulnerability_id = 'V-239977'
+rule_id = 'SV-239977r666337_rule'
+content = "Review the ASA configuration to verify that FIPS mode has been enabled as shown in the example below.\n\nASA Version x.x\n!\nhostname  ASA1\nfips enable\n\nIf the ASA is not configured to be enabled in FIPS mode, this is a finding."
+discussion = "Both IPsec and TLS gateways use the RNG to strengthen the security of the protocols. Using a weak RNG will weaken the protocol and make it more vulnerable.\n\nUse of a FIPS validated RNG that is not DRGB mitigates to a CAT III."
+fix = "Configure the ASA to have FIPS-mode enabled as shown in the example below.\n\nASA1(config)# fips enable\nASA1(config)# end\n\nNote: FIPS mode change will not take effect until the configuration is saved and the device rebooted."
+ccis = [1188]
+
+[[checks]]
+pk = '4f308c8e-23f0-4395-be83-fce03798d7ba'
+title = 'The Cisco ASA remote access VPN server must be configured to use SHA-2 or greater for hashing to protect the integrity of IPsec remote access sessions.'
+human_id = 'CASA-VN-000630'
+group_title = 'SRG-NET-000063-VPN-000220'
+nist_impact = 3
+vulnerability_id = 'V-239978'
+rule_id = 'SV-239978r769254_rule'
+content = "Verify the ASA SHA-2 or greater for hashing to protect the integrity of IPsec remote access sessions as shown in the example below.\n\nStep 1: Verify that SHA-2 or greater is used for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 1\n…\n…\n…\n integrity sha256\n\nStep 2: Verify that SHA-2 or greater is used for the IPsec Security Association.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp integrity sha-256\n\nIf the ASA does not use SHA-2 or greater for hashing to protect the integrity of IPsec remote access sessions, this is a finding."
+discussion = "Without strong cryptographic integrity protections, information can be altered by unauthorized users without detection.\n\nSHA-1 is considered a compromised hashing standard and is being phased out of use by industry and Government standards. DoD systems must not be configured to use SHA-1 for integrity of remote access sessions.\n\nThe remote access VPN provides access to DoD non-public information systems by an authorized user (or an information system) communicating through an external, non-organization-controlled network."
+fix = "Configure the ASA to use SHA-2 or greater for hashing to protect the integrity of IPsec remote access sessions as shown in the example below.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# integrity sha256\nASA1(config-ikev2-policy)# exit\nASA1(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\nASA1(config-ipsec-proposal)# protocol esp integrity sha-256\nASA1(config-ikev2-policy)# end"
+ccis = [1453]
+
+[[checks]]
+pk = '25d24d15-7b03-4db8-bdac-1aec8566c2b0'
+title = 'The Cisco ASA remote access VPN server must be configured to use SHA-2 at 384 bits or greater for hashing to protect the integrity of IPsec remote access sessions.'
+human_id = 'CASA-VN-000630'
+group_title = 'SRG-NET-000063-VPN-000220'
+nist_impact = 3
+vulnerability_id = 'V-239978'
+rule_id = 'SV-239978r916146_rule'
+content = "Verify that the ASA uses SHA-2 at 384 bits or greater for hashing to protect the integrity of IPsec remote access sessions as shown in the example below.\n\nStep 1: Verify that SHA-2 at 384 bits or greater is used for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 1\n…\n…\n…\n integrity sha384\n\nStep 2: Verify that SHA-2 at 384 bits or greater is used for the IPsec Security Association.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp integrity sha-384\n\nIf the ASA does not use SHA-2 at 384 bits or greater for hashing to protect the integrity of IPsec remote access sessions, this is a finding."
+discussion = "Without strong cryptographic integrity protections, information can be altered by unauthorized users without detection.\n\nSHA-1 is considered a compromised hashing standard and is being phased out of use by industry and Government standards. DOD systems must not be configured to use SHA-1 for integrity of remote access sessions.\n\nThe remote access VPN provides access to DOD nonpublic information systems by an authorized user (or an information system) communicating through an external, non-organization-controlled network."
+fix = "Configure the ASA to use SHA-2 at 384 bits or greater for hashing to protect the integrity of IPsec remote access sessions as shown in the example below.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# integrity sha384\nASA1(config-ikev2-policy)# exit\nASA1(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\nASA1(config-ipsec-proposal)# protocol esp integrity sha-384\nASA1(config-ikev2-policy)# end"
+ccis = [1453]
+
+[[checks]]
+pk = '1f504d43-3181-49fd-b020-9315de6794b3'
+title = 'The Cisco VPN remote access server must be configured to use AES encryption for the Internet Key Exchange (IKE) Phase 1 to protect confidentiality of remote access sessions.'
+human_id = 'CASA-VN-000640'
+group_title = 'SRG-NET-000317-VPN-001090'
+nist_impact = 4
+vulnerability_id = 'V-239979'
+rule_id = 'SV-239979r666343_rule'
+content = "Verify IKE Phase 1 is set to use an AES encryption algorithm as shown in the example below.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption aes-192\n\nIf the value of the encryption algorithm for IKE Phase 1 is not set to use an AES algorithm, this is a finding."
+discussion = "Without confidentiality protection mechanisms, unauthorized individuals may gain access to sensitive information via a remote access session.\n\nRemote access is access to DoD non-public information systems by an authorized user (or an information system) communicating through an external, non-organization-controlled network.\n\nAES is the FIPS-validated cipher block cryptographic algorithm approved for use in DoD. For an algorithm implementation to be listed on a FIPS 140-2 cryptographic module validation certificate as an approved security function, the algorithm implementation must meet all the requirements of FIPS 140-2 and must successfully complete the cryptographic algorithm validation process. Currently, NIST has approved the following confidentiality modes to be used with approved block ciphers in a series of special publications: ECB, CBC, OFB, CFB, CTR, XTS-AES, FF1, FF3, CCM, GCM, KW, KWP, and TKW."
+fix = "Configure the ASA to use AES encryption algorithm for IKE Phase 1 as shown in the example below.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# encryption aes-192"
+ccis = [68]
+
+[[checks]]
+pk = '7ae59e06-43f6-4202-83e6-7b81817fbdb4'
+title = 'The Cisco VPN remote access server must be configured to use AES256 or greater encryption for the Internet Key Exchange (IKE) Phase 1 to protect confidentiality of remote access sessions.'
+human_id = 'CASA-VN-000640'
+group_title = 'SRG-NET-000317-VPN-001090'
+nist_impact = 4
+vulnerability_id = 'V-239979'
+rule_id = 'SV-239979r987747_rule'
+content = "Verify IKE Phase 1 is set to use an AES256 or greater encryption algorithm as shown in the example below.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption aes-256\n\nIf the value of the encryption algorithm for IKE Phase 1 is not set to use an AES256 or greater algorithm, this is a finding."
+discussion = "Without confidentiality protection mechanisms, unauthorized individuals may gain access to sensitive information via a remote access session.\n\nRemote access is access to DOD nonpublic information systems by an authorized user (or an information system) communicating through an external, non-organization-controlled network.\n\nAES is the FIPS-validated cipher block cryptographic algorithm approved for use in DOD. For an algorithm implementation to be listed on a FIPS 140-2/140-3 cryptographic module validation certificate as an approved security function, the algorithm implementation must meet all the requirements of FIPS 140-2/140-3 and must successfully complete the cryptographic algorithm validation process. Currently, NIST has approved the following confidentiality modes to be used with approved block ciphers in a series of special publications: ECB, CBC, OFB, CFB, CTR, XTS-AES, FF1, FF3, CCM, GCM, KW, KWP, and TKW."
+fix = "Configure the ASA to use AES256 or greater encryption algorithm for IKE Phase 1 as shown in the example below.\n\nASA1(config)# crypto ikev2 policy 1\nASA1(config-ikev2-policy)# encryption aes-256"
+ccis = [68]
+
+[[checks]]
+pk = '50f9f0d9-b978-497a-873d-b4f2f0d8a74b'
+title = 'The Cisco ASA VPN remote access server must be configured to use Advanced Encryption Standard (AES) encryption for the IPsec security association to protect the confidentiality of remote access sessions.'
+human_id = 'CASA-VN-000650'
+group_title = 'SRG-NET-000525-VPN-002330'
+nist_impact = 4
+vulnerability_id = 'V-239980'
+rule_id = 'SV-239980r666346_rule'
+content = "Verify all IPsec proposals are set to use the AES encryption algorithm as shown in the example below.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption aes-192\n\nIf the value of the encryption algorithm for any IPsec proposal is not set to use an AES algorithm, this is a finding."
+discussion = "Without confidentiality protection mechanisms, unauthorized individuals may gain access to sensitive information via a remote access session.\n\nRemote access is access to DoD non-public information systems by an authorized user (or an information system) communicating through an external, non-organization-controlled network.\n\nA block cipher mode is an algorithm that features the use of a symmetric key block cipher algorithm to provide an information service, such as confidentiality or authentication.\n\nAES is the FIPS-validated cipher block cryptographic algorithm approved for use in DoD. For an algorithm implementation to be listed on a FIPS 140-2 cryptographic module validation certificate as an approved security function, the algorithm implementation must meet all the requirements of FIPS 140-2 and must successfully complete the cryptographic algorithm validation process. Currently, NIST has approved the following confidentiality modes to be used with approved block ciphers in a series of special publications: ECB, CBC, OFB, CFB, CTR, XTS-AES, FF1, FF3, CCM, GCM, KW, KWP, and TKW."
+fix = "Configure the ASA to use AES encryption algorithm to implement IPsec encryption services as shown in the example below.\n\nASA2(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\nASA2(config-ipsec-proposal)# protocol esp encryption aes-192\nASA2(config-ipsec-proposal)# end"
+ccis = [68]
+
+[[checks]]
+pk = '48ce49f2-eb81-4e31-93dc-1c700f092a12'
+title = 'The Cisco ASA VPN remote access server must be configured to use AES256 or greater encryption for the IPsec security association to protect the confidentiality of remote access sessions.'
+human_id = 'CASA-VN-000650'
+group_title = 'SRG-NET-000525-VPN-002330'
+nist_impact = 4
+vulnerability_id = 'V-239980'
+rule_id = 'SV-239980r916158_rule'
+content = "Verify all IPsec proposals are set to use the AES256 or greater encryption algorithm as shown in the example below.\n\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption aes-256\n\nIf the value of the encryption algorithm for any IPsec proposal is not set to use an AES256 or greater algorithm, this is a finding."
+discussion = "Without confidentiality protection mechanisms, unauthorized individuals may gain access to sensitive information via a remote access session.\n\nRemote access is access to DOD nonpublic information systems by an authorized user (or an information system) communicating through an external, non-organization-controlled network.\n\nA block cipher mode is an algorithm that features the use of a symmetric key block cipher algorithm to provide an information service, such as confidentiality or authentication.\n\nAES is the FIPS-validated cipher block cryptographic algorithm approved for use in DOD. For an algorithm implementation to be listed on a FIPS 140-2/140-3 cryptographic module validation certificate as an approved security function, the algorithm implementation must meet all the requirements of FIPS 140-2/140-3 and must successfully complete the cryptographic algorithm validation process. Currently, NIST has approved the following confidentiality modes to be used with approved block ciphers in a series of special publications: ECB, CBC, OFB, CFB, CTR, XTS-AES, FF1, FF3, CCM, GCM, KW, KWP, and TKW."
+fix = "Configure the ASA to use AES256 or greater encryption algorithm to implement IPsec encryption services as shown in the example below.\n\nASA2(config)# crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\nASA2(config-ipsec-proposal)# protocol esp encryption aes-256\nASA2(config-ipsec-proposal)# end"
+ccis = [68]
+
+[[checks]]
+pk = 'a5c80547-a427-4d50-8e58-c50acf754e9b'
+title = 'The Cisco VPN remote access server must be configured to accept Personal Identity Verification (PIV) credentials.'
+human_id = 'CASA-VN-000660'
+group_title = 'SRG-NET-000341-VPN-001350'
+nist_impact = 3
+vulnerability_id = 'CASA-VN-000660'
+rule_id = 'CASA-VN-000660_rule'
+content = "Verify the ASA accepts PIV credentials as shown in the example below.\n\ntunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT webvpn-attributes\n authentication certificate\n\nIf the ASA does not accept PIV credentials, this is a finding."
+discussion = "The use of PIV credentials facilitates standardization and reduces the risk of unauthorized access.\n\nDoD has mandated the use of the CAC to support identity management and personal authentication for systems covered under HSPD 12, as well as a primary component of layered protection for national security systems."
+fix = "Configure the ASA to accept Personal Identity Verification (PIV) credentials as shown in the example below.\n\nASA1(config)# tunnel-group ANY_CONNECT webvpn-attributes\nASA1(config-tunnel-webvpn)# authentication certificate\nASA1(config-tunnel-webvpn)# end"
+ccis = [1953]
+
+[[checks]]
+pk = '74851282-e56f-46b8-9d0d-aeaef1a2b67d'
+title = 'The Cisco VPN remote access server must be configured to accept Common Access Card (CAC) credential credentials.'
+human_id = 'CASA-VN-000660'
+group_title = 'SRG-NET-000341-VPN-001350'
+nist_impact = 3
+vulnerability_id = 'V-239981'
+rule_id = 'SV-239981r666349_rule'
+ccis = [1953]
+
+[[checks]]
+pk = 'c62620b8-ff41-443a-a0e7-ec4016cf9c96'
+title = 'The Cisco VPN remote access server must be configured to accept Common Access Card (CAC) credential credentials.'
+human_id = 'CASA-VN-000660'
+group_title = 'SRG-NET-000341-VPN-001350'
+nist_impact = 3
+vulnerability_id = 'V-239981'
+rule_id = 'SV-239981r856175_rule'
+content = "Verify the ASA accepts CAC credentials as shown in the example below.\n\ntunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT webvpn-attributes\n authentication certificate\n\nIf the ASA does not accept PIV credentials, this is a finding."
+discussion = "The use of PIV credentials facilitates standardization and reduces the risk of unauthorized access.\n\nDoD has mandated the use of the CAC to support identity management and personal authentication for systems covered under HSPD 12, as well as a primary component of layered protection for national security systems."
+fix = "Configure the ASA to accept CAC credentials as shown in the example below.\n\nASA1(config)# tunnel-group ANY_CONNECT webvpn-attributes\nASA1(config-tunnel-webvpn)# authentication certificate\nASA1(config-tunnel-webvpn)# end"
+ccis = [1953]
+
+[[checks]]
+pk = 'b2c32c9a-0622-4c21-8292-01dfd10e10a7'
+title = 'The Cisco ASA VPN remote access server must be configured to disable split-tunneling for remote clients.'
+human_id = 'CASA-VN-000700'
+group_title = 'SRG-NET-000369-VPN-001620'
+nist_impact = 3
+vulnerability_id = 'V-239982'
+rule_id = 'SV-239982r856176_rule'
+content = "Verify the ASA disables split-tunneling for remote clients VPNs as shown in the example below.\n\ngroup-policy ANY_CONNECT_GROUP attributes\n …\n …\n …\n split-tunnel-policy tunnelall\n\nIf the ASA does not disable split-tunneling for remote clients VPNs, this is a finding."
+discussion = "Split tunneling would in effect allow unauthorized external connections, making the system more vulnerable to attack and to exfiltration of organizational information.\n\nA VPN hardware or software client with split tunneling enabled provides an unsecured backdoor to the enclave from the internet. With split tunneling enabled, a remote client has access to the internet while at the same time has established a secured path to the enclave via an IPsec tunnel. A remote client connected to the internet that has been compromised by an attacker in the internet provides an attack base to the enclave’s private network via the IPsec tunnel. Hence, it is imperative that the VPN gateway enforces a no split-tunneling policy to all remote clients."
+fix = "Configure the ASA to disable split-tunneling for remote clients VPNs as shown in the example below.\n\nASA2(config)# group-policy ANY_CONNECT_GROUP attributes\nASA2(config-group-policy)# split-tunnel-policy tunnelall\nASA2(config-group-policy)# end"
+ccis = [2397]
+
+[[checks]]
+pk = '8b7633a7-8ebe-4d59-97e8-be0688a300fe'
+title = 'The Cisco ASA VPN remote access server must be configured to disable split-tunneling for remote clients.'
+human_id = 'CASA-VN-000700'
+group_title = 'SRG-NET-000369-VPN-001620'
+nist_impact = 3
+vulnerability_id = 'V-239982'
+rule_id = 'SV-239982r1005432_rule'
+content = "Verify the ASA disables split-tunneling for remote clients VPNs as shown in the example below.\n\ngroup-policy ANY_CONNECT_GROUP attributes\n …\n …\n …\n split-tunnel-policy tunnelall\n\nIf the ASA does not disable split-tunneling for remote clients VPNs, this is a finding.\n\nNote: Certain cloud products require direct connectivity to operate correctly. These items may be excluded from the split tunneling restriction if documented and approved.\n\nIf split-tunneling for remote client VPNs is enabled by the above exception, verify only authorized external destinations are excluded from tunneling as shown in the example below:\n\nWebvpn\nanyconnect-custom-attr dynamic-split-exclude-domains description DoD IL5 Authorized Destinations\nanyconnect-custom-data dynamic-split-exclude-domains DoD-IL5 dod.teams.microsoft.us,azureedge.net,core.usgovcloudapi.net,streaming.media.usgovcloudapi.net,wvd.azure.us,cdn.office365.us\n\n anyconnect-custom dynamic-split-exclude-domains value DoD-IL5\n\n If any unauthorized exempted connections exist, this is a finding."
+discussion = "Split tunneling would in effect allow unauthorized external connections, making the system more vulnerable to attack and to exfiltration of organizational information.\n\nA VPN hardware or software client with split tunneling enabled provides an unsecured backdoor to the enclave from the internet. With split tunneling enabled, a remote client has access to the internet while at the same time has established a secured path to the enclave via an IPsec tunnel. A remote client connected to the internet that has been compromised by an attacker in the internet provides an attack base to the enclave’s private network via the IPsec tunnel. Hence, it is imperative that the VPN gateway enforces a no split-tunneling policy to all remote clients."
+fix = "Configure the ASA to disable split-tunneling for remote clients VPNs as shown in the example below.\n\nASA2(config)# group-policy ANY_CONNECT_GROUP attributes\nASA2(config-group-policy)# split-tunnel-policy tunnelall\nASA2(config-group-policy)# end"
+ccis = [2397]
+
+[[checks]]
+pk = '4ed8b928-a14f-4ae7-8685-d276f3379051'
+title = 'The Cisco ASA VPN remote access server must be configured to generate log records when successful and/or unsuccessful VPN connection attempts occur.'
+human_id = 'CASA-VN-000720'
+group_title = 'SRG-NET-000492-VPN-001980'
+nist_impact = 3
+vulnerability_id = 'CASA-VN-000720'
+rule_id = 'CASA-VN-000720_rule'
+content = "Verify the ASA generates log records when successful and/or unsuccessful VPN connection attempts occur as shown in the example below.\n\nlogging host INSIDE 10.1.1.12\nlogging class svc trap notifications\n\nIf the ASA does not generate log records when successful and/or unsuccessful VPN connection attempts occur, this is a finding."
+discussion = "Without generating log records that are specific to the security and mission needs of the organization, it would be difficult to establish, correlate, and investigate the events relating to an incident, or identify those responsible for one.\n\nLog records can be generated from various components within the information system (e.g., module or policy filter).\n\nThis requirement only applies to components where this is specific to the function of the device, such as application layer gateway (ALG), which provides these access control and auditing functions on behalf of an application. This does not apply to audit logs generated on behalf of the device itself (management)."
+fix = "Configure the ASA to generate log records when successful and/or unsuccessful VPN connection attempts occur as shown in the example below.\n\nASA2(config)# logging class svc trap notifications"
+ccis = [172]
+
+[[checks]]
+pk = 'be751cb4-6632-48f7-a128-a0de94bce97f'
+title = 'The Cisco ASA VPN remote access server must be configured to generate log records when successful and/or unsuccessful VPN connection attempts occur.'
+human_id = 'CASA-VN-000720'
+group_title = 'SRG-NET-000492-VPN-001980'
+nist_impact = 3
+vulnerability_id = 'V-239983'
+rule_id = 'SV-239983r666355_rule'
+ccis = [172]
+
+[[checks]]
+pk = 'a42c4a2f-f12f-4d61-a886-d6a56259e744'
+title = 'The Cisco ASA VPN remote access server must be configured to generate log records when successful and/or unsuccessful VPN connection attempts occur.'
+human_id = 'CASA-VN-000720'
+group_title = 'SRG-NET-000492-VPN-001980'
+nist_impact = 3
+vulnerability_id = 'V-239983'
+rule_id = 'SV-239983r666355_rule'
+content = "Verify the ASA generates log records when successful and/or unsuccessful VPN connection attempts occur as shown in the example below.\n\nlogging host INDM_INTERFACE 10.1.1.12\nlogging class svc trap notifications\n\nNote: A logging list can be used as an alternative to using class.\n\nIf the ASA does not generate log records when successful and/or unsuccessful VPN connection attempts occur, this is a finding."
+discussion = "Without generating log records that are specific to the security and mission needs of the organization, it would be difficult to establish, correlate, and investigate the events relating to an incident, or identify those responsible for one.\n\nLog records can be generated from various components within the information system (e.g., module or policy filter).\n\nThis requirement only applies to components where this is specific to the function of the device, such as application layer gateway (ALG), which provides these access control and auditing functions on behalf of an application. This does not apply to audit logs generated on behalf of the device itself (management)."
+fix = "Configure the ASA to generate log records when successful and/or unsuccessful VPN connection attempts occur as shown in the example below.\n\nASA2(config)# logging class svc trap notifications"
+ccis = [172]
+
+[[checks]]
+pk = '3022d481-31eb-4f91-a785-1b529cc6f574'
+title = 'The Cisco ASA VPN remote access server must be configured to validate certificates used for Transport Layer Security (TLS) functions by performing RFC 5280-compliant certification path validation.'
+human_id = 'CASA-VN-000730'
+group_title = 'SRG-NET-000580-VPN-002410'
+nist_impact = 3
+vulnerability_id = 'V-239984'
+rule_id = 'SV-239984r666358_rule'
+content = "Verify the ASA validates TLS certificates by performing RFC 5280-compliant certification path validation.\n\nReview the ASA configuration to determine if a CA trust point has been configured as shown in the example below.\n\ncrypto ca trustpoint CA_X\n enrollment …\n validation-usage ipsec-client\n validation-usage ssl-client\n\nIf the ASA does not validate certificates used for TLS functions by performing RFC 5280-compliant certification path validation, this is a finding."
+discussion = "A certificate's certification path is the path from the end entity certificate to a trusted root certification authority (CA). Certification path validation is necessary for a relying party to make an informed decision regarding acceptance of an end entity certificate.\n\nCertification path validation includes checks such as certificate issuer trust, time validity, and revocation status for each certificate in the certification path. Revocation status information for CA and subject certificates in a certification path is commonly provided via certificate revocation lists (CRLs) or online certificate status protocol (OCSP) responses."
+fix = "Configure the ASA to validate certificates used for TLS functions by performing RFC 5280- compliant certification path validation as shown in the example below.\n\nASA2(config)# crypto ca trustpoint CA_X\nASA2(config-ca-trustpoint)# validation-usage ssl-client\nASA2(config-ca-trustpoint)# validation-usage ipsec-client"
+ccis = [185]
+
+[[checks]]
+pk = 'bd26a835-68ba-4e92-af53-4f28f1ccc101'
+title = 'The Cisco ASA VPN remote access server must be configured to use an approved High Assurance Commercial Solution for Classified (CSfC) cryptographic algorithm for remote access to a classified network.'
+human_id = 'CASA-VN-000760'
+group_title = 'SRG-NET-000565-VPN-002390'
+nist_impact = 4
+vulnerability_id = 'CASA-VN-000760'
+rule_id = 'CASA-VN-000760_rule'
+content = "Verify the ASA uses an approved High Assurance CSfC cryptographic algorithm for remote access to a classified network.\n\nStep 1: Verify that Suite B parameters have been configured for IKE Phase 1 as shown in the example below.\n\ncrypto ikev2 policy 2\n encryption aes-gcm-256\n integrity null\n group 19\n prf sha384\n\nStep 2: Determine the crypto map for IKE Phase 2 used for Suite B.\n\ncrypto map SUITE_B_MAP 10 set ikev2 ipsec-proposal AES-GCM-256\n\nStep 3: Verify that the proposal specifies Suite B parameters.\n\ncrypto ipsec ikev2 ipsec-proposal AES-GCM-256\n protocol esp encryption aes-gcm-256\n\nNote: The CSfC initiative assures the confidentiality and interoperability of solutions through the use of Suite B algorithms.\n\nIf the ASA is not configured to use an approved High Assurance Commercial Solution for Classified (CSfC) cryptographic algorithm for remote access to a classified network, this is a finding."
+discussion = "Use of improperly configured or lower assurance equipment and solutions could compromise high-value information.\n\nThe National Security Agency/Central Security Service's (NSA/CSS) CSfC Program enables commercial products to be used in layered solutions to protect classified National Security Systems (NSS) data. Currently, Suite B cryptographic algorithms are specified by the National Institute of Standards and Technology (NIST) and are used by NSA's Information Assurance Directorate in solutions approved for protecting classified and unclassified NSS. However, quantum resistant algorithms will be required for future Suite B implementations."
+fix = "Configure the ASA to use an approved High Assurance CSfC cryptographic algorithm for remote access to a classified network.\n\nStep 1: Configure the IKE Phase 1.\n\nASA2(config)# crypto ikev2 policy 2\nASA2(config-ikev2-policy)# encryption aes-gcm-256\nASA2(config-ikev2-policy)# integrity null\nASA2(config-ikev2-policy)# group 20\nASA2(config-ikev2-policy)# prf sha384\nASA2(config-ikev2-policy)# exit\n\nStep 2: Configure the IPsec proposal for Suite B and apply to a crypto map as shown in the example below.\n\nASA2(config-ipsec-proposal)# protocol esp encryption aes-gcm-256\nASA2(config-ipsec-proposal)# exit\nASA2(config)# crypto map SUITE_B_MAP 10 set ikev2 ipsec-proposal AES-GCM-256\nASA2(config)# end"
+ccis = [2450]
+
+[[checks]]
+pk = '96b695a0-a9e8-48d3-85e0-61624614017a'
+title = 'The Cisco ASA VPN remote access server must be configured to use an approved High Assurance Commercial Solution for Classified (CSfC) cryptographic algorithm for remote access to a classified network.'
+human_id = 'CASA-VN-000760'
+group_title = 'SRG-NET-000565-VPN-002390'
+nist_impact = 4
+vulnerability_id = 'V-239985'
+rule_id = 'SV-239985r792466_rule'
+ccis = [2450]
+
+[[checks]]
+pk = '5964a594-0137-4ad6-ad12-59a2a6bc32f4'
+title = 'The Cisco ASA VPN remote access server must be configured to use an approved High Assurance Commercial Solution for Classified (CSfC) cryptographic algorithm for remote access to a classified network.'
+human_id = 'CASA-VN-000760'
+group_title = 'SRG-NET-000565-VPN-002390'
+nist_impact = 4
+vulnerability_id = 'V-239985'
+rule_id = 'SV-239985r878134_rule'
+content = "Verify the ASA uses an approved High Assurance CSfC cryptographic algorithm for remote access to a classified network.\n\nStep 1: Verify IKE Phase 1 is configured in compliance with CSNA/CNSSP-15 parameters as shown in the example below.\n\ncrypto ikev2 policy 2\n encryption aes-256\n integrity null\n group 19\n prf sha384\n\nStep 2: Determine the crypto map for IKE Phase 2 used is in compliance with CSNA/CNSSP-15 as in the example below.\n\ncrypto map CSNA_MAP 10 set ikev2 ipsec-proposal AES-256\n\nStep 3: Verify the proposal specifies CSNA/CNSSP-15 parameters.\n\ncrypto ipsec ikev2 ipsec-proposal AES-256\n protocol esp encryption aes-256\n\nIf the ASA is not configured to use an approved High Assurance CSfC cryptographic algorithm for remote access to a classified network, this is a finding."
+discussion = "Use of improperly configured or lower assurance equipment and solutions could compromise high-value information.\n\nThe National Security Agency/Central Security Service's (NSA/CSS) CSfC program enables commercial products to be used in layered solutions to protect classified National Security Systems (NSS) data. Based on an analysis of the impact of quantum computing, cryptographic algorithms specified by CNSSP-15 and approved for use in products in the CSfC program have been changed to more stringent protocols and configured with increased bit sizes and other secure characteristics to protect against quantum computing threats. The Commercial National Security Algorithm Suite (CNSA Suite) replaces Suite B."
+fix = "Configure the ASA to use an approved High Assurance CSfC cryptographic algorithm for remote access to a classified network.\n\nStep 1: Configure the IKE Phase 1.\n\nASA2(config)# crypto ikev2 policy 2\nASA2(config-ikev2-policy)# encryption aes-256\nASA2(config-ikev2-policy)# integrity null\nASA2(config-ikev2-policy)# group 20\nASA2(config-ikev2-policy)# prf sha384\nASA2(config-ikev2-policy)# exit\n\nStep 2: Configure the IPsec proposal in compliance with CNSA/CNSSP-15 and apply to a crypto map as shown in the example below.\n\nASA2(config-ipsec-proposal)# protocol esp encryption aes-256\nASA2(config-ipsec-proposal)# exit\nASA2(config)# crypto map CSNA_MAP 10 set ikev2 ipsec-proposal AES-256\nASA2(config)# end"
+ccis = [2450]
+
+[data]
+05f02ad70acccf471a291169f85081f35b7c03f01a0129673e2ebd622801ef25 = "tunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT webvpn-attributes\n authentication certificate\n"
+0c36163f460300fe7e10f84a5829e8b91f933109f91a7a5e19c741dc321f0fc0 = "tunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT general-attributes\n authorization-server-group LDAP\n authorization-required\n!\naaa-server LDAP protocol ldap\naaa-server LDAP (INSIDE) host 10.1.1.1\n ldap-over-ssl enable\n"
+279bc736a04a01e44d70a42e63555ea6c9ec6fa45635e23dc3b730ee1a4876a5 = "Certificate\n  Subject Name:\n    commonName                = test\n    unstructuredName          = ciscoasa.cisco.com\n    serialNumber              = 9A8N02C5XFU\n  Status: Pending terminal enrollment\n  Key Usage: General Purpose\n  Fingerprint:  7e2bb504 d8e2c4ca e45c76af 5309d2e4\n  Associated Trustpoint: test\nCertificate\n  Subject Name:\n    commonName                = test2\n    unstructuredName          = ciscoasa.cisco.com\n    serialNumber              = 9A8N02C5XFF\n  Status: Pending terminal enrollment\n  Key Usage: General Purpose\n  Fingerprint:  7e2bb504 d8e2c4ca e45c76af 5309d2e3\n  Associated Trustpoint: test2\n"
+2d391b81c2fc55493e7b6eb226247677c8720ffd7d5219b9763564509cece988 = "crypto map IPSEC_MAP 10 match address SITE1_SITE2\ncrypto map IPSEC_MAP 10 set peer x.x.x.x\n"
+3211f82235cd82461d943c33a69589ce79b1d97cbe0b317d53cd54ca7078fbe3 = "!\nversion 12.4\nservice nagle\nno service pad\nservice tcp-keepalives-in\n!\nhostname Foo\n!\nboot-start-marker\nboot-end-marker\n!\nsecurity authentication failure rate 4 log\nsecurity passwords min-length 6\n!\ncrypto ikev2 policy 1\ncrypto ikev2 enable FastEthernet0/0\ncrypto ipsec ikev2 ipsec-proposal SOMETHING\n!\ninterface FastEthernet0/0\n ip address 172.16.2.1 255.255.255.0\n ip access-group ETH0_0_IN in\n ip access-group BLACKHOLE out\n no ip unreachables\n no ip proxy-arp\n ip nat inside\n ip virtual-reassembly\n ip tcp adjust-mss 1452\n load-interval 30\n speed 100\n full-duplex\n no keepalive\n no cdp log mismatch duplex\n hold-queue 100 in\n hold-queue 100 out\n!\ninterface FastEthernet0/1\n ip address 172.16.3.1 255.255.255.0\n no ip unreachables\n!\ninterface FastEthernet1/0\n ip address 172.16.4.1 255.255.255.0\n no ip unreachables\n shutdown\n!\n"
+33ddd3366f9842015119159ada6464566fc4cb6db890550a1b5618788558aaf1 = "crypto ikev2 policy 1\n integrity sha256\n!\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp integrity sha-384\n"
+34a267c2daaffcaefde84b612eacc740ce2953fda15c7bfa09d2822cd0264d7b = "crypto ikev2 policy 1\n integrity sha512\n!\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp integrity sha-512\n"
+3971c4ba68682309ba2b1a69058514c99acc5d201e4a289e449cd53ca4715b3c = "crypto map CSNA_MAP 10 set ikev2 ipsec-proposal aes-256\n!\ncrypto ipsec ikev2 ipsec-proposal AES-256\n protocol esp encryption aes-256\n"
+4118371dc12ad0b127f9ec117ce7e24dc505e0d41c09bdf11a0fe5accc295b38 = "crypto ikev2 policy 1\n encryption aes-128\n …\n group 24\n"
+437bb4ffb72a9c0849b0193823d2437ab58fe4ed609c040b445d3fd11de247c7 = "crypto ikev2 policy 1\n encryption aes-256\n"
+46738f5ec9d43079ac9f7cd04595de80ffbbb4e0e0eac1ce41f5cb12edc7bf8d = "!\nversion 12.4\nservice nagle\nno service pad\nservice tcp-keepalives-in\n!\nhostname Foo\n!\nboot-start-marker\nboot-end-marker\n!\nsecurity authentication failure rate 4 log\nsecurity passwords min-length 6\n!\ncrypto ikev1 policy 1\n encryption aes-256\ncrypto ikev2 enable FastEthernet0/0\ncrypto ipsec ikev2 ipsec-proposal SOMETHING\n!\ninterface FastEthernet0/0\n ip address 172.16.2.1 255.255.255.0\n ip access-group ETH0_0_IN in\n ip access-group BLACKHOLE out\n no ip unreachables\n no ip proxy-arp\n ip nat inside\n ip virtual-reassembly\n ip tcp adjust-mss 1452\n load-interval 30\n speed 100\n full-duplex\n no keepalive\n no cdp log mismatch duplex\n hold-queue 100 in\n hold-queue 100 out\n!\ninterface FastEthernet0/1\n ip address 172.16.3.1 255.255.255.0\n no ip unreachables\n!\ninterface FastEthernet1/0\n ip address 172.16.4.1 255.255.255.0\n no ip unreachables\n shutdown\n!\n"
+49e290ef0f26da368e444edb541d96ac96a9b075f8752ba86a60a74ca29fef65 = "crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption aes-gcm-256\n"
+4ebc8920bcc1af99c3f04dfdacc69c63d5f1509fc8147d16665bf9d297061bbd = "crypto pki trustpoint labTrustpoint\n enrollment terminal pem\n serial-number none\n fqdn none\n ip-address none\n subject-name cn=router.example.cisco.com\n subject-alt-name myrouter.example.cisco.com\n revocation-check crl\n rsakeypair rsaKey\n hash sha256\ncrypto pki trustpoint labTrustpoint2\n enrollment terminal pem\n serial-number none\n fqdn none\n ip-address none\n subject-name cn=router.example.cisco.com\n subject-alt-name myrouter.example.cisco.com\n revocation-check ocsp\n rsakeypair rsaKey\n hash sha256\n"
+5b4a73111083744d730eed00227b5eca286b1a5302ae1e20995dba81bc73738a = "group-policy GROUP_POLICY_ANYCONNECT attributes\n banner value I've read & consent to terms in IS user agreem't.\n"
+5ffb4cad6b92ceff9826ee35b5e842a38a77435a05c41da7b616a33487171e27 = "tunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT general-attributes\n authorization-server-group LDAP\n"
+615ae3572b38eec85c145921c52c8160eb4c24c22ea3231fc126e1eab83d77ee = "crypto ikev2 policy 2\n encryption aes-256\n lifetime seconds 86400\ncrypto ikev2 policy 20\n encryption aes-256\n lifetime seconds 1\n"
+636af38136196366b75aa9072c932e622ed7f28750a5da1bbcf7da1a1f3ff446 = "tunnel-group 127.0.0.1 type ipsec-l2l\ntunnel-group 127.0.0.1 ipsec-attributes\n ikev2 remote-authentication pre-shared-key *****\n ikev2 local-authentication pre-shared-key *****\n!\ntunnel-group 192.0.0.1 type ipsec-l2l\n"
+6371c7356eebb8b9948f8940098ada175c6ebcb363ae20710ca09be2b3093eec = "crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption aes-128\n"
+65eb054c078eed9774658c5ee26646b6d8747044e3edd1e5d323bbcf95bb5595 = "crypto ikev2 policy 2\n encryption aes-256\n lifetime seconds 86400\ncrypto ikev2 policy 40\n encryption aes-256\n"
+711df873f4cfa0798a74c8f9f8090c8715f344de9476a7c675b0de5202892e83 = "crypto ca trustpoint CA_X\n validation-usage ipsec-client\n"
+715cd4b17c8e1940b4cef7d8f352b1bbe2ccce0aefc15db0f4ad7054edb859ff = "!\nversion 12.4\nservice nagle\nno service pad\nservice tcp-keepalives-in\n!\nhostname Foo\n!\nboot-start-marker\nboot-end-marker\n!\nsecurity authentication failure rate 4 log\nsecurity passwords min-length 6\n!\ncrypto ikev2 policy 1\n encryption aes-256\n integrity sha384\n group 24\ncrypto ikev2 enable FastEthernet0/0\ncrypto ipsec ikev2 ipsec-proposal SOMETHING\n protocol esp integrity sha-384\n protocol esp encryption aes-256\n!\ninterface FastEthernet0/0\n ip address 172.16.2.1 255.255.255.0\n ip access-group ETH0_0_IN in\n ip access-group BLACKHOLE out\n no ip unreachables\n no ip proxy-arp\n ip nat inside\n ip virtual-reassembly\n ip tcp adjust-mss 1452\n load-interval 30\n speed 100\n full-duplex\n no keepalive\n no cdp log mismatch duplex\n hold-queue 100 in\n hold-queue 100 out\n!\ninterface FastEthernet0/1\n ip address 172.16.3.1 255.255.255.0\n no ip unreachables\n!\ninterface FastEthernet1/0\n ip address 172.16.4.1 255.255.255.0\n no ip unreachables\n shutdown\n!\n"
+76cdc441e69f6ecba7d6bc2c5d877c9026455063d9ead40d8a8dd02ef117eec8 = "group-policy ANY_CONNECT_GROUP attributes\n nothing\n"
+7cee537599c575ba2f650f9a8e441b5b297989723cf5184fa1c25207e21e5697 = "tunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT general-attributes\n authorization-server-group LDAP\n!\naaa-server LDAP protocol ldap\naaa-server LDAP (INSIDE) host 10.1.1.1\n ldap-over-ssl enable\n"
+7fd09563c4d140eec5bbcd69f265becc0a3f991d6463eaf82b2cae9ae96422ae = "!\nversion 12.4\nservice nagle\nno service pad\nservice tcp-keepalives-in\n!\nhostname Foo\n!\nboot-start-marker\nboot-end-marker\n!\nsecurity authentication failure rate 4 log\nsecurity passwords min-length 6\n!\ncrypto ikev2 policy 1\n encryption aes-256\n integrity sha256\n group 14\ncrypto ikev2 enable FastEthernet0/0\ncrypto ipsec ikev2 ipsec-proposal SOMETHING\n protocol esp integrity sha-384\n protocol esp encryption aes-256\n!\ninterface FastEthernet0/0\n ip address 172.16.2.1 255.255.255.0\n ip access-group ETH0_0_IN in\n ip access-group BLACKHOLE out\n no ip unreachables\n no ip proxy-arp\n ip nat inside\n ip virtual-reassembly\n ip tcp adjust-mss 1452\n load-interval 30\n speed 100\n full-duplex\n no keepalive\n no cdp log mismatch duplex\n hold-queue 100 in\n hold-queue 100 out\n!\ninterface FastEthernet0/1\n ip address 172.16.3.1 255.255.255.0\n no ip unreachables\n!\ninterface FastEthernet1/0\n ip address 172.16.4.1 255.255.255.0\n no ip unreachables\n shutdown\n!\n"
+804c185b9965f835823b8ca65e97cc4d79b6fc460cea71d97ac95461bf8ba7ce = "!\nversion 12.4\nservice nagle\nno service pad\nservice tcp-keepalives-in\n!\nhostname Foo\n!\nboot-start-marker\nboot-end-marker\n!\nsecurity authentication failure rate 4 log\nsecurity passwords min-length 6\n!\ncrypto ikev2 policy 1\n encryption aes-256\n integrity sha384\n group 24\ncrypto ikev2 enable FastEthernet0/0\ncrypto ipsec ikev2 ipsec-proposal SOMETHING\n protocol esp integrity sha-384 sha-256\n protocol esp encryption aes-256\n!\ninterface FastEthernet0/0\n ip address 172.16.2.1 255.255.255.0\n ip access-group ETH0_0_IN in\n ip access-group BLACKHOLE out\n no ip unreachables\n no ip proxy-arp\n ip nat inside\n ip virtual-reassembly\n ip tcp adjust-mss 1452\n load-interval 30\n speed 100\n full-duplex\n no keepalive\n no cdp log mismatch duplex\n hold-queue 100 in\n hold-queue 100 out\n!\ninterface FastEthernet0/1\n ip address 172.16.3.1 255.255.255.0\n no ip unreachables\n!\ninterface FastEthernet1/0\n ip address 172.16.4.1 255.255.255.0\n no ip unreachables\n shutdown\n!\n"
+89c7341f30fae9abec41732a57471fe7f3cb3ac4640371ec9b40cf7a402fcf98 = "crypto ikev2 policy 1\n integrity sha384\n!\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp integrity sha-256\n"
+8b40a33e7d23b655ebf807e3e1eade77241f6e64114a47319fe55edca738b138 = "crypto ikev2 policy 2\n encryption aes-256\n integrity null\n group 19\n prf sha384\ncrypto ikev2 policy 20\n encryption aes-256\n integrity null\n group 19\n prf sha384\n!\ncrypto map CSNA_MAP 10 set ikev2 ipsec-proposal aes-256\n!\n"
+929963aa7d630fb23aac29cd570fcaed1dbb5ec3abe2f448454f8fa176fc6596 = "!\nversion 12.4\nservice nagle\nno service pad\nservice tcp-keepalives-in\n!\nhostname Foo\n!\nboot-start-marker\nboot-end-marker\n!\nsecurity authentication failure rate 4 log\nsecurity passwords min-length 6\n!\ncrypto ikev2 policy 1\n encryption aes-256\ncrypto ikev2 enable FastEthernet0/0\ncrypto ipsec ikev2 ipsec-proposal SOMETHING\ncrypto map IPSEC_CRYPTO_MAP 1 set pfs group5\ncrypto map IPSEC_CRYPTO_MAP 1 set peer x.x.x.x\n!\ninterface FastEthernet0/0\n ip address 172.16.2.1 255.255.255.0\n ip access-group ETH0_0_IN in\n ip access-group BLACKHOLE out\n no ip unreachables\n no ip proxy-arp\n ip nat inside\n ip virtual-reassembly\n ip tcp adjust-mss 1452\n load-interval 30\n speed 100\n full-duplex\n no keepalive\n no cdp log mismatch duplex\n hold-queue 100 in\n hold-queue 100 out\n!\ninterface FastEthernet0/1\n ip address 172.16.3.1 255.255.255.0\n no ip unreachables\n!\ninterface FastEthernet1/0\n ip address 172.16.4.1 255.255.255.0\n no ip unreachables\n shutdown\n!\n"
+a40689967dcf6781283af1015e3df4dfc0afd5f8cc1ae3731014389d07b90de4 = "!\nversion 12.4\nservice nagle\nno service pad\nservice tcp-keepalives-in\n!\nhostname Foo\n!\nboot-start-marker\nboot-end-marker\n!\nsecurity authentication failure rate 4 log\nsecurity passwords min-length 6\n!\ncrypto ikev2 policy 1\n encryption aes-256\n integrity sha256\n group 14\ncrypto ikev2 enable FastEthernet0/0\ncrypto ipsec ikev2 ipsec-proposal SOMETHING\n protocol esp integrity sha-1 sha-256\n protocol esp encryption aes-256\n!\ninterface FastEthernet0/0\n ip address 172.16.2.1 255.255.255.0\n ip access-group ETH0_0_IN in\n ip access-group BLACKHOLE out\n no ip unreachables\n no ip proxy-arp\n ip nat inside\n ip virtual-reassembly\n ip tcp adjust-mss 1452\n load-interval 30\n speed 100\n full-duplex\n no keepalive\n no cdp log mismatch duplex\n hold-queue 100 in\n hold-queue 100 out\n!\ninterface FastEthernet0/1\n ip address 172.16.3.1 255.255.255.0\n no ip unreachables\n!\ninterface FastEthernet1/0\n ip address 172.16.4.1 255.255.255.0\n no ip unreachables\n shutdown\n!\n"
+a649a9a363f760e1e80cd306f85eb24826e5a84581d78c961bade43bd7b548c3 = "tunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT general-attributes\n authorization-server-group LDAP\n authorization-required\n username-from-certificate use-entire-name\n"
+a72834bc742a3df3324afc14263bd97ef3f314c6ce7052ca287b2a7f8ad7bf87 = "crypto ikev2 policy 1\n encryption aes-256\n …\n group 1\n"
+a78a1140635754928ca5bd634465730507a29c88bd976d7bfd7f80583238d4b1 = "crypto pki trustpoint labTrustpoint\n enrollment terminal pem\n serial-number none\n fqdn none\n ip-address none\n subject-name cn=router.example.cisco.com\n subject-alt-name myrouter.example.cisco.com\n revocation-check none\n rsakeypair rsaKey\n hash sha256\n"
+ab48f6a9cb90b88c3189785e160001be693b6a3802ad69a91c2f8514c4e6ab4e = "crypto ikev2 policy 1\n encryption aes-gcm-256\n"
+adf4508b5468b95c08f1c169b91f2822698d79b094866ca304a6bb9e07e0b099 = "!\nversion 12.4\nservice nagle\nno service pad\nservice tcp-keepalives-in\n!\nhostname Foo\n!\nboot-start-marker\nboot-end-marker\n!\nsecurity authentication failure rate 4 log\nsecurity passwords min-length 6\n!\ncrypto ikev1 policy 1\ncrypto ikev1 enable FastEthernet0/0\n! other ikev1 setup stuff\n!\ninterface FastEthernet0/0\n ip address 172.16.2.1 255.255.255.0\n ip access-group ETH0_0_IN in\n ip access-group BLACKHOLE out\n no ip unreachables\n no ip proxy-arp\n ip nat inside\n ip virtual-reassembly\n ip tcp adjust-mss 1452\n load-interval 30\n speed 100\n full-duplex\n no keepalive\n no cdp log mismatch duplex\n hold-queue 100 in\n hold-queue 100 out\n!\ninterface FastEthernet0/1\n ip address 172.16.3.1 255.255.255.0\n no ip unreachables\n!\ninterface FastEthernet1/0\n ip address 172.16.4.1 255.255.255.0\n no ip unreachables\n shutdown\n!\n"
+b5f44db05d18d2d60cafe487ffb14d51b47b50d63cec35b7a1d37c671187fb26 = "crypto map IPSEC_MAP 10 match address SITE1_SITE2\ncrypto map IPSEC_MAP 10 set peer x.x.x.x\ncrypto map IPSEC_MAP 10 set security-association lifetime seconds 3600\n"
+baebfe7d29dbfb7be97c439e423bdcef1493d979be4f65f90956c11862f5bcc3 = "crypto ikev2 policy 1\n encryption aes-128\n"
+bb544e8ce9363966281d577f8c267fd8ccc7018a1aa00826e20c81934b466f3d = "crypto ikev2 policy 1\n encryption aes-256\n group 24\n"
+c1a2e7b230b481002ed1790100cc85640af23233737b9a306ad0116dfd8ab41b = "group-policy GROUP_POLICY_ANYCONNECT something something\n"
+c45a89c8410adeeaeeb5e783cdbde26b18a2ca5a0fdf1615676a42260f3705d0 = "crypto ikev2 policy 2\n encryption aes-256\n integrity null\n group 19\n prf sha384\ncrypto ikev2 policy 20\n encryption aes-256\n integrity null\n group 19\n prf sha384\n!\ncrypto map CSNA_MAP 10 set ikev2 ipsec-proposal aes-256\n!\ncrypto ipsec ikev2 ipsec-proposal AES-256\n protocol esp encryption aes-256\n"
+ca51abd5bba238cfe8aad1fde09b97dd1e11fb003592f2bc81a3fe532c87f309 = "crypto ikev2 policy 1\n encryption aes-gcm-256\n …\n group 24\n"
+d367e7a0b12b13afdb6aa14e2d1061a844e95e82718c95e622e4aa6307e565e9 = "tunnel-group 127.0.0.1 type ipsec-l2l\ntunnel-group 127.0.0.1 ipsec-attributes\n ikev2 remote-authentication pre-shared-key *****\n ikev2 local-authentication pre-shared-key *****\n"
+d84c1632616cb673de50d6f3123d3b42a821b1bc02687719bd1352c36c24db7f = "crypto ikev2 policy 2\n encryption aes-gcm-256\n integrity null\n group 19\n prf sha384\ncrypto ikev2 policy 20\n encryption aes-256\n integrity null\n group 19\n prf sha384\n!\ncrypto map CSNA_MAP 10 set ikev2 ipsec-proposal aes-256\n!\ncrypto ipsec ikev2 ipsec-proposal AES-256\n protocol esp encryption aes-256\n"
+e182a956418ccbd08a83f3228bf04cab57323fca52a81a13c31afbae0974df6e = "tunnel-group ANY_CONNECT type remote-access\ntunnel-group ANY_CONNECT general-attributes\n authorization-server-group LDAP\n authorization-required\n!\naaa-server LDAP protocol ldap\n"
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 = ''
+e9401d346f5a81ca15e0db7013df7b19411be8884657e2d8d526cc1b91c76a14 = "crypto ca trustpoint CA_X\n validation-usage ipsec-client\n validation-usage ssl-client\n"
+ec0c5ec0d2cc570b07f1a636955f82487721198ed107fbcf8370910dd3254413 = "group-policy ANY_CONNECT_GROUP attributes\n split-tunnel-policy tunnelall\n"
+ef7dc0bdb3597c044e4b2e8e2df3f6b5fb92cdce5e289ceb00a34d158b363905 = "!\nversion 12.4\nservice nagle\nno service pad\nservice tcp-keepalives-in\n!\nhostname Foo\n!\nboot-start-marker\nboot-end-marker\n!\nsecurity authentication failure rate 4 log\nsecurity passwords min-length 6\n!\ncrypto ikev2 policy 1\n encryption aes-256\n integrity sha384\n group 24\ncrypto ikev2 enable FastEthernet0/0\ncrypto ipsec ikev2 ipsec-proposal SOMETHING\n protocol esp integrity sha-384 sha-256\n protocol esp encryption aes-256\n!\ncrypto map IPSEC_MAP 10 match address HERE_TO_THERE\ncrypto map IPSEC_MAP 10 set peer 127.0.0.1\n!\ncrypto map IPSEC_MAP 10 match address HERE_TO_SOMEWHERE\ncrypto map IPSEC_MAP 10 set peer 192.168.168.1\n!\naccess-list HERE_TO_THERE extended permit ip 192.168.1.0 255.255.255.0 192.168.2.0 255.255.255.0\naccess-list HERE_TO_SOMEWHERE extended permit ip 192.168.1.0 255.255.255.0 192.168.2.0 255.255.255.0\naccess-list OOPS extended permit ip 192.168.1.0 255.255.255.0 192.168.2.0 255.255.255.0\n!\ninterface FastEthernet0/0\n ip address 172.16.2.1 255.255.255.0\n ip access-group ETH0_0_IN in\n ip access-group BLACKHOLE out\n no ip unreachables\n no ip proxy-arp\n ip nat inside\n ip virtual-reassembly\n ip tcp adjust-mss 1452\n load-interval 30\n speed 100\n full-duplex\n no keepalive\n no cdp log mismatch duplex\n hold-queue 100 in\n hold-queue 100 out\n!\ninterface FastEthernet0/1\n ip address 172.16.3.1 255.255.255.0\n no ip unreachables\n!\ninterface FastEthernet1/0\n ip address 172.16.4.1 255.255.255.0\n no ip unreachables\n shutdown\n!\n"
+f46055c4c2b4a92b9ea6962f7b874d86c6cffa715aac41c647469c46b02d1510 = "tunnel-group ANY_CONNECT type remote-access\n"
+f9220c69b75338911ee8f4f80f00a6d12dcbc35705ea028dd33886f4cffa169c = "crypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp encryption aes-256\n"
+fa5739bd12dccb85498c3c19758d3452313356d9ddc11e56fdd093e8fb18428d = "crypto ikev2 policy 1\n integrity sha384\n!\ncrypto ipsec ikev2 ipsec-proposal IPSEC_TRANS\n protocol esp integrity sha-384\n"

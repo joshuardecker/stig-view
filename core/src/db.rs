@@ -44,12 +44,12 @@ impl DB {
         }
     }
 
-    pub async fn insert(&self, group_id: String, rule: Arc<Rule>) {
+    pub async fn insert(&self, group_id: String, rule: Rule) {
         let mut benchmark = self.benchmark.write().await;
         benchmark.rules.insert(group_id, rule);
     }
 
-    pub async fn get(&self, group_id: &str) -> Option<Arc<Rule>> {
+    pub async fn get(&self, group_id: &str) -> Option<Rule> {
         let benchmark = self.benchmark.read().await;
 
         let rule = benchmark.rules.get(group_id);

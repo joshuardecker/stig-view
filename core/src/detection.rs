@@ -20,11 +20,11 @@ pub enum DetectErr {
 /// If its not a STIG, that is still returned as an error.
 pub fn detect_stig_version<P: AsRef<Path>>(path: P) -> Result<Version, DetectErr> {
     match path.as_ref().extension().and_then(|os_str| os_str.to_str()) {
-        Some("txt") => {
+        Some("toml") => {
             if detect_xylok(path.as_ref()).is_some() {
                 return Ok(Version::Xylok);
             } else {
-                return Err(DetectErr::NotStig("Provided txt could not be loaded."));
+                return Err(DetectErr::NotStig("Provided toml could not be loaded."));
             }
         }
         Some("xml") => {
@@ -57,14 +57,7 @@ fn detect_xylok(path: &Path) -> Option<Version> {
 
     file.read_to_string(&mut buf).ok()?;
 
-    let xylok_format = Regex::new(
-        r"(?s).*# Title\n([\w-]+):(.*)#################\n# Similar checks(.*)#################\n# Content(.*)#################\n# Discussion(.*)#################\n# Fix(.*)",
-    )
-    .unwrap();
-
-    let _captures = xylok_format.captures(&buf)?;
-
-    Some(Version::Xylok)
+    todo!();
 }
 
 /// See if the input is an XML STIG.
