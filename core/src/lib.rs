@@ -27,6 +27,11 @@ pub struct Benchmark {
     pub rules: BTreeMap<String, Rule>,
 }
 
+#[derive(Debug, Clone)]
+pub enum BenchmarkErr {
+    SaveErr(&'static str),
+}
+
 /// Each check / rule of a benchmark.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Rule {
@@ -135,6 +140,40 @@ pub enum Format {
     Xylok(XylokToml),
 }
 
+impl Benchmark {
+    pub fn save(&self) -> Result<(), BenchmarkErr> {
+        use std::fs::File;
+        use std::fs::create_dir_all;
+        use std::io::Write;
+
+        let mut cache_dir =
+            dirs::cache_dir().ok_or(BenchmarkErr::SaveErr("Error finding cache directory."))?;
+
+        // Create the save directory if it does not exist.
+        cache_dir.push("stig-view/");
+        create_dir_all(&cache_dir);
+
+        // Add proper file extensions.
+        cache_dir.push(self.id.clone() + ".msgpack.zstd");
+
+        let mut file = File::create(cache_dir)
+            .map_err(|_| BenchmarkErr::SaveErr("Error creating benchmark cache file."))?;
+
+        // Serialize the benchmark into bytes in the MessagePack format.
+        let benchmark_bytes = rmp_serde::to_vec(self)
+            .map_err(|_| BenchmarkErr::SaveErr("Error serializing benchmark."))?;
+
+        // Compress it to shrink file size using zstd.
+        let compressed = zstd::encode_all(&*benchmark_bytes, 3)
+            .map_err(|_| BenchmarkErr::SaveErr("Error compressing benchmark."))?;
+
+        file.write_all(&compressed)
+            .map_err(|_| BenchmarkErr::SaveErr("Error writing benchmark to disk."))?;
+
+        Ok(())
+    }
+}
+
 impl XylokToml {
     pub fn convert(self) -> Benchmark {
         let mut rules = BTreeMap::new();
@@ -185,5 +224,18 @@ impl XylokRule {
             false_negatives: None,
             documentable: None,
         })
+    }
+}
+
+#[test]
+fn test_saving_benchmark() {
+    let format =
+        detect_stig_format("../test_assets/packed.toml").expect("Could not load Xylok benchmark.");
+
+    if let Format::Xylok(xylok_benchmark) = format {
+        let benchmark = xylok_benchmark.convert();
+        benchmark.save().expect("Could not save benchmark.");
+    } else {
+        panic!("Incorrect format loaded.")
     }
 }
