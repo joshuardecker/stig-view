@@ -1,7 +1,7 @@
 # TODO
 
 ## 0.2
-- [x] Replace synchronous `std::fs::read_dir` in `iced/src/app/async_fns.rs` with `tokio::fs::read_dir` so the directory scan task is cancellable on shutdown, fixing the app freeze when quitting during a folder load.
+- [x] Replace synchronous `std::fs::read_dir` in `desktop/src/app/async_fns.rs` with `tokio::fs::read_dir` so the directory scan task is cancellable on shutdown, fixing the app freeze when quitting during a folder load.
 - [x] Add a settings menu, initially supporting theme switching only.
 - [x] Add error notification display to the GUI (`ErrNotif` state is already set but never rendered).
 - [x] Add window click and drag resizing functionality.
@@ -9,12 +9,12 @@
 - [x] Fix cancelling the file/folder picker incorrectly triggering an error notification.
 - [x] Show both the filter icon and bookmark icon simultaneously in the STIG list, rather than replacing the bookmark with the filter icon when a STIG is matched.
 - [x] Persist user settings (e.g. theme) between sessions using a `config.toml` stored in `{config_dir}/stig-view/`. Use `dirs::config_dir()` for cross-platform and Flatpak-compatible path resolution. Fall back to defaults on first launch and write the config on save.
-- [x] Implement the settings menu (see separate settings menu item above), then remove the `todo!()` panic in `Popup::Settings` match arm in `iced/src/ui/mod.rs`.
+- [x] Implement the settings menu (see separate settings menu item above), then remove the `todo!()` panic in `Popup::Settings` match arm in `desktop/src/ui/mod.rs`.
 
 ## 0.3
-- [ ] Add STIG type detection support, for XccdfV1_1, XccdfV1_2, and Xylok.
+- [x] Add STIG type detection support, for XccdfV1_1, XccdfV1_2, and Xylok.
 - [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, in addition to the existing Xylok internal format.
-- [ ] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Compression is always on — MessagePack is binary regardless, so uncompressed cache offers no benefit to the user. Prepend a magic byte or version byte to detect and reject stale/incompatible cache files gracefully. Cache files live in `{cache_dir}/stig-view/`.
+- [ ] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Compression is always on — MessagePack is binary regardless, so uncompressed cache offers no benefit to the user. Cache files live in `{cache_dir}/stig-view/`.
 - [ ] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
 - [ ] Set up a clean pattern for composing multiple time subscriptions in `subscription()` before animations and loading indicators are both active simultaneously.
 - [ ] Add a loading indicator (spinner) when a folder is being loaded or a filter is being processed. Drive via a time subscription active only while loading, using an `is_loading` flag in app state.
@@ -71,8 +71,9 @@
 - [ ] Add a `macos-15` job to the GitHub Actions workflow that sets signing credentials as environment variables and calls `scripts/build-macos.sh`.
 
 ## Backlog
-- [ ] Write hand-crafted tests for all of the below using known good/bad cases and real sample files as fixtures before reaching for fuzz testing. Add fuzz testing for `Stig::from_xylok_txt()` using `cargo-fuzz` as a one-time hardening step before a release, to catch panics and pathological regex behavior on arbitrary input.
-- [ ] Expand unit tests for `core/src/stig.rs` — cover valid Xylok files, files with missing fields, non-Xylok files returning `None`, and edge cases like empty fields or unusual whitespace.
+- [ ] Write hand-crafted tests for all of the below using known good/bad cases and real sample files as fixtures before reaching for fuzz testing. Add fuzz testing for `detect_stig_format()` in `core/src/detection.rs` using `cargo-fuzz` as a one-time hardening step before a release, to catch panics on arbitrary input.
+- [x] Expand unit tests for `core/src/detection.rs` — cover all three formats (`XccdfV1_1`, `XccdfV1_2`, `Xylok`): valid files, files with missing fields, non-matching files returning `None`, and edge cases like empty fields or unusual whitespace.
+- [ ] Expand unit tests for `core/src/load.rs` — cover loading each format (`XccdfV1_1`, `XccdfV1_2`, `Xylok`) from known-good sample files and verify the resulting `Benchmark` fields are correct; cover bad/corrupt inputs returning errors cleanly.
 - [ ] Add unit tests for `core/src/db.rs` — verify that `insert` and `clean` keep the `std::sync::RwLock` cache consistent with the underlying tokio `RwLock` data.
-- [ ] Add unit tests for `iced/src/app/command.rs` — cover each valid command keyword, invalid input returning the correct error, and regex errors in search terms being handled gracefully.
-- [ ] Benchmark folder load performance on large directories to inform loading indicator design.
+- [ ] Add unit tests for `desktop/src/app/command.rs` — cover each valid command keyword, invalid input returning the correct error, and regex errors in search terms being handled gracefully.
+- [ ] Benchmark load performance over all three formats (`XccdfV1_1`, `XccdfV1_2`, `Xylok`).

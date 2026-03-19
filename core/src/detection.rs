@@ -111,14 +111,20 @@ fn detect_xccdf_in_zip(path: &Path) -> Option<Format> {
 }
 
 #[test]
-fn test_detection() {
+fn test_xccdfv1_1_detection() {
     let format = detect_stig_format("../test_assets/U_RHEL_8_V2R6_STIG.zip");
     assert_eq!(format, Ok(Format::XccdfV1_1));
+}
 
+#[test]
+fn test_xccdfv1_2_detection() {
     let format =
         detect_stig_format("../test_assets/U_MS_Windows_10_V3R7_STIG_SCAP_1-3_Benchmark.zip");
     assert_eq!(format, Ok(Format::XccdfV1_2));
+}
 
+#[test]
+fn test_xylok_detection() {
     let format = detect_stig_format("../test_assets/packed.toml");
     assert!(matches!(format, Ok(Format::Xylok(_))));
 }
