@@ -55,8 +55,17 @@ pub struct Rule {
 #[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct XylokToml {
+    pub versions: Vec<XylokVersion>,
     pub benchmark: XylokBenchmark,
     pub checks: Vec<XylokRule>,
+}
+
+/// Date and uuids.
+#[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(test, derive(PartialEq, Eq))]
+pub struct XylokVersion {
+    date: String,
+    check_pks: Vec<String>,
 }
 
 /// The information I care about from [benchmark].
@@ -195,16 +204,36 @@ impl Benchmark {
 }
 
 impl XylokToml {
-    pub fn convert(self) -> Benchmark {
+    pub fn convert(mut self) -> Option<Benchmark> {
+        self.versions.sort_by(|a, b| a.date.cmp(&b.date));
+
+        let version = self.versions.last()?;
+
         let mut rules = BTreeMap::new();
 
         self.checks.into_iter().for_each(|xylok_rule| {
+            // If there is no uuid, skip.
+            if let None = xylok_rule.pk {
+                return;
+            }
+
+            // Safe .expect call.
+            // If the uuid is not contained in the most recent version, skip.
+            if !version
+                .check_pks
+                .contains(&xylok_rule.pk.clone().expect("This should have a pk value."))
+            {
+                return;
+            }
+
+            // Convert the rule and insert it.
+            // Known to be from the most recent version, so it is relevant.
             if let Some(rule) = xylok_rule.convert() {
                 rules.insert(rule.group_id.clone(), rule);
             }
         });
 
-        Benchmark {
+        Some(Benchmark {
             id: self.benchmark.benchmark_id,
             title: self.benchmark.title,
             version: None,
@@ -213,7 +242,7 @@ impl XylokToml {
             status: None,
             status_date: None,
             rules,
-        }
+        })
     }
 }
 
