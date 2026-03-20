@@ -152,6 +152,19 @@ pub enum Format {
 }
 
 impl Benchmark {
+    pub fn empty() -> Self {
+        Self {
+            id: String::new(),
+            title: String::new(),
+            version: None,
+            release: None,
+            description: None,
+            status: None,
+            status_date: None,
+            rules: BTreeMap::new(),
+        }
+    }
+
     pub fn save(&self) -> Result<(), BenchmarkErr> {
         use std::fs::File;
         use std::fs::create_dir_all;

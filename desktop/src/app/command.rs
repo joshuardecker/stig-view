@@ -1,5 +1,5 @@
 use regex::Regex;
-use stig_view_core::db_dep::{DB, Pinned};
+use stig_view_core::{DB, Pinned};
 
 use crate::app::Command;
 
@@ -7,11 +7,10 @@ use crate::app::Command;
 pub enum CommandErr {
     NotCommand,
     RegexErr,
-    DBCacheErr,
 }
 
 pub fn parse_command(input: &str) -> Result<Command, CommandErr> {
-    let cmd_regex = Regex::new(r"(\w+)\s*(.*)").map_err(|_| CommandErr::RegexErr)?;
+    let cmd_regex = Regex::new(r"(\w+)\s+(.*)").map_err(|_| CommandErr::RegexErr)?;
     let captures = cmd_regex.captures(input).ok_or(CommandErr::RegexErr)?;
 
     match captures[1].to_string().as_str() {
@@ -32,35 +31,55 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
         Command::KeywordSearch(keyword) => {
             let re = Regex::new(&keyword).map_err(|_| CommandErr::RegexErr)?;
 
-            let snapshot = db.snapshot().map_err(|_| CommandErr::DBCacheErr)?;
+            let snapshot = db.snapshot().await;
 
-            for (name, data) in snapshot.iter() {
+            for (name, rule) in snapshot.rules.iter() {
                 let mut is_match = false;
 
-                is_match |= re.is_match(&data.get_stig().version);
-                is_match |= re.is_match(&data.get_stig().intro);
-                is_match |= re.is_match(&data.get_stig().desc);
-                is_match |= re.is_match(&data.get_stig().check_text);
-                is_match |= re.is_match(&data.get_stig().fix_text);
-                is_match |= re.is_match(&data.get_stig().similar_checks);
+                // Search through all string fields for a match.
+                is_match |= re.is_match(&rule.group_id);
+                is_match |= re.is_match(&rule.rule_id);
+                // Cant make the default an empty string, because it would be very easy to unintentionally sort
+                // all names that dont have a stig id by inputting an empty filter query.
+                is_match = re.is_match(
+                    &rule
+                        .stig_id
+                        .unwrap_or("oopsie this is a long string".to_string()),
+                );
+                is_match |= re.is_match(&rule.title);
+                is_match |= re.is_match(&rule.vuln_discussion);
+                is_match |= re.is_match(&rule.check_text);
+                is_match |= re.is_match(&rule.fix_text);
+                is_match |= re.is_match(
+                    &rule
+                        .cci_refs
+                        .unwrap_or(vec![String::new()])
+                        .iter()
+                        .flatten()
+                        .collect(),
+                );
+                // Cant make the default an empty string, because it would be very easy to unintentionally sort
+                // all names that dont have a stig id by inputting an empty filter query.
+                is_match |= re.is_match(
+                    &rule
+                        .false_positives
+                        .unwrap_or("oopsie this is a long string".to_string()),
+                );
+                // Cant make the default an empty string, because it would be very easy to unintentionally sort
+                // all names that dont have a stig id by inputting an empty filter query.
+                is_match |= re.is_match(
+                    &rule
+                        .false_negatives
+                        .unwrap_or("oopsie this is a long string".to_string()),
+                );
 
                 if is_match {
-                    match data.get_pin() {
+                    match db.get_pin(name).await {
                         Pinned::Not => {
-                            let mut data = data.to_owned();
-                            data.set_pin(Pinned::ByFilter);
-
-                            db.insert(name.to_owned(), data)
-                                .await
-                                .map_err(|_| CommandErr::DBCacheErr)?;
+                            db.set_pin(name.to_owned(), Pinned::ByFilter).await;
                         }
                         Pinned::ByUser => {
-                            let mut data = data.to_owned();
-                            data.set_pin(Pinned::ByFilterAndUser);
-
-                            db.insert(name.to_owned(), data)
-                                .await
-                                .map_err(|_| CommandErr::DBCacheErr)?;
+                            db.set_pin(name.to_owned(), Pinned::ByFilterAndUser).await;
                         }
                         Pinned::ByFilter => (),
                         Pinned::ByFilterAndUser => (),
@@ -68,24 +87,14 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
 
                     continue;
                 } else {
-                    match data.get_pin() {
+                    match db.get_pin(name).await {
                         Pinned::Not => (),
                         Pinned::ByUser => (),
                         Pinned::ByFilter => {
-                            let mut data = data.to_owned();
-                            data.set_pin(Pinned::Not);
-
-                            db.insert(name.to_owned(), data)
-                                .await
-                                .map_err(|_| CommandErr::DBCacheErr)?;
+                            db.set_pin(name.to_owned(), Pinned::Not).await;
                         }
                         Pinned::ByFilterAndUser => {
-                            let mut data = data.to_owned();
-                            data.set_pin(Pinned::ByUser);
-
-                            db.insert(name.to_owned(), data)
-                                .await
-                                .map_err(|_| CommandErr::DBCacheErr)?;
+                            db.set_pin(name.to_owned(), Pinned::ByUser).await;
                         }
                     }
                 }
@@ -94,28 +103,28 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
         Command::NameSearch(name) => {
             let re = Regex::new(&name).map_err(|_| CommandErr::RegexErr)?;
 
-            let snapshot = db.snapshot().map_err(|_| CommandErr::DBCacheErr)?;
+            let snapshot = db.snapshot().await;
 
-            for (name, data) in snapshot.iter() {
-                let is_match = re.is_match(&data.get_stig().version);
+            for (name, rule) in snapshot.rules.iter() {
+                let mut is_match = false;
+
+                is_match = re.is_match(&rule.group_id);
+                is_match = re.is_match(&rule.rule_id);
+                // Cant make the default an empty string, because it would be very easy to unintentionally sort
+                // all names that dont have a stig id by inputting an empty filter query.
+                is_match = re.is_match(
+                    &rule
+                        .stig_id
+                        .unwrap_or("oopsie this is a long string".to_string()),
+                );
 
                 if is_match {
-                    match data.get_pin() {
+                    match db.get_pin(name).await {
                         Pinned::Not => {
-                            let mut data = data.to_owned();
-                            data.set_pin(Pinned::ByFilter);
-
-                            db.insert(name.to_owned(), data)
-                                .await
-                                .map_err(|_| CommandErr::DBCacheErr)?;
+                            db.set_pin(name.to_owned(), Pinned::ByFilter).await;
                         }
                         Pinned::ByUser => {
-                            let mut data = data.to_owned();
-                            data.set_pin(Pinned::ByFilterAndUser);
-
-                            db.insert(name.to_owned(), data)
-                                .await
-                                .map_err(|_| CommandErr::DBCacheErr)?;
+                            db.set_pin(name.to_owned(), Pinned::ByFilterAndUser).await;
                         }
                         Pinned::ByFilter => (),
                         Pinned::ByFilterAndUser => (),
@@ -123,54 +132,21 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
 
                     continue;
                 } else {
-                    match data.get_pin() {
+                    match db.get_pin(name).await {
                         Pinned::Not => (),
                         Pinned::ByUser => (),
                         Pinned::ByFilter => {
-                            let mut data = data.to_owned();
-                            data.set_pin(Pinned::Not);
-
-                            db.insert(name.to_owned(), data)
-                                .await
-                                .map_err(|_| CommandErr::DBCacheErr)?;
+                            db.set_pin(name.to_owned(), Pinned::Not).await;
                         }
                         Pinned::ByFilterAndUser => {
-                            let mut data = data.to_owned();
-                            data.set_pin(Pinned::ByUser);
-
-                            db.insert(name.to_owned(), data)
-                                .await
-                                .map_err(|_| CommandErr::DBCacheErr)?;
+                            db.set_pin(name.to_owned(), Pinned::ByUser).await;
                         }
                     }
                 }
             }
         }
         Command::Reset => {
-            let snapshot = db.snapshot().map_err(|_| CommandErr::DBCacheErr)?;
-
-            for (name, data) in snapshot.iter() {
-                match data.get_pin() {
-                    Pinned::Not => (),
-                    Pinned::ByUser => (),
-                    Pinned::ByFilter => {
-                        let mut data = data.to_owned();
-                        data.set_pin(Pinned::Not);
-
-                        db.insert(name.to_owned(), data)
-                            .await
-                            .map_err(|_| CommandErr::DBCacheErr)?;
-                    }
-                    Pinned::ByFilterAndUser => {
-                        let mut data = data.to_owned();
-                        data.set_pin(Pinned::ByUser);
-
-                        db.insert(name.to_owned(), data)
-                            .await
-                            .map_err(|_| CommandErr::DBCacheErr)?;
-                    }
-                }
-            }
+            db.unpin_all().await;
         }
     }
 

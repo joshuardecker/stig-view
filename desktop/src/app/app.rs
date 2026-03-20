@@ -4,9 +4,10 @@ use iced::theme::{Custom, Palette, Theme};
 use iced::window::icon::from_file_data;
 use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
-use stig_view_core::db_dep::{DBErr, Data, Pinned};
+use rfd::AsyncFileDialog;
+use stig_view_core::{Benchmark, Format, XylokToml, detect_stig_format};
 
-use crate::app::async_fns::{FileError, open_file, open_folder};
+use crate::app::async_fns::FileError;
 use crate::app::command::{CommandErr, parse_command, run_search_cmd};
 use crate::app::*;
 
@@ -16,7 +17,7 @@ impl App {
 
         (
             Self {
-                db: DB::new(),
+                db: DB::new(Benchmark::empty()),
                 displayed: None,
                 contents: [
                     Content::new(),
@@ -99,7 +100,7 @@ impl App {
                 if let Some(id) = self.window_id {
                     window::minimize(id, true)
                 } else {
-                    Task::done(Message::SendErrNotif("Cant get window Id to minimize."))
+                    Task::done(Message::SendErrNotif("Cant get window id to minimize."))
                 }
             }
             Message::WindowFullscreenToggle => {
@@ -107,7 +108,7 @@ impl App {
                     window::toggle_maximize(id)
                 } else {
                     Task::done(Message::SendErrNotif(
-                        "Cant get window Id to toggle fullscreen.",
+                        "Cant get window id to toggle fullscreen.",
                     ))
                 }
             }
@@ -115,14 +116,14 @@ impl App {
                 if let Some(id) = self.window_id {
                     window::drag(id)
                 } else {
-                    Task::done(Message::SendErrNotif("Cant get window Id to move."))
+                    Task::done(Message::SendErrNotif("Cant get window id to move."))
                 }
             }
             Message::WindowDragResize(dir) => {
                 if let Some(id) = self.window_id {
                     window::drag_resize(id, dir)
                 } else {
-                    Task::done(Message::SendErrNotif("Cant get window Id to move."))
+                    Task::done(Message::SendErrNotif("Cant get window id to resize."))
                 }
             }
 
@@ -136,62 +137,43 @@ impl App {
                 let db = self.db.clone();
 
                 Task::future(async move {
-                    let id = open_file(db).await;
+                    let home_dir = dirs::home_dir();
 
-                    match id {
-                        Ok(id) => Message::Switch(id),
-                        Err(e) => match e {
-                            FileError::HomeDir(err_msg) => Message::SendErrNotif(err_msg),
-                            FileError::UserExitedSelect => Message::DoNothing, // Do nothing when the user backs out of selecting a file.
-                            FileError::NotAStig(err_msg) => Message::SendErrNotif(err_msg),
-                            FileError::ReadDir(_) => Message::DoNothing,
-                            FileError::DBCacheErr(err_msg) => Message::SendErrNotif(err_msg),
-                        },
+                    if let None = home_dir {
+                        return Message::SendErrNotif("Home directory could not be found.");
                     }
+
+                    let home_dir = home_dir.expect("Home dir is safe to unwrap here.");
+
+                    let file_handle = AsyncFileDialog::new()
+                        .add_filter("toml", &["toml"])
+                        .add_filter("xml", &["xml"])
+                        .add_filter("zip", &["zip"])
+                        .set_directory(home_dir)
+                        .set_title("Stig View - Select File")
+                        .pick_file()
+                        .await;
+
+                    if let None = file_handle {
+                        return Message::SendErrNotif("Selected file path could not be loaded.");
+                    }
+
+                    let file_handle = file_handle.expect("File handle is safe to unwrap here.");
+
+                    let format = detect_stig_format(file_handle);
+
+                    match format {
+                        Ok(Format::Xylok(xylok_toml)) => {
+                            let benchmark = xylok_toml.convert();
+
+                            if let Some(benchmark) = benchmark {
+                                self.db = DB::new(benchmark);
+                            }
+                        }
+                    }
+
+                    todo!()
                 })
-            }
-            Message::OpenFolder => {
-                let db = self.db.clone();
-
-                if let Some(handle) = self.load_handle.take() {
-                    handle.abort();
-                }
-
-                let (task, handle) = Task::future(async move {
-                    let err = db.clean().await;
-
-                    match err {
-                        Ok(_) => (),
-                        Err(DBErr::CacheErr(err_str)) => return Message::SendErrNotif(err_str),
-                        Err(DBErr::NoFirstEntry(_)) => (),
-                    }
-
-                    let (id, error) = open_folder(db).await;
-
-                    match (id, error) {
-                        (Some(id), None) => Message::Switch(id),
-                        (Some(id), Some(err)) => match err {
-                            FileError::HomeDir(err_msg) => Message::SwitchWithError(id, err_msg),
-                            FileError::UserExitedSelect => Message::DoNothing, // Do nothing when the user backs out of selecting a file.
-                            FileError::NotAStig(_) => Message::DoNothing,
-                            FileError::ReadDir(err_msg) => Message::SwitchWithError(id, err_msg),
-                            FileError::DBCacheErr(err_msg) => Message::SendErrNotif(err_msg),
-                        },
-                        (None, Some(err)) => match err {
-                            FileError::HomeDir(err_msg) => Message::SendErrNotif(err_msg),
-                            FileError::UserExitedSelect => Message::DoNothing, // Do nothing when the user backs out of selecting a file.
-                            FileError::NotAStig(_) => Message::DoNothing,
-                            FileError::ReadDir(err_msg) => Message::SendErrNotif(err_msg),
-                            FileError::DBCacheErr(err_msg) => Message::SendErrNotif(err_msg),
-                        },
-                        (None, None) => Message::DoNothing,
-                    }
-                })
-                .abortable();
-
-                self.load_handle = Some(handle);
-
-                task
             }
 
             Message::SelectContent(action, slot) => {

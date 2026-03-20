@@ -13,14 +13,12 @@ use iced::window;
 use iced::window::Direction;
 use iced::{Task, task::Handle};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use stig_view_core::db_dep::DB;
-use stig_view_core::stig_dep::Stig;
+use stig_view_core::{DB, Rule};
 
 #[derive(Debug, Clone)]
 pub struct App {
     pub db: DB,
-    pub displayed: Option<Arc<Stig>>,
+    pub displayed: Option<Rule>,
     pub contents: [Content; 6],
     pub filter_input: String,
     pub popup: Popup,
@@ -63,7 +61,6 @@ pub enum Message {
     SwitchTheme(AppTheme),
 
     OpenFile,
-    OpenFolder,
 
     SelectContent(Action, ContentSlot),
 
