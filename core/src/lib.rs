@@ -8,7 +8,7 @@ mod load;
 
 // Re exports.
 pub use crate::db::*;
-pub use crate::detection::detect_stig_format;
+pub use crate::detection::{DetectErr, detect_stig_format};
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

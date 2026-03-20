@@ -5,7 +5,8 @@ use iced::window::icon::from_file_data;
 use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
-use stig_view_core::{Benchmark, Format, XylokToml, detect_stig_format};
+use std::sync::Arc;
+use stig_view_core::{DetectErr, Format, Pinned, XylokToml, detect_stig_format};
 
 use crate::app::async_fns::FileError;
 use crate::app::command::{CommandErr, parse_command, run_search_cmd};
@@ -133,48 +134,50 @@ impl App {
                 Task::done(Message::SaveSettings)
             }
 
-            Message::OpenFile => {
-                let db = self.db.clone();
+            Message::OpenFile => Task::future(async move {
+                let home_dir = dirs::home_dir();
 
-                Task::future(async move {
-                    let home_dir = dirs::home_dir();
+                if let None = home_dir {
+                    return Message::SendErrNotif("Home directory could not be found.");
+                }
 
-                    if let None = home_dir {
-                        return Message::SendErrNotif("Home directory could not be found.");
-                    }
+                let home_dir = home_dir.expect("Home dir is safe to unwrap here.");
 
-                    let home_dir = home_dir.expect("Home dir is safe to unwrap here.");
+                let file_handle = AsyncFileDialog::new()
+                    .add_filter("toml", &["toml"])
+                    .add_filter("xml", &["xml"])
+                    .add_filter("zip", &["zip"])
+                    .set_directory(home_dir)
+                    .set_title("Stig View - Select File")
+                    .pick_file()
+                    .await;
 
-                    let file_handle = AsyncFileDialog::new()
-                        .add_filter("toml", &["toml"])
-                        .add_filter("xml", &["xml"])
-                        .add_filter("zip", &["zip"])
-                        .set_directory(home_dir)
-                        .set_title("Stig View - Select File")
-                        .pick_file()
-                        .await;
+                if let None = file_handle {
+                    return Message::SendErrNotif("Selected file path could not be loaded.");
+                }
 
-                    if let None = file_handle {
-                        return Message::SendErrNotif("Selected file path could not be loaded.");
-                    }
+                let file_handle = file_handle.expect("File handle is safe to unwrap here.");
 
-                    let file_handle = file_handle.expect("File handle is safe to unwrap here.");
+                let format = detect_stig_format(file_handle.path());
 
-                    let format = detect_stig_format(file_handle);
+                match format {
+                    Ok(Format::Xylok(xylok_toml)) => {
+                        let benchmark = xylok_toml.convert();
 
-                    match format {
-                        Ok(Format::Xylok(xylok_toml)) => {
-                            let benchmark = xylok_toml.convert();
-
-                            if let Some(benchmark) = benchmark {
-                                self.db = DB::new(benchmark);
-                            }
+                        if let Some(benchmark) = benchmark {
+                            Message::SwitchBenchmark(benchmark)
+                        } else {
+                            Message::SendErrNotif("Could not parse selected toml.")
                         }
                     }
-
-                    todo!()
-                })
-            }
+                    Err(err) => match err {
+                        DetectErr::CantOpenFile(err_str) => Message::SendErrNotif(err_str),
+                        DetectErr::InvalidFileFormat(err_str) => Message::SendErrNotif(err_str),
+                        DetectErr::NotStig(err_str) => Message::SendErrNotif(err_str),
+                    },
+                    _ => unimplemented!(),
+                }
+            }),
 
             Message::SelectContent(action, slot) => {
                 // Dont let the user delete or add letters to the displayed text.
@@ -191,24 +194,37 @@ impl App {
                 let db = self.db.clone();
 
                 Task::future(async move {
-                    let stig = db.get(&id).await;
+                    let rule = db.get(&id).await;
 
-                    if let Some(stig) = stig {
-                        Message::Display(stig.get_stig().clone())
+                    if let Some(rule) = rule {
+                        Message::Display(rule)
                     } else {
                         Message::DoNothing
                     }
                 })
+            }
+            Message::SwitchBenchmark(benchmark) => {
+                if let Some((name, _rule)) = benchmark.rules.first_key_value() {
+                    let name = name.to_owned();
+
+                    self.db = DB::new(benchmark);
+
+                    Task::done(Message::Switch(name))
+                } else {
+                    self.db = DB::new(benchmark);
+
+                    Task::none()
+                }
             }
             Message::SwitchWithError(id, err_str) => {
                 let db = self.db.clone();
 
                 Task::batch(vec![
                     Task::future(async move {
-                        let stig = db.get(&id).await;
+                        let rule = db.get(&id).await;
 
-                        if let Some(stig) = stig {
-                            Message::Display(stig.get_stig().clone())
+                        if let Some(rule) = rule {
+                            Message::Display(rule)
                         } else {
                             Message::DoNothing
                         }
@@ -222,25 +238,19 @@ impl App {
 
                 if let Some(displayed_name) = displayed_name {
                     Task::future(async move {
-                        let maybe_snapshot = db.snapshot();
+                        let snapshot = db.snapshot().await;
 
-                        let snapshot = match maybe_snapshot {
-                            Ok(snapshot) => snapshot,
-                            Err(DBErr::CacheErr(err_str)) => return Message::SendErrNotif(err_str),
-                            Err(DBErr::NoFirstEntry(_)) => return Message::DoNothing,
-                        };
+                        let mut iter = snapshot.rules.iter();
 
-                        let mut iter = snapshot.iter();
+                        let _ = iter.find(|entry| *entry.0 == displayed_name.group_id);
 
-                        let _ = iter.find(|entry| *entry.0 == displayed_name.version);
-
-                        let entry: Option<(&String, &Data)> = iter.next();
+                        let entry: Option<(&String, &Rule)> = iter.next();
 
                         if let Some(entry) = entry {
                             return Message::Switch(entry.0.to_owned());
                         }
 
-                        let first = snapshot.first_key_value();
+                        let first = snapshot.rules.first_key_value();
 
                         if let Some(first) = first {
                             return Message::Switch(first.0.clone());
@@ -252,17 +262,20 @@ impl App {
                     Task::none()
                 }
             }
-            Message::Display(stig) => {
-                self.displayed = Some(stig.clone());
-
-                self.contents[ContentSlot::Version as usize] = Content::with_text(&stig.version);
-                self.contents[ContentSlot::Intro as usize] = Content::with_text(&stig.intro);
-                self.contents[ContentSlot::Desc as usize] = Content::with_text(&stig.desc);
+            Message::Display(rule) => {
+                // TODO: make display all info
+                self.contents[ContentSlot::Version as usize] = Content::with_text(&rule.group_id);
+                self.contents[ContentSlot::Intro as usize] = Content::with_text(&rule.title);
+                self.contents[ContentSlot::Desc as usize] =
+                    Content::with_text(&rule.vuln_discussion);
                 self.contents[ContentSlot::CheckText as usize] =
-                    Content::with_text(&stig.check_text);
-                self.contents[ContentSlot::FixText as usize] = Content::with_text(&stig.fix_text);
+                    Content::with_text(&rule.check_text);
+                self.contents[ContentSlot::FixText as usize] = Content::with_text(&rule.fix_text);
+                // TODO: fix
                 self.contents[ContentSlot::SimilarChecks as usize] =
-                    Content::with_text(&stig.similar_checks);
+                    Content::with_text(&rule.group_id);
+
+                self.displayed = Some(rule);
 
                 Task::none()
             }
@@ -291,25 +304,17 @@ impl App {
             }
 
             Message::Pin(id) => {
-                let db = self.db.clone();
+                let mut db = self.db.clone();
 
                 Task::future(async move {
-                    let stig = db.get(&id).await;
+                    let pin_status = db.get_pin(&id).await;
 
-                    if let Some(mut stig) = stig {
-                        match stig.get_pin() {
-                            Pinned::Not => stig.set_pin(Pinned::ByUser),
-                            Pinned::ByUser => stig.set_pin(Pinned::Not),
+                    match pin_status {
+                        Pinned::Not => db.set_pin(id, Pinned::ByUser).await,
+                        Pinned::ByUser => db.set_pin(id, Pinned::Not).await,
 
-                            Pinned::ByFilter => stig.set_pin(Pinned::ByFilterAndUser),
-                            Pinned::ByFilterAndUser => stig.set_pin(Pinned::ByFilter),
-                        }
-
-                        let insert_err = db.insert(id, stig).await;
-
-                        if let Err(_) = insert_err {
-                            return Message::SendErrNotif("DB cache error when pinning a STIG.");
-                        }
+                        Pinned::ByFilter => db.set_pin(id, Pinned::ByFilterAndUser).await,
+                        Pinned::ByFilterAndUser => db.set_pin(id, Pinned::ByFilter).await,
                     }
 
                     Message::DoNothing
@@ -354,27 +359,30 @@ impl App {
                     }
 
                     // Get the displayed STIG, if its already pinned, dont switch which STIG is viewed.
-                    if let Some(stig) = displayed {
-                        let data = db.get(&stig.version).await;
+                    if let Some(rule) = displayed {
+                        let pin_status = db.get_pin(&rule.group_id).await;
 
-                        if let Some(data) = data {
-                            match data.get_pin() {
-                                Pinned::ByFilter => return Message::DoNothing,
-                                Pinned::ByFilterAndUser => return Message::DoNothing,
-                                _ => (), // continue if not above options.
-                            }
+                        match pin_status {
+                            Pinned::ByFilter => return Message::DoNothing,
+                            Pinned::ByFilterAndUser => return Message::DoNothing,
+                            _ => (), // continue if not above options.
                         }
                     }
 
-                    // TODO: fix this logic. First in the db doesnt mean first filtered STIG.
-                    let stig = db.first_snapshot();
+                    // Create a snapshot, and switch to the first STIG pinned by the filter.
+                    // At this point, it is known the displayed STIG is not applied by the filter.
+                    // So switch to the first STIG that the filter does apply too.
+                    let snapshot = db.snapshot().await;
 
-                    // Auto switch to the first STIG pinned by the filter and or user.
-                    match stig {
-                        Ok(stig) => Message::Switch(stig.get_stig().version.clone()),
-                        Err(DBErr::CacheErr(err_str)) => Message::SendErrNotif(err_str),
-                        Err(DBErr::NoFirstEntry(_)) => Message::DoNothing,
+                    for (name, _rule) in snapshot.rules.iter() {
+                        match db.get_pin(name).await {
+                            Pinned::ByFilter => return Message::Switch(name.to_owned()),
+                            Pinned::ByFilterAndUser => return Message::Switch(name.to_owned()),
+                            _ => (),
+                        }
                     }
+
+                    Message::DoNothing
                 })
             }
 
@@ -386,7 +394,6 @@ impl App {
                 } => match key_smolstr.as_str() {
                     "q" if modifiers.control() => return Task::done(Message::WindowClose),
                     "i" if modifiers.control() => return Task::done(Message::OpenFile),
-                    "o" if modifiers.control() => return Task::done(Message::OpenFolder),
                     "p" if modifiers.control() => {
                         return Task::done(Message::SwitchPopup(Popup::Filter));
                     }

@@ -12,7 +12,7 @@ pub struct DB {
 }
 
 /// Whether the stig has been pinned in the list for any reason.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Pinned {
     Not,
     ByUser,

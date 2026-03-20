@@ -13,7 +13,7 @@ use iced::window;
 use iced::window::Direction;
 use iced::{Task, task::Handle};
 use serde::{Deserialize, Serialize};
-use stig_view_core::{DB, Rule};
+use stig_view_core::{Benchmark, DB, Rule};
 
 #[derive(Debug, Clone)]
 pub struct App {
@@ -65,9 +65,10 @@ pub enum Message {
     SelectContent(Action, ContentSlot),
 
     Switch(String),
+    SwitchBenchmark(Benchmark),
     SwitchWithError(String, &'static str),
     SwitchNext,
-    Display(Arc<Stig>),
+    Display(Rule),
 
     SwitchPopup(Popup),
 
