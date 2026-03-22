@@ -15,18 +15,18 @@
 - [x] Add STIG type detection support, for XccdfV1_1, XccdfV1_2, and Xylok.
 - [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, in addition to the existing Xylok internal format.
 - [ ] Modify UI to show all fields of the new Benchmark type.
-- [x] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Compression is always on — MessagePack is binary regardless, so uncompressed cache offers no benefit to the user. Cache files live in `{cache_dir}/stig-view/`.
-- [ ] Add a `Popup::SaveBenchmark` variant that prompts the user to save a compressed local copy of a just-opened XCCDF/ZIP benchmark. Should appear as a banner or dialog after loading a non-Xylok file, with a "Save Local Copy" action and a dismiss option. Saves to `{cache_dir}/stig-view/` using `rmp-serde` + `zstd` (same format as the cache). This lets the user retain a fast-loading copy independent of the original DISA file.
+- [x] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Cache files live in `{cache_dir}/stig-view/`.
+- [ ] Add a `Popup::SaveBenchmark` variant that prompts the user to save a compressed local copy of a just-opened XCCDF/ZIP benchmark. This lets the user retain a fast-loading copy independent of the original DISA file.
 - [x] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
 - [ ] Set up a clean pattern for composing multiple time subscriptions in `subscription()` before animations and loading indicators are both active simultaneously.
 - [ ] Add a loading indicator (spinner) when a folder is being loaded or a filter is being processed. Drive via a time subscription active only while loading, using an `is_loading` flag in app state.
-- [ ] Add fade-in/fade-out transition animations wherever content changes — switching the displayed STIG, popups appearing, and elements loading. Drive via a time subscription and a transition state machine (e.g. `FadingOut`, `FadingIn`, `Idle`) with an `f32` opacity value applied through widget styles.
+- [ ] Add fade-in/fade-out transition animations wherever content changes — switching the displayed STIG, popups appearing, and elements loading.
 - [ ] Move the Flatpak build out of the CI/CD pipeline into `scripts/build-linux.sh`. CI only needs to call the script.
 
 ## 0.4 — Windows Support
 
 ### Installer
-- [ ] Build a WiX/MSI installer. MSI is the expected format for the DISA/enterprise audience and integrates cleanly with enterprise deployment tooling. The installer must bundle the Visual C++ Redistributable (`vcruntime140.dll`) to resolve the missing runtime error on clean Windows installs.
+- [ ] Build a WiX/MSI installer. The installer must bundle the Visual C++ Redistributable (`vcruntime140.dll`) to resolve the missing runtime error on clean Windows installs.
 
 ### Console Window
 - [ ] Add `#![windows_subsystem = "windows"]` to `main.rs` to suppress the blank terminal window that appears when launching the application on Windows.
@@ -36,11 +36,10 @@
 
 ### Code Signing
 - [ ] Investigate **SignPath Foundation** (free for open-source projects on GitHub) as the primary signing path before committing to a paid CA.
-- [ ] If SignPath Foundation is unavailable or insufficient, use **Azure Trusted Signing** (~$10/month) as the next option — Microsoft controls both the CA and SmartScreen, ephemeral certs eliminate private key management, and it has native GitHub Actions support. Requires an Azure subscription and identity verification through Microsoft Partner Center.
-- [ ] Do not pursue an EV certificate — as of 2024, EV no longer bypasses SmartScreen and the price premium is not worth it. OV is equivalent for SmartScreen purposes.
+- [ ] If SignPath Foundation is unavailable or insufficient, use **Azure Trusted Signing** (~$10/month) as the next option.
 
 ### SmartScreen Reputation
-- [ ] On first release, submit the signed installer to the [Microsoft malware submission portal](https://www.microsoft.com/en-us/wdsi/filesubmission) for review to accelerate SmartScreen clearance. Downloads via browser (from your website or tooling) will trigger SmartScreen until the file accumulates enough download history.
+- [ ] On first release, submit the signed installer to the [Microsoft malware submission portal](https://www.microsoft.com/en-us/wdsi/filesubmission) for review to accelerate SmartScreen clearance.
 - [ ] Include a note in Windows release instructions explaining that SmartScreen may show a warning on first install ("Click 'More info → Run anyway'") and that this is expected behavior for a new release.
 
 ### Build Script
@@ -59,9 +58,9 @@
 - [ ] Create an `.icns` file (generate from a 1024×1024 PNG using `iconutil`) and place it in `Contents/Resources/`. The in-app icon already set in code controls the window title bar at runtime; the `.icns` is a separate thing used by Finder, the Dock, and Spotlight and must be provided in the bundle.
 
 ### Build, Signing, and Notarization
-- [ ] Produce separate binaries for each architecture: `cargo build --release --target aarch64-apple-darwin` (Apple Silicon) and `cargo build --release --target x86_64-apple-darwin` (Intel), releasing both as distinct artifacts. Both targets can be built on a single `macos-15` runner via cross-compilation.
+- [ ] Produce separate binaries for each architecture: `cargo build --release --target aarch64-apple-darwin` (Apple Silicon) and `cargo build --release --target x86_64-apple-darwin` (Intel).
 - [ ] Sign the `.app` with: `codesign --sign "Developer ID Application: ..." --options runtime --entitlements macos/entitlements.plist --timestamp --force StigView.app`. Both `--options runtime` (hardened runtime) and `--timestamp` are required for notarization. If the bundle ever gains nested dylibs (check with `otool -L`), sign each one inside-out before signing the `.app` — do not use `--deep`, it is unreliable.
-- [ ] Notarize by zipping (`ditto -c -k --keepParent StigView.app StigView.zip`), submitting (`xcrun notarytool submit StigView.zip --apple-id ... --team-id ... --wait` — typically completes in under 5 minutes), then stapling the ticket (`xcrun stapler staple StigView.app`) so Gatekeeper can verify offline in air-gapped environments. On failure, inspect the JSON log: `xcrun notarytool log <submission-id>`.
+- [ ] Notarize by zipping (`ditto -c -k --keepParent StigView.app StigView.zip`), submitting (`xcrun notarytool submit StigView.zip --apple-id ... --team-id ... --wait` — typically completes in under 5 minutes), then stapling the ticket (`xcrun stapler staple StigView.app`) so Gatekeeper can verify offline in air-gapped environments.
 
 ### Packaging (DMG)
 - [ ] Package as a **DMG** for self-service install (`hdiutil create` from the stapled `.app`, sign with the Application cert, notarize, staple). Produce one DMG per architecture.

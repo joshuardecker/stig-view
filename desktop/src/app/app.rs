@@ -222,6 +222,9 @@ impl App {
             Message::SetPins(pins) => {
                 self.pins = pins;
 
+                // When the pins are set, check if the displayed rule has a filter applied.
+                // If not, switch to the first one that does.
+
                 // Get the displayed STIG, if its already pinned, dont switch which STIG is viewed.
                 if let Some(rule) = &self.displayed {
                     let pin_status = self.pins.get(&rule.group_id);
@@ -229,7 +232,7 @@ impl App {
                     match pin_status.unwrap_or(&Pinned::Not) {
                         Pinned::ByFilter => return Task::done(Message::DoNothing),
                         Pinned::ByFilterAndUser => return Task::done(Message::DoNothing),
-                        _ => (), // continue if not above options.
+                        _ => (), // Continue if not above options.
                     }
                 }
 
