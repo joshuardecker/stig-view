@@ -14,8 +14,10 @@
 ## 0.3
 - [x] Add STIG type detection support, for XccdfV1_1, XccdfV1_2, and Xylok.
 - [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, in addition to the existing Xylok internal format.
-- [ ] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Compression is always on — MessagePack is binary regardless, so uncompressed cache offers no benefit to the user. Cache files live in `{cache_dir}/stig-view/`.
-- [ ] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
+- [ ] Modify UI to show all fields of the new Benchmark type.
+- [x] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Compression is always on — MessagePack is binary regardless, so uncompressed cache offers no benefit to the user. Cache files live in `{cache_dir}/stig-view/`.
+- [ ] Add a `Popup::SaveBenchmark` variant that prompts the user to save a compressed local copy of a just-opened XCCDF/ZIP benchmark. Should appear as a banner or dialog after loading a non-Xylok file, with a "Save Local Copy" action and a dismiss option. Saves to `{cache_dir}/stig-view/` using `rmp-serde` + `zstd` (same format as the cache). This lets the user retain a fast-loading copy independent of the original DISA file.
+- [x] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
 - [ ] Set up a clean pattern for composing multiple time subscriptions in `subscription()` before animations and loading indicators are both active simultaneously.
 - [ ] Add a loading indicator (spinner) when a folder is being loaded or a filter is being processed. Drive via a time subscription active only while loading, using an `is_loading` flag in app state.
 - [ ] Add fade-in/fade-out transition animations wherever content changes — switching the displayed STIG, popups appearing, and elements loading. Drive via a time subscription and a transition state machine (e.g. `FadingOut`, `FadingIn`, `Idle`) with an `f32` opacity value applied through widget styles.

@@ -6,10 +6,9 @@ use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
 use std::sync::Arc;
-use stig_view_core::{DetectErr, Format, Pinned, XylokToml, detect_stig_format};
+use stig_view_core::{DetectErr, Format, detect_stig_format};
 
-use crate::app::async_fns::FileError;
-use crate::app::command::{CommandErr, parse_command, run_search_cmd};
+use crate::app::command::*;
 use crate::app::*;
 
 impl App {
@@ -18,7 +17,8 @@ impl App {
 
         (
             Self {
-                db: DB::new(Benchmark::empty()),
+                benchmark: Benchmark::empty(),
+                pins: BTreeMap::new(),
                 displayed: None,
                 contents: [
                     Content::new(),
@@ -144,16 +144,15 @@ impl App {
                 let home_dir = home_dir.expect("Home dir is safe to unwrap here.");
 
                 let file_handle = AsyncFileDialog::new()
-                    .add_filter("toml", &["toml"])
-                    .add_filter("xml", &["xml"])
-                    .add_filter("zip", &["zip"])
+                    .add_filter("STIG", &["toml", "xml", "zip"])
                     .set_directory(home_dir)
                     .set_title("Stig View - Select File")
                     .pick_file()
                     .await;
 
+                // Do nothing if the user closed their file explorer before selecting a file.
                 if let None = file_handle {
-                    return Message::SendErrNotif("Selected file path could not be loaded.");
+                    return Message::DoNothing;
                 }
 
                 let file_handle = file_handle.expect("File handle is safe to unwrap here.");
@@ -191,13 +190,13 @@ impl App {
             }
 
             Message::Switch(id) => {
-                let db = self.db.clone();
+                let benchmark = self.benchmark.clone();
 
                 Task::future(async move {
-                    let rule = db.get(&id).await;
+                    let rule = benchmark.rules.get(&id);
 
                     if let Some(rule) = rule {
-                        Message::Display(rule)
+                        Message::Display(rule.to_owned())
                     } else {
                         Message::DoNothing
                     }
@@ -207,24 +206,54 @@ impl App {
                 if let Some((name, _rule)) = benchmark.rules.first_key_value() {
                     let name = name.to_owned();
 
-                    self.db = DB::new(benchmark);
+                    self.benchmark = benchmark;
+                    // Reset pin values.
+                    self.pins = BTreeMap::new();
 
                     Task::done(Message::Switch(name))
                 } else {
-                    self.db = DB::new(benchmark);
+                    self.benchmark = benchmark;
+                    // Reset pin values.
+                    self.pins = BTreeMap::new();
 
                     Task::none()
                 }
             }
+            Message::SetPins(pins) => {
+                self.pins = pins;
+
+                // Get the displayed STIG, if its already pinned, dont switch which STIG is viewed.
+                if let Some(rule) = &self.displayed {
+                    let pin_status = self.pins.get(&rule.group_id);
+
+                    match pin_status.unwrap_or(&Pinned::Not) {
+                        Pinned::ByFilter => return Task::done(Message::DoNothing),
+                        Pinned::ByFilterAndUser => return Task::done(Message::DoNothing),
+                        _ => (), // continue if not above options.
+                    }
+                }
+
+                for (name, _rule) in self.benchmark.rules.iter() {
+                    match self.pins.get(name).unwrap_or(&Pinned::Not) {
+                        Pinned::ByFilter => return Task::done(Message::Switch(name.to_owned())),
+                        Pinned::ByFilterAndUser => {
+                            return Task::done(Message::Switch(name.to_owned()));
+                        }
+                        _ => (),
+                    }
+                }
+
+                Task::none()
+            }
             Message::SwitchWithError(id, err_str) => {
-                let db = self.db.clone();
+                let benchmark = self.benchmark.clone();
 
                 Task::batch(vec![
                     Task::future(async move {
-                        let rule = db.get(&id).await;
+                        let rule = benchmark.rules.get(&id);
 
                         if let Some(rule) = rule {
-                            Message::Display(rule)
+                            Message::Display(rule.to_owned())
                         } else {
                             Message::DoNothing
                         }
@@ -233,14 +262,12 @@ impl App {
                 ])
             }
             Message::SwitchNext => {
-                let db = self.db.clone();
+                let benchmark = self.benchmark.clone();
                 let displayed_name = self.displayed.clone();
 
                 if let Some(displayed_name) = displayed_name {
                     Task::future(async move {
-                        let snapshot = db.snapshot().await;
-
-                        let mut iter = snapshot.rules.iter();
+                        let mut iter = benchmark.rules.iter();
 
                         let _ = iter.find(|entry| *entry.0 == displayed_name.group_id);
 
@@ -250,7 +277,7 @@ impl App {
                             return Message::Switch(entry.0.to_owned());
                         }
 
-                        let first = snapshot.rules.first_key_value();
+                        let first = benchmark.rules.first_key_value();
 
                         if let Some(first) = first {
                             return Message::Switch(first.0.clone());
@@ -304,21 +331,25 @@ impl App {
             }
 
             Message::Pin(id) => {
-                let mut db = self.db.clone();
+                let pin_status = self.pins.get(&id);
 
-                Task::future(async move {
-                    let pin_status = db.get_pin(&id).await;
-
-                    match pin_status {
-                        Pinned::Not => db.set_pin(id, Pinned::ByUser).await,
-                        Pinned::ByUser => db.set_pin(id, Pinned::Not).await,
-
-                        Pinned::ByFilter => db.set_pin(id, Pinned::ByFilterAndUser).await,
-                        Pinned::ByFilterAndUser => db.set_pin(id, Pinned::ByFilter).await,
+                match pin_status.unwrap_or(&Pinned::Not) {
+                    Pinned::Not => {
+                        let _ = self.pins.insert(id, Pinned::ByUser);
+                    }
+                    Pinned::ByUser => {
+                        let _ = self.pins.insert(id, Pinned::Not);
                     }
 
-                    Message::DoNothing
-                })
+                    Pinned::ByFilter => {
+                        let _ = self.pins.insert(id, Pinned::ByFilterAndUser);
+                    }
+                    Pinned::ByFilterAndUser => {
+                        let _ = self.pins.insert(id, Pinned::ByFilter);
+                    }
+                }
+
+                Task::none()
             }
 
             Message::FocusWidget(widget_id) => iced::widget::operation::focus(widget_id),
@@ -329,60 +360,28 @@ impl App {
                 Task::none()
             }
             Message::ProcessCmd(command_str) => {
-                let db = self.db.clone();
-                let displayed = self.displayed.clone();
+                let benchmark = self.benchmark.clone();
+                let pins = self.pins.clone();
 
                 Task::future(async move {
                     let command = parse_command(&command_str);
 
                     match command {
                         Ok(command) => {
-                            let err = run_search_cmd(command.clone(), db.clone()).await;
+                            let new_pins = run_search_cmd(command.clone(), benchmark, pins);
 
-                            if err.is_err() {
-                                return Message::SendErrNotif("Error when running the command.");
-                            }
-
-                            // If the user resets the filter, dont continue with the following logic
-                            // and move the display STIG to a different STIG.
-                            // Only do that when runnning a sort command.
-                            if let Command::Reset = command {
-                                return Message::DoNothing;
+                            match new_pins {
+                                Ok(new_pins) => Message::SetPins(new_pins),
+                                Err(_) => Message::SendErrNotif("Error when running the command."),
                             }
                         }
                         Err(e) => match e {
                             CommandErr::RegexErr => {
-                                return Message::SendErrNotif("Error when parsing the command.");
+                                Message::SendErrNotif("Error when parsing the command.")
                             }
-                            _ => (),
+                            _ => Message::DoNothing,
                         },
                     }
-
-                    // Get the displayed STIG, if its already pinned, dont switch which STIG is viewed.
-                    if let Some(rule) = displayed {
-                        let pin_status = db.get_pin(&rule.group_id).await;
-
-                        match pin_status {
-                            Pinned::ByFilter => return Message::DoNothing,
-                            Pinned::ByFilterAndUser => return Message::DoNothing,
-                            _ => (), // continue if not above options.
-                        }
-                    }
-
-                    // Create a snapshot, and switch to the first STIG pinned by the filter.
-                    // At this point, it is known the displayed STIG is not applied by the filter.
-                    // So switch to the first STIG that the filter does apply too.
-                    let snapshot = db.snapshot().await;
-
-                    for (name, _rule) in snapshot.rules.iter() {
-                        match db.get_pin(name).await {
-                            Pinned::ByFilter => return Message::Switch(name.to_owned()),
-                            Pinned::ByFilterAndUser => return Message::Switch(name.to_owned()),
-                            _ => (),
-                        }
-                    }
-
-                    Message::DoNothing
                 })
             }
 

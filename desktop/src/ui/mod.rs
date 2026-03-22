@@ -11,7 +11,6 @@ use iced::window::Direction::{
     East, North, NorthEast, NorthWest, South, SouthEast, SouthWest, West,
 };
 use iced::{Center, Fill, Shrink};
-use stig_view_core::db_dep::{DB, Pinned};
 
 use crate::app::*;
 use crate::ui::styles::*;
@@ -20,9 +19,7 @@ impl App {
     /// Get the application gui.
     pub fn get_view(&self) -> Element<'_, Message> {
         if let Some(_name) = &self.displayed {
-            let db = self.db.clone();
-
-            let mut list_col = self.get_stig_buttons(db.clone());
+            let mut list_col = self.get_stig_buttons();
             list_col = list_col.push(space::vertical());
 
             let main_col = column![
@@ -423,18 +420,6 @@ impl App {
                         .delay(iced::time::Duration::from_secs(1)),
                         space().width(4),
                         tooltip(
-                            button(text("Folder").center().size(14))
-                                .padding(6)
-                                .width(Shrink)
-                                .height(Shrink)
-                                .style(rounded_dark_button)
-                                .on_press(Message::OpenFolder),
-                            container("Ctrl + O").style(tooltip_container).padding(4),
-                            tooltip::Position::Right
-                        )
-                        .delay(iced::time::Duration::from_secs(1)),
-                        space().width(4),
-                        tooltip(
                             button(text("Filter").center().size(14))
                                 .padding(6)
                                 .width(Shrink)
@@ -496,7 +481,7 @@ impl App {
     }
 
     /// Return a column of the sorted buttons to display.
-    fn get_stig_buttons(&self, db: DB) -> Column<'_, Message> {
+    fn get_stig_buttons(&self) -> Column<'_, Message> {
         let mut not_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
         let mut user_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
         let mut filter_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
@@ -507,10 +492,10 @@ impl App {
         let filled_bookmark_svg_handle =
             svg::Handle::from_memory(self.assets.bookmark_filled_svg.clone());
 
-        let snapshot = db.snapshot().unwrap_or_default();
+        for (name, _data) in self.benchmark.rules.iter() {
+            let pin_type = self.pins.get(name).unwrap_or(&Pinned::Not);
 
-        for (name, data) in snapshot.iter() {
-            match data.get_pin() {
+            match pin_type {
                 Pinned::Not => {
                     not_pin_col.push(Box::new(
                         button(
@@ -538,7 +523,7 @@ impl App {
                         .padding(8)
                         .width(Fill)
                         .style(rounded_boring_button)
-                        .on_press(Message::Display(data.get_stig())),
+                        .on_press(Message::Switch(name.to_owned())),
                     ));
                 }
                 Pinned::ByUser => {
@@ -568,7 +553,7 @@ impl App {
                         .padding(8)
                         .width(Fill)
                         .style(rounded_boring_button)
-                        .on_press(Message::Display(data.get_stig())),
+                        .on_press(Message::Switch(name.to_owned())),
                     ));
                 }
                 Pinned::ByFilter => {
@@ -602,7 +587,7 @@ impl App {
                         .padding(8)
                         .width(Fill)
                         .style(rounded_boring_button)
-                        .on_press(Message::Display(data.get_stig())),
+                        .on_press(Message::Switch(name.to_owned())),
                     ));
                 }
                 Pinned::ByFilterAndUser => {
@@ -636,7 +621,7 @@ impl App {
                         .padding(8)
                         .width(Fill)
                         .style(rounded_boring_button)
-                        .on_press(Message::Display(data.get_stig())),
+                        .on_press(Message::Switch(name.to_owned())),
                     ));
                 }
             }

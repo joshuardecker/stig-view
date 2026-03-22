@@ -1,7 +1,8 @@
 pub mod app;
 mod assets;
-mod async_fns;
 mod command;
+
+use std::collections::BTreeMap;
 
 // Re-exports:
 pub use crate::app::assets::Assets;
@@ -13,11 +14,12 @@ use iced::window;
 use iced::window::Direction;
 use iced::{Task, task::Handle};
 use serde::{Deserialize, Serialize};
-use stig_view_core::{Benchmark, DB, Rule};
+use stig_view_core::{Benchmark, Rule};
 
 #[derive(Debug, Clone)]
 pub struct App {
-    pub db: DB,
+    pub benchmark: Benchmark,
+    pub pins: BTreeMap<String, Pinned>,
     pub displayed: Option<Rule>,
     pub contents: [Content; 6],
     pub filter_input: String,
@@ -66,6 +68,7 @@ pub enum Message {
 
     Switch(String),
     SwitchBenchmark(Benchmark),
+    SetPins(BTreeMap<String, Pinned>),
     SwitchWithError(String, &'static str),
     SwitchNext,
     Display(Rule),
@@ -122,6 +125,15 @@ pub struct AppSettings {
 #[derive(Debug, Clone)]
 pub enum AppSettingsErr {
     CantSave(&'static str),
+}
+
+/// Whether the stig has been pinned in the list for any reason.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Pinned {
+    Not,
+    ByUser,
+    ByFilter,
+    ByFilterAndUser,
 }
 
 impl AppSettings {

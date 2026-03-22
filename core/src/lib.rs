@@ -1,13 +1,7 @@
-// Depricated files, but keeping them around until new stuff will replace them.
-pub mod db_dep;
-pub mod stig_dep;
-
-mod db;
 mod detection;
 mod load;
 
 // Re exports.
-pub use crate::db::*;
 pub use crate::detection::{DetectErr, detect_stig_format};
 
 use serde::{Deserialize, Serialize};

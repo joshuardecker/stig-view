@@ -1,7 +1,9 @@
-use regex::Regex;
-use stig_view_core::{DB, Pinned};
+use std::collections::BTreeMap;
 
-use crate::app::Command;
+use regex::Regex;
+use stig_view_core::Benchmark;
+
+use crate::app::*;
 
 #[derive(Debug, Clone)]
 pub enum CommandErr {
@@ -10,7 +12,7 @@ pub enum CommandErr {
 }
 
 pub fn parse_command(input: &str) -> Result<Command, CommandErr> {
-    let cmd_regex = Regex::new(r"(\w+)\s+(.*)").map_err(|_| CommandErr::RegexErr)?;
+    let cmd_regex = Regex::new(r"(\w+)\s*(.*)").map_err(|_| CommandErr::RegexErr)?;
     let captures = cmd_regex.captures(input).ok_or(CommandErr::RegexErr)?;
 
     match captures[1].to_string().as_str() {
@@ -26,14 +28,16 @@ pub fn parse_command(input: &str) -> Result<Command, CommandErr> {
     }
 }
 
-pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
+pub fn run_search_cmd(
+    cmd: Command,
+    benchmark: Benchmark,
+    mut pins: BTreeMap<String, Pinned>,
+) -> Result<BTreeMap<String, Pinned>, CommandErr> {
     match cmd {
         Command::KeywordSearch(keyword) => {
             let re = Regex::new(&keyword).map_err(|_| CommandErr::RegexErr)?;
 
-            let snapshot = db.snapshot().await;
-
-            for (name, rule) in snapshot.rules.iter() {
+            for (name, rule) in benchmark.rules.iter() {
                 let mut is_match = false;
 
                 // Search through all string fields for a match.
@@ -41,28 +45,23 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
                 is_match |= re.is_match(&rule.rule_id);
                 // Cant make the default an empty string, because it would be very easy to unintentionally sort
                 // all names that dont have a stig id by inputting an empty filter query.
-                is_match = re.is_match(
+                is_match |= re.is_match(
                     &rule
                         .stig_id
+                        .clone()
                         .unwrap_or("oopsie this is a long string".to_string()),
                 );
                 is_match |= re.is_match(&rule.title);
                 is_match |= re.is_match(&rule.vuln_discussion);
                 is_match |= re.is_match(&rule.check_text);
                 is_match |= re.is_match(&rule.fix_text);
-                is_match |= re.is_match(
-                    &rule
-                        .cci_refs
-                        .unwrap_or(vec![String::new()])
-                        .iter()
-                        .flatten()
-                        .collect(),
-                );
+                is_match |= re.is_match(&rule.cci_refs.as_deref().unwrap_or(&[]).join(" "));
                 // Cant make the default an empty string, because it would be very easy to unintentionally sort
                 // all names that dont have a stig id by inputting an empty filter query.
                 is_match |= re.is_match(
                     &rule
                         .false_positives
+                        .clone()
                         .unwrap_or("oopsie this is a long string".to_string()),
                 );
                 // Cant make the default an empty string, because it would be very easy to unintentionally sort
@@ -70,16 +69,17 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
                 is_match |= re.is_match(
                     &rule
                         .false_negatives
+                        .clone()
                         .unwrap_or("oopsie this is a long string".to_string()),
                 );
 
                 if is_match {
-                    match db.get_pin(name).await {
+                    match pins.get(name).unwrap_or(&Pinned::Not) {
                         Pinned::Not => {
-                            db.set_pin(name.to_owned(), Pinned::ByFilter).await;
+                            let _ = pins.insert(name.to_owned(), Pinned::ByFilter);
                         }
                         Pinned::ByUser => {
-                            db.set_pin(name.to_owned(), Pinned::ByFilterAndUser).await;
+                            let _ = pins.insert(name.to_owned(), Pinned::ByFilterAndUser);
                         }
                         Pinned::ByFilter => (),
                         Pinned::ByFilterAndUser => (),
@@ -87,14 +87,14 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
 
                     continue;
                 } else {
-                    match db.get_pin(name).await {
+                    match pins.get(name).unwrap_or(&Pinned::Not) {
                         Pinned::Not => (),
                         Pinned::ByUser => (),
                         Pinned::ByFilter => {
-                            db.set_pin(name.to_owned(), Pinned::Not).await;
+                            let _ = pins.insert(name.to_owned(), Pinned::Not);
                         }
                         Pinned::ByFilterAndUser => {
-                            db.set_pin(name.to_owned(), Pinned::ByUser).await;
+                            let _ = pins.insert(name.to_owned(), Pinned::ByUser);
                         }
                     }
                 }
@@ -103,28 +103,27 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
         Command::NameSearch(name) => {
             let re = Regex::new(&name).map_err(|_| CommandErr::RegexErr)?;
 
-            let snapshot = db.snapshot().await;
-
-            for (name, rule) in snapshot.rules.iter() {
+            for (name, rule) in benchmark.rules.iter() {
                 let mut is_match = false;
 
-                is_match = re.is_match(&rule.group_id);
-                is_match = re.is_match(&rule.rule_id);
+                is_match |= re.is_match(&rule.group_id);
+                is_match |= re.is_match(&rule.rule_id);
                 // Cant make the default an empty string, because it would be very easy to unintentionally sort
                 // all names that dont have a stig id by inputting an empty filter query.
-                is_match = re.is_match(
+                is_match |= re.is_match(
                     &rule
                         .stig_id
+                        .clone()
                         .unwrap_or("oopsie this is a long string".to_string()),
                 );
 
                 if is_match {
-                    match db.get_pin(name).await {
+                    match pins.get(name).unwrap_or(&Pinned::Not) {
                         Pinned::Not => {
-                            db.set_pin(name.to_owned(), Pinned::ByFilter).await;
+                            let _ = pins.insert(name.to_owned(), Pinned::ByFilter);
                         }
                         Pinned::ByUser => {
-                            db.set_pin(name.to_owned(), Pinned::ByFilterAndUser).await;
+                            let _ = pins.insert(name.to_owned(), Pinned::ByFilterAndUser);
                         }
                         Pinned::ByFilter => (),
                         Pinned::ByFilterAndUser => (),
@@ -132,23 +131,24 @@ pub async fn run_search_cmd(cmd: Command, db: DB) -> Result<(), CommandErr> {
 
                     continue;
                 } else {
-                    match db.get_pin(name).await {
+                    match pins.get(name).unwrap_or(&Pinned::Not) {
                         Pinned::Not => (),
                         Pinned::ByUser => (),
                         Pinned::ByFilter => {
-                            db.set_pin(name.to_owned(), Pinned::Not).await;
+                            let _ = pins.insert(name.to_owned(), Pinned::Not);
                         }
                         Pinned::ByFilterAndUser => {
-                            db.set_pin(name.to_owned(), Pinned::ByUser).await;
+                            let _ = pins.insert(name.to_owned(), Pinned::ByUser);
                         }
                     }
                 }
             }
         }
         Command::Reset => {
-            db.unpin_all().await;
+            pins.iter_mut()
+                .for_each(|(_name, value)| *value = Pinned::Not);
         }
     }
 
-    Ok(())
+    Ok(pins)
 }
