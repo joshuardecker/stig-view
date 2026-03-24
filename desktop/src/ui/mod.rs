@@ -2,6 +2,7 @@ mod styles;
 
 use iced::Alignment::End;
 use iced::Element;
+use iced::Length::FillPortion;
 use iced::widget::{
     Button, Column, Container, button, column, container, mouse_area, row, rule, scrollable,
     sensor, space, stack, svg, text, text_editor, text_input, tooltip,
@@ -18,19 +19,54 @@ use crate::ui::styles::*;
 impl App {
     /// Get the application gui.
     pub fn get_view(&self) -> Element<'_, Message> {
-        if let Some(_name) = &self.displayed {
+        if let Some(stig_rule) = &self.displayed {
             let mut list_col = self.get_stig_buttons();
             list_col = list_col.push(space::vertical());
 
             let main_col = column![
-                text("Version").size(32),
-                rule::horizontal(2),
-                space().height(15),
                 row![
-                    space().width(10),
-                    text_editor(&self.contents[0])
-                        .style(no_text_editor)
-                        .on_action(|action| Message::SelectContent(action, ContentSlot::Version))
+                    column![
+                        text("Group ID").size(24),
+                        space().height(5),
+                        text(&stig_rule.group_id),
+                        space().height(7),
+                        rule::horizontal(2),
+                        space().height(7),
+                        text("Severity").size(24),
+                        space().height(5),
+                        text(stig_rule.severity.clone().to_string()),
+                    ]
+                    .align_x(Center)
+                    .width(FillPortion(1)),
+                    space().width(5),
+                    rule::vertical(2),
+                    space().width(5),
+                    column![
+                        text("Rule ID").size(24),
+                        space().height(5),
+                        text(&stig_rule.rule_id),
+                        space().height(7),
+                        rule::horizontal(2),
+                        space().height(7),
+                    ]
+                    .align_x(Center)
+                    .width(FillPortion(1)),
+                    space().width(5),
+                    rule::vertical(2),
+                    space().width(5),
+                    column![
+                        text("STIG ID").size(24),
+                        space().height(5),
+                        text(stig_rule.stig_id.clone().unwrap_or("None".to_string())),
+                        space().height(7),
+                        rule::horizontal(2),
+                        space().height(7),
+                        text("Documentable").size(24),
+                        space().height(5),
+                        text(stig_rule.documentable_str()),
+                    ]
+                    .align_x(Center)
+                    .width(FillPortion(1)),
                 ],
                 space().height(15),
                 text("Introduction").size(32),
@@ -38,9 +74,9 @@ impl App {
                 space().height(15),
                 row![
                     space().width(10),
-                    text_editor(&self.contents[1])
+                    text_editor(&self.contents[ContentIndex::Title as usize])
                         .style(no_text_editor)
-                        .on_action(|action| Message::SelectContent(action, ContentSlot::Intro))
+                        .on_action(|action| Message::SelectContent(action, ContentIndex::Title))
                 ],
                 space().height(15),
                 text("Description").size(32),
@@ -48,9 +84,12 @@ impl App {
                 space().height(15),
                 row![
                     space().width(10),
-                    text_editor(&self.contents[2])
+                    text_editor(&self.contents[ContentIndex::Discussion as usize])
                         .style(no_text_editor)
-                        .on_action(|action| Message::SelectContent(action, ContentSlot::Desc))
+                        .on_action(|action| Message::SelectContent(
+                            action,
+                            ContentIndex::Discussion
+                        ))
                 ],
                 space().height(15),
                 text("Check").size(32),
@@ -58,9 +97,9 @@ impl App {
                 space().height(15),
                 row![
                     space().width(10),
-                    text_editor(&self.contents[3])
+                    text_editor(&self.contents[ContentIndex::Check as usize])
                         .style(no_text_editor)
-                        .on_action(|action| Message::SelectContent(action, ContentSlot::CheckText))
+                        .on_action(|action| Message::SelectContent(action, ContentIndex::Check))
                 ],
                 space().height(15),
                 text("Fix").size(32),
@@ -68,9 +107,9 @@ impl App {
                 space().height(15),
                 row![
                     space().width(10),
-                    text_editor(&self.contents[4])
+                    text_editor(&self.contents[ContentIndex::Fix as usize])
                         .style(no_text_editor)
-                        .on_action(|action| Message::SelectContent(action, ContentSlot::FixText))
+                        .on_action(|action| Message::SelectContent(action, ContentIndex::Fix))
                 ],
                 space().height(15),
                 text("Similar Checks").size(32),
@@ -78,11 +117,34 @@ impl App {
                 space().height(15),
                 row![
                     space().width(10),
-                    text_editor(&self.contents[5])
+                    text_editor(&self.contents[ContentIndex::CCIRefs as usize])
+                        .style(no_text_editor)
+                        .on_action(|action| Message::SelectContent(action, ContentIndex::CCIRefs))
+                ],
+                space().height(15),
+                text("False Positives").size(32),
+                rule::horizontal(2),
+                space().height(15),
+                row![
+                    space().width(10),
+                    text_editor(&self.contents[ContentIndex::FalsePositives as usize])
                         .style(no_text_editor)
                         .on_action(|action| Message::SelectContent(
                             action,
-                            ContentSlot::SimilarChecks
+                            ContentIndex::FalsePositives
+                        ))
+                ],
+                space().height(15),
+                text("False Negatives").size(32),
+                rule::horizontal(2),
+                space().height(15),
+                row![
+                    space().width(10),
+                    text_editor(&self.contents[ContentIndex::FalseNegatives as usize])
+                        .style(no_text_editor)
+                        .on_action(|action| Message::SelectContent(
+                            action,
+                            ContentIndex::FalseNegatives
                         ))
                 ],
             ];
@@ -187,9 +249,9 @@ impl App {
                         .on_press(Message::WindowDragResize(West))
                 ),
                 column![
-                    container(scrollable(list_col).spacing(4))
+                    container(list_col)
                         .style(background_container)
-                        .width(250)
+                        .width(300)
                         .height(Fill)
                         .padding(8)
                 ],
@@ -487,12 +549,11 @@ impl App {
         let mut filter_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
         let mut filter_user_pin_col: Vec<Box<Button<'_, Message>>> = vec![];
 
-        let filter_svg_handle = svg::Handle::from_memory(self.assets.filter_svg.clone());
         let bookmark_svg_handle = svg::Handle::from_memory(self.assets.bookmark_svg.clone());
         let filled_bookmark_svg_handle =
             svg::Handle::from_memory(self.assets.bookmark_filled_svg.clone());
 
-        for (name, _data) in self.benchmark.rules.iter() {
+        for (name, rule) in self.benchmark.rules.iter() {
             let pin_type = self.pins.get(name).unwrap_or(&Pinned::Not);
 
             match pin_type {
@@ -501,7 +562,14 @@ impl App {
                         button(
                             column![
                                 row![
-                                    text(name.to_owned()).center(),
+                                    text(match self.display_type {
+                                        DisplayType::GroupId => name.to_owned(),
+                                        DisplayType::RuleId => rule.rule_id.clone(),
+                                        // If there is no STIG Id, fall back to Group Id since its always known.
+                                        DisplayType::STIGId =>
+                                            rule.stig_id.clone().unwrap_or(name.to_owned()),
+                                    })
+                                    .center(),
                                     space::horizontal(),
                                     button(
                                         svg(bookmark_svg_handle.clone())
@@ -531,7 +599,14 @@ impl App {
                         button(
                             column![
                                 row![
-                                    text(name.to_owned()).center(),
+                                    text(match self.display_type {
+                                        DisplayType::GroupId => name.to_owned(),
+                                        DisplayType::RuleId => rule.rule_id.clone(),
+                                        // If there is no STIG Id, fall back to Group Id since its always known.
+                                        DisplayType::STIGId =>
+                                            rule.stig_id.clone().unwrap_or(name.to_owned()),
+                                    })
+                                    .center(),
                                     space::horizontal(),
                                     button(
                                         svg(filled_bookmark_svg_handle.clone())
@@ -561,12 +636,15 @@ impl App {
                         button(
                             column![
                                 row![
-                                    text(name.to_owned()).center(),
+                                    text(match self.display_type {
+                                        DisplayType::GroupId => name.to_owned(),
+                                        DisplayType::RuleId => rule.rule_id.clone(),
+                                        // If there is no STIG Id, fall back to Group Id since its always known.
+                                        DisplayType::STIGId =>
+                                            rule.stig_id.clone().unwrap_or(name.to_owned()),
+                                    })
+                                    .center(),
                                     space::horizontal(),
-                                    svg(filter_svg_handle.clone())
-                                        .width(32)
-                                        .height(32)
-                                        .style(good_svg),
                                     button(
                                         svg(bookmark_svg_handle.clone())
                                             .width(32)
@@ -586,7 +664,7 @@ impl App {
                         .height(64)
                         .padding(8)
                         .width(Fill)
-                        .style(rounded_boring_button)
+                        .style(rounded_boring_button_right)
                         .on_press(Message::Switch(name.to_owned())),
                     ));
                 }
@@ -595,12 +673,15 @@ impl App {
                         button(
                             column![
                                 row![
-                                    text(name.to_owned()).center(),
+                                    text(match self.display_type {
+                                        DisplayType::GroupId => name.to_owned(),
+                                        DisplayType::RuleId => rule.rule_id.clone(),
+                                        // If there is no STIG Id, fall back to Group Id since its always known.
+                                        DisplayType::STIGId =>
+                                            rule.stig_id.clone().unwrap_or(name.to_owned()),
+                                    })
+                                    .center(),
                                     space::horizontal(),
-                                    svg(filter_svg_handle.clone())
-                                        .width(32)
-                                        .height(32)
-                                        .style(good_svg),
                                     button(
                                         svg(filled_bookmark_svg_handle.clone())
                                             .width(32)
@@ -620,22 +701,69 @@ impl App {
                         .height(64)
                         .padding(8)
                         .width(Fill)
-                        .style(rounded_boring_button)
+                        .style(rounded_boring_button_right)
                         .on_press(Message::Switch(name.to_owned())),
                     ));
                 }
             }
         }
 
-        filter_user_pin_col.append(&mut user_pin_col);
         filter_user_pin_col.append(&mut filter_pin_col);
-        filter_user_pin_col.append(&mut not_pin_col);
+        user_pin_col.append(&mut not_pin_col);
 
-        let mut col = column![].padding(1).spacing(8);
+        let mut col = column![
+            row![
+                button(text("Group ID").size(12).center())
+                    .on_press(Message::SwitchDisplayType(DisplayType::GroupId))
+                    .style(rounded_boring_button)
+                    .width(FillPortion(1)),
+                space().width(5),
+                button(text("Rule ID").size(12).center())
+                    .on_press(Message::SwitchDisplayType(DisplayType::RuleId))
+                    .style(rounded_boring_button)
+                    .width(FillPortion(1)),
+                space().width(5),
+                button(text("STIG ID").size(12).center())
+                    .on_press(Message::SwitchDisplayType(DisplayType::STIGId))
+                    .style(rounded_boring_button)
+                    .width(FillPortion(1)),
+            ],
+            space().height(2)
+        ]
+        .padding(1)
+        .spacing(8)
+        .align_x(Center);
+
+        let mut scrollable_col = column![].padding(1).spacing(8).align_x(Center);
+
+        // This bool is calculated before items in the vector are consumed.
+        // It is needed later.
+        let has_filter = filter_user_pin_col.len() != 0;
 
         for button in filter_user_pin_col {
-            col = col.push(*button);
+            scrollable_col = scrollable_col.push(
+                row![
+                    container(space::horizontal())
+                        .width(4)
+                        .height(Fill)
+                        .style(filter_accent),
+                    (*button).width(Fill),
+                ]
+                .height(64),
+            );
         }
+
+        // Add only if there are filtered items.
+        // This rule is a visual seperator.
+        if has_filter {
+            scrollable_col = scrollable_col.push(rule::horizontal(2));
+        }
+
+        for button in user_pin_col {
+            scrollable_col = scrollable_col.push(*button);
+        }
+
+        col = col.push(scrollable(scrollable_col).spacing(4));
 
         col
     }

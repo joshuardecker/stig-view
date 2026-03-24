@@ -59,6 +59,19 @@ pub enum Severity {
     VeryHigh,
 }
 
+impl std::fmt::Display for Severity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Severity::Unknown => write!(f, "Unknown"),
+            Severity::VeryLow => write!(f, "Very Low"),
+            Severity::Low => write!(f, "Low"),
+            Severity::Medium => write!(f, "Medium"),
+            Severity::High => write!(f, "High"),
+            Severity::VeryHigh => write!(f, "Very High"),
+        }
+    }
+}
+
 impl TryFrom<u64> for Severity {
     type Error = String;
     fn try_from(v: u64) -> Result<Self, Self::Error> {
@@ -147,5 +160,14 @@ impl Benchmark {
             .map_err(|_| BenchmarkErr::LoadErr("Failed to deserialize file."))?;
 
         Ok(benchmark)
+    }
+}
+
+impl Rule {
+    pub fn documentable_str(&self) -> &'static str {
+        match self.documentable {
+            Some(true) => "True",
+            _ => "False",
+        }
     }
 }

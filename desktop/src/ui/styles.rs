@@ -1,6 +1,7 @@
 use iced::Shadow;
 use iced::border;
 use iced::border::Border;
+use iced::border::Radius;
 use iced::color;
 use iced::theme::Theme;
 use iced::widget::{button, container, svg, text_editor};
@@ -111,6 +112,64 @@ pub fn no_button(theme: &Theme, _status: button::Status) -> button::Style {
             ..Shadow::default()
         },
         snap: false,
+    }
+}
+
+/// A button with only the right corners rounded, for use next to the filter accent strip.
+pub fn rounded_boring_button_right(theme: &Theme, status: button::Status) -> button::Style {
+    let palette = theme.extended_palette();
+
+    match status {
+        button::Status::Hovered => button::Style {
+            background: Some(palette.background.weak.color.into()),
+            text_color: palette.background.base.text,
+            border: Border {
+                radius: Radius {
+                    top_left: 0.0,
+                    top_right: BORDER_RAD,
+                    bottom_right: BORDER_RAD,
+                    bottom_left: 0.0,
+                },
+
+                ..Border::default()
+            },
+            shadow: Shadow::default(),
+            snap: false,
+        },
+        _ => button::Style {
+            background: Some(palette.background.strong.color.into()),
+            text_color: palette.background.base.text,
+            border: Border {
+                radius: Radius {
+                    top_left: 0.0,
+                    top_right: BORDER_RAD,
+                    bottom_right: BORDER_RAD,
+                    bottom_left: 0.0,
+                },
+                ..Border::default()
+            },
+            shadow: Shadow::default(),
+            snap: false,
+        },
+    }
+}
+
+/// A thin accent strip indicating a filter match.
+pub fn filter_accent(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
+    container::Style {
+        background: Some(palette.primary.base.color.into()),
+        border: Border {
+            radius: Radius {
+                top_left: 0.0,
+                top_right: BORDER_RAD,
+                bottom_right: BORDER_RAD,
+                bottom_left: 0.0,
+            },
+            ..Border::default()
+        },
+        ..container::Style::default()
     }
 }
 

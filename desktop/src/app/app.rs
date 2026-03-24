@@ -27,6 +27,7 @@ impl App {
                     Content::new(),
                     Content::new(),
                     Content::new(),
+                    Content::new(),
                 ],
                 filter_input: String::new(),
                 popup: Popup::None,
@@ -35,6 +36,7 @@ impl App {
                 window_id: None,
                 settings: settings,
                 load_handle: None,
+                display_type: DisplayType::GroupId,
             },
             window::oldest().map(Message::InitWindow),
         )
@@ -178,13 +180,13 @@ impl App {
                 }
             }),
 
-            Message::SelectContent(action, slot) => {
+            Message::SelectContent(action, index) => {
                 // Dont let the user delete or add letters to the displayed text.
                 if let Action::Edit(_) = action {
                     return Task::none();
                 }
 
-                self.contents[slot as usize].perform(action);
+                self.contents[index as usize].perform(action);
 
                 Task::none()
             }
@@ -293,17 +295,22 @@ impl App {
                 }
             }
             Message::Display(rule) => {
-                // TODO: make display all info
-                self.contents[ContentSlot::Version as usize] = Content::with_text(&rule.group_id);
-                self.contents[ContentSlot::Intro as usize] = Content::with_text(&rule.title);
-                self.contents[ContentSlot::Desc as usize] =
+                self.contents[ContentIndex::Title as usize] = Content::with_text(&rule.title);
+                self.contents[ContentIndex::Discussion as usize] =
                     Content::with_text(&rule.vuln_discussion);
-                self.contents[ContentSlot::CheckText as usize] =
-                    Content::with_text(&rule.check_text);
-                self.contents[ContentSlot::FixText as usize] = Content::with_text(&rule.fix_text);
-                // TODO: fix
-                self.contents[ContentSlot::SimilarChecks as usize] =
-                    Content::with_text(&rule.group_id);
+                self.contents[ContentIndex::Check as usize] = Content::with_text(&rule.check_text);
+                self.contents[ContentIndex::Fix as usize] = Content::with_text(&rule.fix_text);
+                self.contents[ContentIndex::CCIRefs as usize] = Content::with_text(
+                    &rule
+                        .cci_refs
+                        .clone()
+                        .unwrap_or(vec!["".to_string()])
+                        .join("\n"),
+                );
+                self.contents[ContentIndex::FalsePositives as usize] =
+                    Content::with_text(&rule.false_positives.clone().unwrap_or("".to_string()));
+                self.contents[ContentIndex::FalseNegatives as usize] =
+                    Content::with_text(&rule.false_negatives.clone().unwrap_or("".to_string()));
 
                 self.displayed = Some(rule);
 
@@ -423,6 +430,12 @@ impl App {
                         Task::done(Message::SendErrNotif(err_str))
                     }
                 }
+            }
+
+            Message::SwitchDisplayType(display_type) => {
+                self.display_type = display_type;
+
+                Task::none()
             }
 
             Message::DoNothing => Task::none(),

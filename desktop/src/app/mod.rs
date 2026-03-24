@@ -21,7 +21,7 @@ pub struct App {
     pub benchmark: Benchmark,
     pub pins: BTreeMap<String, Pinned>,
     pub displayed: Option<Rule>,
-    pub contents: [Content; 6],
+    pub contents: [Content; 7],
     pub filter_input: String,
     pub popup: Popup,
     pub err_notif: ErrNotif,
@@ -29,6 +29,7 @@ pub struct App {
     pub window_id: Option<window::Id>,
     pub settings: AppSettings,
     pub load_handle: Option<Handle>,
+    pub display_type: DisplayType,
 }
 
 #[derive(Debug, Clone)]
@@ -64,7 +65,7 @@ pub enum Message {
 
     OpenFile,
 
-    SelectContent(Action, ContentSlot),
+    SelectContent(Action, ContentIndex),
 
     Switch(String),
     SwitchBenchmark(Benchmark),
@@ -89,17 +90,20 @@ pub enum Message {
 
     SaveSettings,
 
+    SwitchDisplayType(DisplayType),
+
     DoNothing,
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum ContentSlot {
-    Version = 0,
-    Intro = 1,
-    Desc = 2,
-    CheckText = 3,
-    FixText = 4,
-    SimilarChecks = 5,
+pub enum ContentIndex {
+    Title,
+    Discussion,
+    Check,
+    Fix,
+    CCIRefs,
+    FalsePositives,
+    FalseNegatives,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
@@ -134,6 +138,14 @@ pub enum Pinned {
     ByUser,
     ByFilter,
     ByFilterAndUser,
+}
+
+/// What name should be displayed on the buttons that switch the displayed STIG.
+#[derive(Debug, Clone)]
+pub enum DisplayType {
+    GroupId,
+    RuleId,
+    STIGId,
 }
 
 impl AppSettings {

@@ -14,7 +14,8 @@
 ## 0.3
 - [x] Add STIG type detection support, for XccdfV1_1, XccdfV1_2, and Xylok.
 - [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, in addition to the existing Xylok internal format.
-- [ ] Modify UI to show all fields of the new Benchmark type.
+- [ ] Modify UI to show all fields of the new Benchmark type and CKL status.
+- [ ] Support loading CKL files.
 - [x] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Cache files live in `{cache_dir}/stig-view/`.
 - [ ] Add a `Popup::SaveBenchmark` variant that prompts the user to save a compressed local copy of a just-opened XCCDF/ZIP benchmark. This lets the user retain a fast-loading copy independent of the original DISA file.
 - [x] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.

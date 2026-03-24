@@ -116,7 +116,14 @@ impl XylokRule {
 
         Some(Rule {
             group_id: self.vulnerability_id?,
-            rule_id: self.rule_id?,
+            // Trim _rule from the end of the string when converting.
+            // Verbose as always.
+            rule_id: self
+                .rule_id
+                .clone()?
+                .strip_suffix("_rule")
+                .unwrap_or(&self.rule_id?)
+                .to_owned(),
             stig_id: self.human_id,
             severity: self.nist_impact?,
             title: self.title?,
