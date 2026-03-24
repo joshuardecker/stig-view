@@ -12,19 +12,20 @@
 - [x] Implement the settings menu (see separate settings menu item above), then remove the `todo!()` panic in `Popup::Settings` match arm in `desktop/src/ui/mod.rs`.
 
 ## 0.3
-- [x] Add STIG type detection support, for XccdfV1_1, XccdfV1_2, and Xylok.
-- [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, in addition to the existing Xylok internal format.
+- [ ] Add format support, for XccdfV1_1, XccdfV1_2, Xylok, CKL, and CKLB.
+- [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, Xylok internal format files, and displaying CKL's.
 - [ ] Modify UI to show all fields of the new Benchmark type and CKL status.
-- [ ] Support loading CKL files.
 - [x] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Cache files live in `{cache_dir}/stig-view/`.
 - [ ] Add a `Popup::SaveBenchmark` variant that prompts the user to save a compressed local copy of a just-opened XCCDF/ZIP benchmark. This lets the user retain a fast-loading copy independent of the original DISA file.
 - [x] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
+- [ ] Move the Flatpak build out of the CI/CD pipeline into `scripts/build-linux.sh`. CI only needs to call the script.
+
+## 0.4 - Animation Support
 - [ ] Set up a clean pattern for composing multiple time subscriptions in `subscription()` before animations and loading indicators are both active simultaneously.
 - [ ] Add a loading indicator (spinner) when a folder is being loaded or a filter is being processed. Drive via a time subscription active only while loading, using an `is_loading` flag in app state.
 - [ ] Add fade-in/fade-out transition animations wherever content changes — switching the displayed STIG, popups appearing, and elements loading.
-- [ ] Move the Flatpak build out of the CI/CD pipeline into `scripts/build-linux.sh`. CI only needs to call the script.
 
-## 0.4 — Windows Support
+## 0.5 — Windows Support
 
 ### Installer
 - [ ] Build a WiX/MSI installer. The installer must bundle the Visual C++ Redistributable (`vcruntime140.dll`) to resolve the missing runtime error on clean Windows installs.
@@ -49,7 +50,7 @@
 ### Validation
 - [ ] Verify that file/folder path handling works correctly on Windows — confirm no assumptions about `/` separators in path display or regex logic.
 
-## 0.5 — macOS Support
+## 0.6 — macOS Support
 
 ### Prerequisites
 - [ ] Enroll in the **Apple Developer Program** ($99/year, standard tier) to obtain Developer ID certificates and notarization access. Create a **Developer ID Application** certificate in the developer portal, export it as a `.p12` file from Keychain Access (includes the private key) for CI use, and generate an **app-specific password** at appleid.apple.com for `notarytool`.

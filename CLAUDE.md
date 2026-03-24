@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Stig View is a Rust desktop application for viewing DISA Security Technical Implementation Guides (STIGs). It supports Xylok TOML and XCCDF XML/ZIP formats (v1.1 and v1.2).
+Stig View is a Rust desktop application for viewing DISA Security Technical Implementation Guides (STIGs). It supports Xylok TOML, XCCDF XML/ZIP (v1.1 and v1.2), CKL, and CKLB formats.
 
 ## Commands
 
