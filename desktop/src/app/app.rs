@@ -6,7 +6,7 @@ use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
 use std::sync::Arc;
-use stig_view_core::{DetectErr, Format, detect_stig_format};
+use stig_view_core::{DetectErr, Format, detect_stig_format, load_xccdf_v1_1};
 
 use crate::app::command::*;
 use crate::app::*;
@@ -169,6 +169,15 @@ impl App {
                             Message::SwitchBenchmark(benchmark)
                         } else {
                             Message::SendErrNotif("Could not parse selected toml.")
+                        }
+                    }
+                    Ok(Format::XccdfV1_1(file_str)) => {
+                        let benchmark = load_xccdf_v1_1(&file_str);
+
+                        if let Ok(benchmark) = benchmark {
+                            Message::SwitchBenchmark(benchmark)
+                        } else {
+                            Message::SendErrNotif("Could not parse selected file.")
                         }
                     }
                     Err(err) => match err {

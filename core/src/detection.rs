@@ -1,7 +1,7 @@
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::Read;
 use std::path::Path;
 use zip::ZipArchive;
 
@@ -22,22 +22,14 @@ pub fn detect_stig_format<P: AsRef<Path>>(path: P) -> Result<Format, DetectErr> 
         Some("toml") => detect_xylok(path.as_ref())
             .ok_or(DetectErr::NotStig("Provided toml could not be loaded.")),
         Some("xml") => {
-            let format = detect_xccdf(
-                Reader::from_file(path)
-                    .map_err(|_| DetectErr::CantOpenFile("Provided xml could not be loaded."))?,
-            );
+            let xml = std::fs::read_to_string(path.as_ref())
+                .map_err(|_| DetectErr::CantOpenFile("Provided xml could not be loaded."))?;
 
-            return match format {
-                Some(format) => Ok(format),
-                None => Err(DetectErr::NotStig("Provided xml could not be loaded.")),
-            };
+            detect_xccdf_str(&xml)
+                .ok_or(DetectErr::NotStig("Provided xml could not be loaded."))
         }
-        Some("zip") => {
-            return match detect_xccdf_in_zip(path.as_ref()) {
-                Some(format) => Ok(format),
-                None => Err(DetectErr::NotStig("Provided zip could not be loaded.")),
-            };
-        }
+        Some("zip") => detect_xccdf_in_zip(path.as_ref())
+            .ok_or(DetectErr::NotStig("Provided zip could not be loaded.")),
         _ => Err(DetectErr::InvalidFileFormat(
             "Provided file does not have a supported file extension.",
         )),
@@ -55,12 +47,15 @@ fn detect_xylok(path: &Path) -> Option<Format> {
     Some(Format::Xylok(xylok_toml))
 }
 
-/// See if the input is an XML STIG.
-fn detect_xccdf<R: BufRead>(mut xml: Reader<R>) -> Option<Format> {
+/// Detect the XCCDF version from a raw XML string.
+/// For XccdfV1_1 the string is moved into the variant so the caller does not
+/// need to re-read (or re-unzip) the file.
+fn detect_xccdf_str(xml: &str) -> Option<Format> {
+    let mut reader = Reader::from_str(xml);
     let mut buf = Vec::new();
 
     loop {
-        match xml.read_event_into(&mut buf).ok()? {
+        match reader.read_event_into(&mut buf).ok()? {
             Event::Start(start) => {
                 for attribute in start.attributes().flatten() {
                     let key = attribute.key.as_ref();
@@ -73,7 +68,7 @@ fn detect_xccdf<R: BufRead>(mut xml: Reader<R>) -> Option<Format> {
                     if value.contains("checklists.nist.gov/xccdf/1.2") {
                         return Some(Format::XccdfV1_2);
                     } else if value.contains("checklists.nist.gov/xccdf/1.1") {
-                        return Some(Format::XccdfV1_1);
+                        return Some(Format::XccdfV1_1(xml.to_owned()));
                     }
                 }
             }
@@ -87,7 +82,7 @@ fn detect_xccdf<R: BufRead>(mut xml: Reader<R>) -> Option<Format> {
     None
 }
 
-/// See if the input zip is a STIG.
+/// See if the input zip contains an XCCDF STIG.
 fn detect_xccdf_in_zip(path: &Path) -> Option<Format> {
     let mut archive = ZipArchive::new(File::open(path).ok()?).ok()?;
 
@@ -98,11 +93,17 @@ fn detect_xccdf_in_zip(path: &Path) -> Option<Format> {
         .collect();
 
     for name in &xml_names {
-        let entry = archive.by_name(name).ok()?;
+        let mut entry = match archive.by_name(name) {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
 
-        let format = detect_xccdf(Reader::from_reader(BufReader::new(entry)));
+        let mut xml = String::new();
+        if entry.read_to_string(&mut xml).is_err() {
+            continue;
+        }
 
-        if let Some(format) = format {
+        if let Some(format) = detect_xccdf_str(&xml) {
             return Some(format);
         }
     }
@@ -113,7 +114,7 @@ fn detect_xccdf_in_zip(path: &Path) -> Option<Format> {
 #[test]
 fn test_xccdfv1_1_detection() {
     let format = detect_stig_format("../test_assets/U_RHEL_8_V2R6_STIG.zip");
-    assert_eq!(format, Ok(Format::XccdfV1_1));
+    assert!(matches!(format, Ok(Format::XccdfV1_1(_))));
 }
 
 #[test]

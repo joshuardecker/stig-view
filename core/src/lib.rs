@@ -4,6 +4,7 @@ mod xylok;
 
 // Re exports.
 pub use crate::detection::{DetectErr, detect_stig_format};
+pub use crate::load::load_xccdf_v1_1;
 pub use crate::xylok::*;
 
 use serde::{Deserialize, Serialize};
@@ -91,7 +92,8 @@ impl TryFrom<u64> for Severity {
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq, Eq))]
 pub enum Format {
-    XccdfV1_1,
+    // Carries the raw XML string so detection and loading share one read.
+    XccdfV1_1(String),
     XccdfV1_2,
     // So easy to parse that passing Xylok toml around is easy
     // and saves doing redundant work.
