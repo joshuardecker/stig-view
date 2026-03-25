@@ -4,7 +4,7 @@ mod xylok;
 
 // Re exports.
 pub use crate::detection::{DetectErr, detect_stig_format};
-pub use crate::load_xccdf::load_v1_1;
+pub use crate::load_xccdf::*;
 pub use crate::xylok::*;
 
 use serde::{Deserialize, Serialize};
@@ -157,6 +157,7 @@ impl Benchmark {
 }
 
 impl Rule {
+    /// Convert this field into a string the GUI can display.
     pub fn documentable_str(&self) -> &'static str {
         match self.documentable {
             Some(true) => "True",
