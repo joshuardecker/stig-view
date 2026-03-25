@@ -1,10 +1,10 @@
 mod detection;
-mod load;
+mod load_xccdf;
 mod xylok;
 
 // Re exports.
 pub use crate::detection::{DetectErr, detect_stig_format};
-pub use crate::load::load_xccdf_v1_1;
+pub use crate::load_xccdf::load_v1_1;
 pub use crate::xylok::*;
 
 use serde::{Deserialize, Serialize};
@@ -16,11 +16,6 @@ use std::path::Path;
 pub struct Benchmark {
     pub id: String,
     pub title: String,
-    pub version: Option<String>,
-    pub release: Option<String>,
-    pub description: Option<String>,
-    pub status: Option<String>,
-    pub status_date: Option<String>,
 
     pub rules: BTreeMap<String, Rule>,
 }
@@ -105,11 +100,7 @@ impl Benchmark {
         Self {
             id: String::new(),
             title: String::new(),
-            version: None,
-            release: None,
-            description: None,
-            status: None,
-            status_date: None,
+
             rules: BTreeMap::new(),
         }
     }

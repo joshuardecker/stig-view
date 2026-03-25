@@ -95,11 +95,7 @@ impl XylokToml {
         Some(Benchmark {
             id: self.benchmark.benchmark_id,
             title: self.benchmark.title,
-            version: None,
-            release: None,
-            description: None,
-            status: None,
-            status_date: None,
+
             rules,
         })
     }
