@@ -143,6 +143,7 @@ pub fn load_v1_1(xml: &str) -> Option<Benchmark> {
 }
 
 /// Load a benchmark given the string of an XCCDF v1.2 xml data.
+#[allow(dead_code)]
 pub fn load_v1_2(xml: &str) -> Option<Benchmark> {
     let xml_tree = roxmltree::Document::parse(xml).ok()?;
     let mut benchmark = Benchmark::empty();

@@ -180,15 +180,8 @@ impl App {
                             Message::SendErrNotif("Could not parse selected file.")
                         }
                     }
-                    Ok(Format::XccdfV1_2(file_str)) => {
-                        let benchmark = load_v1_2(&file_str);
-
-                        if let Some(benchmark) = benchmark {
-                            println!("Hello!");
-                            Message::SwitchBenchmark(benchmark)
-                        } else {
-                            Message::SendErrNotif("Could not parse selected file.")
-                        }
+                    Ok(Format::XccdfV1_2) => {
+                        Message::SendErrNotif("SCAP's are not a supported file type.")
                     }
                     Err(err) => match err {
                         DetectErr::CantOpenFile(err_str) => Message::SendErrNotif(err_str),

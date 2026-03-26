@@ -8,7 +8,6 @@ name = "stig_view_core"
 path = "src/lib.rs"
 
 [dependencies]
-quick-xml = "0.39.2"
 roxmltree = "0.21"
 zip = { version = "8.2.0", default-features = false, features = ["deflate"] }
 regex = "1.12.2"

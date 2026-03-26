@@ -12,7 +12,7 @@
 - [x] Implement the settings menu (see separate settings menu item above), then remove the `todo!()` panic in `Popup::Settings` match arm in `desktop/src/ui/mod.rs`.
 
 ## 0.3
-- [ ] Add format support, for XccdfV1_1, XccdfV1_2, Xylok, CKL, and CKLB.
+- [ ] Add format support, for XccdfV1_1, Xylok, CKL, and CKLB.
 - [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, Xylok internal format files, and displaying CKL's.
 - [ ] Modify UI to show all fields of the new Benchmark type and CKL status.
 - [x] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Cache files live in `{cache_dir}/stig-view/`.
@@ -76,7 +76,7 @@
 ## Backlog
 - [ ] Write hand-crafted tests for all of the below using known good/bad cases and real sample files as fixtures before reaching for fuzz testing. Add fuzz testing for `detect_stig_format()` in `core/src/detection.rs` using `cargo-fuzz` as a one-time hardening step before a release, to catch panics on arbitrary input.
 - [x] Expand unit tests for `core/src/detection.rs` — cover all three formats (`XccdfV1_1`, `XccdfV1_2`, `Xylok`): valid files, files with missing fields, non-matching files returning `None`, and edge cases like empty fields or unusual whitespace.
-- [ ] Expand unit tests for `core/src/load.rs` — cover loading each format (`XccdfV1_1`, `XccdfV1_2`, `Xylok`) from known-good sample files and verify the resulting `Benchmark` fields are correct; cover bad/corrupt inputs returning errors cleanly.
+- [ ] Expand unit tests for `core/src/load.rs` — cover loading each format (`XccdfV1_1`, `Xylok`) from known-good sample files and verify the resulting `Benchmark` fields are correct; cover bad/corrupt inputs returning errors cleanly.
 - [ ] Add unit tests for `core/src/db.rs` — verify that `insert` and `clean` keep the `std::sync::RwLock` cache consistent with the underlying tokio `RwLock` data.
 - [ ] Add unit tests for `desktop/src/app/command.rs` — cover each valid command keyword, invalid input returning the correct error, and regex errors in search terms being handled gracefully.
-- [ ] Benchmark load performance over all three formats (`XccdfV1_1`, `XccdfV1_2`, `Xylok`).
+- [ ] Benchmark load performance over all formats (`XccdfV1_1`, `Xylok`).

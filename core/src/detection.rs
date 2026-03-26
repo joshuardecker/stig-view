@@ -1,5 +1,3 @@
-use quick_xml::events::Event;
-use quick_xml::reader::Reader;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -47,38 +45,25 @@ fn detect_xylok(path: &Path) -> Option<Format> {
 }
 
 /// Detect the XCCDF version from a raw XML string.
-/// For XccdfV1_1 the string is moved into the variant so the caller does not
+/// For XccdfV1_1/V1_2 the string is moved into the variant so the caller does not
 /// need to re-read (or re-unzip) the file.
 fn detect_xccdf_str(xml: &str) -> Option<Format> {
-    let mut reader = Reader::from_str(xml);
-    let mut buf = Vec::new();
+    let doc = roxmltree::Document::parse(xml).ok()?;
 
-    loop {
-        match reader.read_event_into(&mut buf).ok()? {
-            Event::Start(start) => {
-                for attribute in start.attributes().flatten() {
-                    let key = attribute.key.as_ref();
-                    let value = str::from_utf8(attribute.value.as_ref()).unwrap_or("");
+    let ns = doc
+        .descendants()
+        .find(|node| node.tag_name().name() == "Benchmark")?
+        .tag_name()
+        .namespace()
+        .unwrap_or("");
 
-                    if key != b"xmlns" && key != b"xmlns:xccdf" {
-                        continue;
-                    }
-
-                    if value.contains("checklists.nist.gov/xccdf/1.2") {
-                        return Some(Format::XccdfV1_2(xml.to_owned()));
-                    } else if value.contains("checklists.nist.gov/xccdf/1.1") {
-                        return Some(Format::XccdfV1_1(xml.to_owned()));
-                    }
-                }
-            }
-            Event::Eof => break,
-            _ => (),
-        }
-
-        buf.clear();
+    if ns.contains("checklists.nist.gov/xccdf/1.2") {
+        Some(Format::XccdfV1_2)
+    } else if ns.contains("checklists.nist.gov/xccdf/1.1") {
+        Some(Format::XccdfV1_1(xml.to_owned()))
+    } else {
+        None
     }
-
-    None
 }
 
 /// See if the input zip contains an XCCDF STIG.
@@ -120,7 +105,8 @@ fn test_xccdfv1_1_detection() {
 fn test_xccdfv1_2_detection() {
     let format =
         detect_stig_format("../test_assets/U_MS_Windows_10_V3R7_STIG_SCAP_1-3_Benchmark.zip");
-    assert!(matches!(format, Ok(Format::XccdfV1_2(_))));
+    eprintln!("{:?}", &format);
+    assert!(matches!(format, Ok(Format::XccdfV1_2)));
 }
 
 #[test]

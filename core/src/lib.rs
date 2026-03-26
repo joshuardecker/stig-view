@@ -89,7 +89,13 @@ impl TryFrom<u64> for Severity {
 pub enum Format {
     // Carries the raw XML string so detection and loading share one read.
     XccdfV1_1(String),
-    XccdfV1_2(String),
+
+    // This version is unsupported, but can easily be detected.
+    // Lets detect the version, and pass a useful error message along
+    // when the user tries to load this version. This version is only
+    // used in SCAP's, which do not contain all necessary information.
+    XccdfV1_2,
+
     // So easy to parse that passing Xylok toml around is easy
     // and saves doing redundant work.
     Xylok(XylokToml),
