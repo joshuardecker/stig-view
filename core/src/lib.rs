@@ -1,10 +1,12 @@
+mod ckl;
 mod detection;
-mod load_xccdf;
+mod xccdf;
 mod xylok;
 
 // Re exports.
+pub use crate::ckl::*;
 pub use crate::detection::{DetectErr, detect_stig_format};
-pub use crate::load_xccdf::*;
+pub use crate::xccdf::*;
 pub use crate::xylok::*;
 
 use serde::{Deserialize, Serialize};
@@ -99,6 +101,8 @@ pub enum Format {
     // So easy to parse that passing Xylok toml around is easy
     // and saves doing redundant work.
     Xylok(XylokToml),
+
+    CKL(String),
 }
 
 impl Benchmark {

@@ -27,6 +27,11 @@ pub fn detect_stig_format<P: AsRef<Path>>(path: P) -> Result<Format, DetectErr> 
         }
         Some("zip") => detect_xccdf_in_zip(path.as_ref())
             .ok_or(DetectErr::NotStig("Provided zip could not be loaded.")),
+        Some("ckl") => {
+            let xml = std::fs::read_to_string(path.as_ref())
+                .map_err(|_| DetectErr::CantOpenFile("Provided ckl could not be loaded."))?;
+            Ok(Format::CKL(xml))
+        }
         _ => Err(DetectErr::InvalidFileFormat(
             "Provided file does not have a supported file extension.",
         )),
@@ -48,18 +53,18 @@ fn detect_xylok(path: &Path) -> Option<Format> {
 /// For XccdfV1_1/V1_2 the string is moved into the variant so the caller does not
 /// need to re-read (or re-unzip) the file.
 fn detect_xccdf_str(xml: &str) -> Option<Format> {
-    let doc = roxmltree::Document::parse(xml).ok()?;
+    let xml_tree = roxmltree::Document::parse(xml).ok()?;
 
-    let ns = doc
+    let str = xml_tree
         .descendants()
         .find(|node| node.tag_name().name() == "Benchmark")?
         .tag_name()
         .namespace()
         .unwrap_or("");
 
-    if ns.contains("checklists.nist.gov/xccdf/1.2") {
+    if str.contains("checklists.nist.gov/xccdf/1.2") {
         Some(Format::XccdfV1_2)
-    } else if ns.contains("checklists.nist.gov/xccdf/1.1") {
+    } else if str.contains("checklists.nist.gov/xccdf/1.1") {
         Some(Format::XccdfV1_1(xml.to_owned()))
     } else {
         None
