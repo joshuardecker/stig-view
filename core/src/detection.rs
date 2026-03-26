@@ -1,52 +1,52 @@
 use std::fs::File;
+use std::fs::read_to_string;
 use std::io::Read;
 use std::path::Path;
 use zip::ZipArchive;
 
+use crate::CKLB;
 use crate::{Format, XylokToml};
-
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq, Eq))]
-pub enum DetectErr {
-    InvalidFileFormat(&'static str),
-    CantOpenFile(&'static str),
-    NotStig(&'static str),
-}
 
 /// Detect the format of STIG the user provided given a path.
 /// If its not a STIG, that is still returned as an error.
-pub fn detect_stig_format<P: AsRef<Path>>(path: P) -> Result<Format, DetectErr> {
+pub fn detect_stig_format<P: AsRef<Path>>(path: P) -> Option<Format> {
     match path.as_ref().extension().and_then(|os_str| os_str.to_str()) {
-        Some("toml") => detect_xylok(path.as_ref())
-            .ok_or(DetectErr::NotStig("Provided toml could not be loaded.")),
+        // Attempt to deserialize the toml as a Xylok Benchmark.
+        Some("toml") => {
+            let toml_str = read_to_string(path).ok()?;
+
+            let xylok_toml: XylokToml = toml::from_str(&toml_str).ok()?;
+
+            Some(Format::Xylok(xylok_toml))
+        }
+
+        // Look in the xml for version keywords to detect its version.
         Some("xml") => {
-            let xml = std::fs::read_to_string(path.as_ref())
-                .map_err(|_| DetectErr::CantOpenFile("Provided xml could not be loaded."))?;
+            let xml = std::fs::read_to_string(path.as_ref()).ok()?;
 
-            detect_xccdf_str(&xml).ok_or(DetectErr::NotStig("Provided xml could not be loaded."))
+            detect_xccdf_str(&xml)
         }
-        Some("zip") => detect_xccdf_in_zip(path.as_ref())
-            .ok_or(DetectErr::NotStig("Provided zip could not be loaded.")),
+
+        // Unzip the file, and then check for key words in the xml.
+        Some("zip") => detect_xccdf_in_zip(path.as_ref()),
+
+        // Just attempt to parse the data, without looking for a keyword.
         Some("ckl") => {
-            let xml = std::fs::read_to_string(path.as_ref())
-                .map_err(|_| DetectErr::CantOpenFile("Provided ckl could not be loaded."))?;
-            Ok(Format::CKL(xml))
+            let xml = std::fs::read_to_string(path.as_ref()).ok()?;
+
+            Some(Format::CKL(xml))
         }
-        _ => Err(DetectErr::InvalidFileFormat(
-            "Provided file does not have a supported file extension.",
-        )),
+
+        Some("cklb") => {
+            let json_str = read_to_string(path).ok()?;
+
+            let cklb_benchmark: CKLB = serde_json::from_str(&json_str).ok()?;
+
+            Some(Format::CKLB(cklb_benchmark))
+        }
+
+        _ => None,
     }
-}
-
-/// See if the input is a Xylok STIG.
-fn detect_xylok(path: &Path) -> Option<Format> {
-    use std::fs::read_to_string;
-
-    let toml_str = read_to_string(path).ok()?;
-
-    let xylok_toml: XylokToml = toml::from_str(&toml_str).ok()?;
-
-    Some(Format::Xylok(xylok_toml))
 }
 
 /// Detect the XCCDF version from a raw XML string.
@@ -103,7 +103,7 @@ fn detect_xccdf_in_zip(path: &Path) -> Option<Format> {
 #[test]
 fn test_xccdfv1_1_detection() {
     let format = detect_stig_format("../test_assets/U_RHEL_8_V2R6_STIG.zip");
-    assert!(matches!(format, Ok(Format::XccdfV1_1(_))));
+    assert!(matches!(format, Some(Format::XccdfV1_1(_))));
 }
 
 #[test]
@@ -111,11 +111,11 @@ fn test_xccdfv1_2_detection() {
     let format =
         detect_stig_format("../test_assets/U_MS_Windows_10_V3R7_STIG_SCAP_1-3_Benchmark.zip");
     eprintln!("{:?}", &format);
-    assert!(matches!(format, Ok(Format::XccdfV1_2)));
+    assert!(matches!(format, Some(Format::XccdfV1_2)));
 }
 
 #[test]
 fn test_xylok_detection() {
     let format = detect_stig_format("../test_assets/packed.toml");
-    assert!(matches!(format, Ok(Format::Xylok(_))));
+    assert!(matches!(format, Some(Format::Xylok(_))));
 }

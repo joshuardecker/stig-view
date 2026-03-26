@@ -1,6 +1,98 @@
+use std::collections::BTreeMap;
+
+use serde::Deserialize;
+
 use crate::{Benchmark, Rule, Severity};
 
+/// A struct representing a JSON CKLB.
+#[derive(Debug, Clone, Deserialize)]
+pub struct CKLB {
+    pub title: String,
+    pub id: String,
+    pub stigs: Vec<CKLBStig>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CKLBStig {
+    pub stig_name: String,
+    pub stig_id: String,
+    pub release_info: Option<String>,
+    pub rules: Vec<CKLBRule>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CKLBRule {
+    pub group_id: String,
+    pub rule_id: String,
+    pub rule_version: Option<String>,
+    pub severity: String,
+    pub rule_title: String,
+    pub discussion: String,
+    pub check_content: String,
+    pub fix_text: String,
+    pub ccis: Option<Vec<String>>,
+    pub false_positives: Option<String>,
+    pub false_negatives: Option<String>,
+    pub documentable: Option<String>,
+}
+
+impl CKLB {
+    pub fn convert(self) -> Option<Benchmark> {
+        // Technically possible for a CKLB to hold multiple benchmarks, so
+        // just convert the first one.
+        self.stigs.into_iter().next()?.convert()
+    }
+}
+
+impl CKLBStig {
+    /// Convert a single CKLB Benchmark into a benchmark.
+    fn convert(self) -> Option<Benchmark> {
+        if self.stig_id.is_empty() || self.stig_name.is_empty() {
+            return None;
+        }
+
+        let mut rules = BTreeMap::new();
+
+        self.rules.into_iter().for_each(|rule| {
+            if let Some(rule) = rule.convert() {
+                rules.insert(rule.group_id.clone(), rule);
+            }
+        });
+
+        if rules.is_empty() {
+            return None;
+        }
+
+        Some(Benchmark {
+            id: self.stig_id,
+            title: self.stig_name,
+            rules,
+        })
+    }
+}
+
+impl CKLBRule {
+    fn convert(self) -> Option<Rule> {
+        Some(Rule {
+            group_id: (!self.group_id.is_empty()).then_some(self.group_id)?,
+            rule_id: (!self.rule_id.is_empty()).then_some(self.rule_id)?,
+            stig_id: self.rule_version.filter(|s| !s.is_empty()),
+            severity: parse_severity(&self.severity),
+            title: (!self.rule_title.is_empty()).then_some(self.rule_title)?,
+            vuln_discussion: (!self.discussion.is_empty()).then_some(self.discussion)?,
+            check_text: (!self.check_content.is_empty()).then_some(self.check_content)?,
+            fix_text: (!self.fix_text.is_empty()).then_some(self.fix_text)?,
+            cci_refs: self.ccis.filter(|v| !v.is_empty()),
+            false_positives: self.false_positives.filter(|s| !s.is_empty()),
+            false_negatives: self.false_negatives.filter(|s| !s.is_empty()),
+            documentable: self.documentable.map(|s| s.trim() == "true"),
+        })
+    }
+}
+
 /// Load a benchmark given the string of a CKL xml data.
+/// Technically possible for a CKL to hold multiple benchmarks, so
+/// this just converts the first one.
 pub fn load_ckl(xml: &str) -> Option<Benchmark> {
     let xml_tree = roxmltree::Document::parse(xml).ok()?;
     let mut benchmark = Benchmark::empty();
@@ -88,12 +180,8 @@ pub fn load_ckl(xml: &str) -> Option<Benchmark> {
                         cci_refs.push(data.to_owned());
                     }
                 }
-                "False_Positives" => {
-                    false_positives = (!data.is_empty()).then(|| data.to_owned())
-                }
-                "False_Negatives" => {
-                    false_negatives = (!data.is_empty()).then(|| data.to_owned())
-                }
+                "False_Positives" => false_positives = (!data.is_empty()).then(|| data.to_owned()),
+                "False_Negatives" => false_negatives = (!data.is_empty()).then(|| data.to_owned()),
                 "Documentable" => documentable = Some(data.trim() == "true"),
                 _ => {}
             }

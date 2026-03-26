@@ -5,7 +5,7 @@ mod xylok;
 
 // Re exports.
 pub use crate::ckl::*;
-pub use crate::detection::{DetectErr, detect_stig_format};
+pub use crate::detection::*;
 pub use crate::xccdf::*;
 pub use crate::xylok::*;
 
@@ -103,6 +103,10 @@ pub enum Format {
     Xylok(XylokToml),
 
     CKL(String),
+
+    // So easy to parse that passing around the JSON is easy
+    // and saves doing redundant work.
+    CKLB(CKLB),
 }
 
 impl Benchmark {

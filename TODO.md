@@ -12,9 +12,9 @@
 - [x] Implement the settings menu (see separate settings menu item above), then remove the `todo!()` panic in `Popup::Settings` match arm in `desktop/src/ui/mod.rs`.
 
 ## 0.3
-- [ ] Add format support, for XccdfV1_1, Xylok, CKL, and CKLB.
-- [ ] Add support in `/core` for loading STIGs downloaded directly from the DISA website, Xylok internal format files, and displaying CKL's.
-- [ ] Modify UI to show all fields of the new Benchmark type and CKL status.
+- [x] Add format support, for XccdfV1_1, Xylok, CKL, and CKLB.
+- [ ] CKL and CKLB files can contain multiple benchmarks — currently only the first is loaded. Update `load_ckl()` and `CKLB::convert()` to return `Vec<Benchmark>` and handle multi-benchmark files.
+- [x] Modify UI to show all fields of the new Benchmark type and CKL status.
 - [x] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Cache files live in `{cache_dir}/stig-view/`.
 - [ ] Add a `Popup::SaveBenchmark` variant that prompts the user to save a compressed local copy of a just-opened XCCDF/ZIP benchmark. This lets the user retain a fast-loading copy independent of the original DISA file.
 - [x] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.

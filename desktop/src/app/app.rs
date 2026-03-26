@@ -6,7 +6,7 @@ use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
 use std::sync::Arc;
-use stig_view_core::{DetectErr, Format, detect_stig_format, load_ckl, load_v1_1};
+use stig_view_core::{Format, detect_stig_format, load_ckl, load_v1_1};
 
 use crate::app::command::*;
 use crate::app::*;
@@ -139,64 +139,74 @@ impl App {
             Message::OpenFile => Task::future(async move {
                 let home_dir = dirs::home_dir();
 
-                if let None = home_dir {
-                    return Message::SendErrNotif("Home directory could not be found.");
-                }
-
-                let home_dir = home_dir.expect("Home dir is safe to unwrap here.");
+                let home_dir = match home_dir {
+                    Some(dir) => dir,
+                    None => return Message::SendErrNotif("Home directory could not be found."),
+                };
 
                 let file_handle = AsyncFileDialog::new()
-                    .add_filter("STIG", &["toml", "xml", "zip", "ckl"])
+                    .add_filter("STIG", &["toml", "xml", "zip", "ckl", "cklb"])
                     .set_directory(home_dir)
                     .set_title("Stig View - Select File")
                     .pick_file()
                     .await;
 
                 // Do nothing if the user closed their file explorer before selecting a file.
-                if let None = file_handle {
-                    return Message::DoNothing;
-                }
-
-                let file_handle = file_handle.expect("File handle is safe to unwrap here.");
+                let file_handle = match file_handle {
+                    Some(handle) => handle,
+                    None => return Message::DoNothing,
+                };
 
                 let format = detect_stig_format(file_handle.path());
 
                 match format {
-                    Ok(Format::Xylok(xylok_toml)) => {
+                    Some(Format::Xylok(xylok_toml)) => {
                         let benchmark = xylok_toml.convert();
 
                         if let Some(benchmark) = benchmark {
                             Message::SwitchBenchmark(benchmark)
                         } else {
-                            Message::SendErrNotif("Could not parse selected toml.")
+                            Message::SendErrNotif(
+                                "Xylok toml could not be converted into a Benchmark.",
+                            )
                         }
                     }
-                    Ok(Format::XccdfV1_1(file_str)) => {
+
+                    Some(Format::XccdfV1_1(file_str)) => {
                         let benchmark = load_v1_1(&file_str);
 
                         if let Some(benchmark) = benchmark {
                             Message::SwitchBenchmark(benchmark)
                         } else {
-                            Message::SendErrNotif("Could not parse selected file.")
+                            Message::SendErrNotif("Xml could not be converted into a Benchmark.")
                         }
                     }
-                    Ok(Format::XccdfV1_2) => {
+
+                    Some(Format::XccdfV1_2) => {
                         Message::SendErrNotif("SCAP's are not a supported file type.")
                     }
-                    Ok(Format::CKL(file_str)) => {
+
+                    Some(Format::CKL(file_str)) => {
                         let benchmark = load_ckl(&file_str);
 
                         if let Some(benchmark) = benchmark {
                             Message::SwitchBenchmark(benchmark)
                         } else {
-                            Message::SendErrNotif("Could not parse selected file.")
+                            Message::SendErrNotif("CKL could not be converted into a Benchmark.")
                         }
                     }
-                    Err(err) => match err {
-                        DetectErr::CantOpenFile(err_str) => Message::SendErrNotif(err_str),
-                        DetectErr::InvalidFileFormat(err_str) => Message::SendErrNotif(err_str),
-                        DetectErr::NotStig(err_str) => Message::SendErrNotif(err_str),
-                    },
+
+                    Some(Format::CKLB(cklb)) => {
+                        let benchmark = cklb.convert();
+
+                        if let Some(benchmark) = benchmark {
+                            Message::SwitchBenchmark(benchmark)
+                        } else {
+                            Message::SendErrNotif("CKLB could not be converted into a Benchmark.")
+                        }
+                    }
+
+                    None => Message::SendErrNotif("Selected file is an unsupported type."),
                 }
             }),
 
