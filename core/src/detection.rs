@@ -25,8 +25,7 @@ pub fn detect_stig_format<P: AsRef<Path>>(path: P) -> Result<Format, DetectErr> 
             let xml = std::fs::read_to_string(path.as_ref())
                 .map_err(|_| DetectErr::CantOpenFile("Provided xml could not be loaded."))?;
 
-            detect_xccdf_str(&xml)
-                .ok_or(DetectErr::NotStig("Provided xml could not be loaded."))
+            detect_xccdf_str(&xml).ok_or(DetectErr::NotStig("Provided xml could not be loaded."))
         }
         Some("zip") => detect_xccdf_in_zip(path.as_ref())
             .ok_or(DetectErr::NotStig("Provided zip could not be loaded.")),
@@ -66,7 +65,7 @@ fn detect_xccdf_str(xml: &str) -> Option<Format> {
                     }
 
                     if value.contains("checklists.nist.gov/xccdf/1.2") {
-                        return Some(Format::XccdfV1_2);
+                        return Some(Format::XccdfV1_2(xml.to_owned()));
                     } else if value.contains("checklists.nist.gov/xccdf/1.1") {
                         return Some(Format::XccdfV1_1(xml.to_owned()));
                     }
@@ -121,7 +120,7 @@ fn test_xccdfv1_1_detection() {
 fn test_xccdfv1_2_detection() {
     let format =
         detect_stig_format("../test_assets/U_MS_Windows_10_V3R7_STIG_SCAP_1-3_Benchmark.zip");
-    assert_eq!(format, Ok(Format::XccdfV1_2));
+    assert!(matches!(format, Ok(Format::XccdfV1_2(_))));
 }
 
 #[test]

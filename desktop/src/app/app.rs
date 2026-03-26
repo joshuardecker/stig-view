@@ -6,7 +6,7 @@ use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
 use std::sync::Arc;
-use stig_view_core::{DetectErr, Format, detect_stig_format, load_v1_1};
+use stig_view_core::{DetectErr, Format, detect_stig_format, load_v1_1, load_v1_2};
 
 use crate::app::command::*;
 use crate::app::*;
@@ -180,12 +180,21 @@ impl App {
                             Message::SendErrNotif("Could not parse selected file.")
                         }
                     }
+                    Ok(Format::XccdfV1_2(file_str)) => {
+                        let benchmark = load_v1_2(&file_str);
+
+                        if let Some(benchmark) = benchmark {
+                            println!("Hello!");
+                            Message::SwitchBenchmark(benchmark)
+                        } else {
+                            Message::SendErrNotif("Could not parse selected file.")
+                        }
+                    }
                     Err(err) => match err {
                         DetectErr::CantOpenFile(err_str) => Message::SendErrNotif(err_str),
                         DetectErr::InvalidFileFormat(err_str) => Message::SendErrNotif(err_str),
                         DetectErr::NotStig(err_str) => Message::SendErrNotif(err_str),
                     },
-                    _ => unimplemented!(),
                 }
             }),
 
