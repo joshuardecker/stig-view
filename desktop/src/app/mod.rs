@@ -2,7 +2,7 @@ pub mod app;
 mod assets;
 mod command;
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 // Re-exports:
 pub use crate::app::assets::Assets;
@@ -19,7 +19,9 @@ use stig_view_core::{Benchmark, Rule};
 #[derive(Debug, Clone)]
 pub struct App {
     pub benchmark: Benchmark,
-    pub pins: BTreeMap<String, Pinned>,
+    // Benchmarks that live in the background, but are not currently displayed.
+    pub benchmarks: Vec<Benchmark>,
+    pub pins: HashMap<String, Pinned>,
     pub displayed: Option<Rule>,
     pub contents: [Content; 7],
     pub filter_input: String,
@@ -69,8 +71,13 @@ pub enum Message {
 
     Switch(String),
     SwitchBenchmark(Benchmark),
-    SetPins(BTreeMap<String, Pinned>),
-    SwitchWithError(String, &'static str),
+    SwitchBenchmarks(Vec<Benchmark>),
+    PushBackgroundBenchmark(Benchmark),
+    // Switch the current Benchmark to one loaded in the background.
+    // Puts the current Benchmark into the background.
+    SwitchToBackground,
+
+    SetPins(HashMap<String, Pinned>),
     SwitchNext,
     Display(Rule),
 

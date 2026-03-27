@@ -18,7 +18,8 @@ impl App {
         (
             Self {
                 benchmark: Benchmark::empty(),
-                pins: BTreeMap::new(),
+                benchmarks: Vec::new(),
+                pins: HashMap::new(),
                 displayed: None,
                 contents: [
                     Content::new(),
@@ -187,22 +188,22 @@ impl App {
                     }
 
                     Some(Format::CKL(file_str)) => {
-                        let benchmark = load_ckl(&file_str);
+                        let benchmarks = load_ckl(&file_str);
 
-                        if let Some(benchmark) = benchmark {
-                            Message::SwitchBenchmark(benchmark)
-                        } else {
+                        if benchmarks.is_empty() {
                             Message::SendErrNotif("CKL could not be converted into a Benchmark.")
+                        } else {
+                            Message::SwitchBenchmarks(benchmarks)
                         }
                     }
 
                     Some(Format::CKLB(cklb)) => {
-                        let benchmark = cklb.convert();
+                        let benchmarks = cklb.convert();
 
-                        if let Some(benchmark) = benchmark {
-                            Message::SwitchBenchmark(benchmark)
-                        } else {
+                        if benchmarks.is_empty() {
                             Message::SendErrNotif("CKLB could not be converted into a Benchmark.")
+                        } else {
+                            Message::SwitchBenchmarks(benchmarks)
                         }
                     }
 
@@ -239,18 +240,52 @@ impl App {
                     let name = name.to_owned();
 
                     self.benchmark = benchmark;
+
                     // Reset pin values.
-                    self.pins = BTreeMap::new();
+                    self.pins = HashMap::new();
+                    // Reset background Benchmarks.
+                    self.benchmarks = Vec::new();
 
                     Task::done(Message::Switch(name))
                 } else {
-                    self.benchmark = benchmark;
-                    // Reset pin values.
-                    self.pins = BTreeMap::new();
-
+                    // Do nothing when an attempting to switch an empty benchmark.
                     Task::none()
                 }
             }
+            Message::SwitchBenchmarks(mut benchmarks) => {
+                if benchmarks.len() == 0 {
+                    return Task::none();
+                }
+
+                let first = benchmarks.remove(0);
+                let mut tasks = vec![Task::done(Message::SwitchBenchmark(first))];
+
+                for benchmark in benchmarks {
+                    tasks.push(Task::done(Message::PushBackgroundBenchmark(benchmark)));
+                }
+
+                Task::batch(tasks)
+            }
+            Message::PushBackgroundBenchmark(benchmark) => {
+                self.benchmarks.push(benchmark);
+
+                Task::none()
+            }
+            Message::SwitchToBackground => {
+                match (!self.benchmarks.is_empty()).then(|| self.benchmarks.remove(0)) {
+                    Some(benchmark) => {
+                        let old = std::mem::replace(&mut self.benchmark, benchmark);
+                        self.benchmarks.push(old);
+
+                        // Reset pin values when switching to this new benchmark.
+                        self.pins = HashMap::new();
+
+                        Task::done(Message::DoNothing)
+                    }
+                    None => Task::none(),
+                }
+            }
+
             Message::SetPins(pins) => {
                 self.pins = pins;
 
@@ -279,22 +314,6 @@ impl App {
                 }
 
                 Task::none()
-            }
-            Message::SwitchWithError(id, err_str) => {
-                let benchmark = self.benchmark.clone();
-
-                Task::batch(vec![
-                    Task::future(async move {
-                        let rule = benchmark.rules.get(&id);
-
-                        if let Some(rule) = rule {
-                            Message::Display(rule.to_owned())
-                        } else {
-                            Message::DoNothing
-                        }
-                    }),
-                    Task::done(Message::SendErrNotif(err_str)),
-                ])
             }
             Message::SwitchNext => {
                 let benchmark = self.benchmark.clone();

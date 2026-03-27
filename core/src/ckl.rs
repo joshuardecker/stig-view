@@ -37,10 +37,8 @@ pub struct CKLBRule {
 }
 
 impl CKLB {
-    pub fn convert(self) -> Option<Benchmark> {
-        // Technically possible for a CKLB to hold multiple benchmarks, so
-        // just convert the first one.
-        self.stigs.into_iter().next()?.convert()
+    pub fn convert(self) -> Vec<Benchmark> {
+        self.stigs.into_iter().filter_map(|stig| stig.convert()).collect()
     }
 }
 
@@ -90,19 +88,25 @@ impl CKLBRule {
     }
 }
 
-/// Load a benchmark given the string of a CKL xml data.
-/// Technically possible for a CKL to hold multiple benchmarks, so
-/// this just converts the first one.
-pub fn load_ckl(xml: &str) -> Option<Benchmark> {
-    let xml_tree = roxmltree::Document::parse(xml).ok()?;
+/// Load all benchmarks from a CKL xml string.
+pub fn load_ckl(xml: &str) -> Vec<Benchmark> {
+    let xml_tree = match roxmltree::Document::parse(xml) {
+        Ok(doc) => doc,
+        Err(_) => return Vec::new(),
+    };
+
+    xml_tree
+        .descendants()
+        .filter(|node| node.tag_name().name() == "iSTIG")
+        .filter_map(parse_istig)
+        .collect()
+}
+
+fn parse_istig(istig: roxmltree::Node) -> Option<Benchmark> {
     let mut benchmark = Benchmark::empty();
 
-    let istig_node = xml_tree
-        .descendants()
-        .find(|node| node.tag_name().name() == "iSTIG")?;
-
     // Benchmark id and title are stored as SI_DATA key-value pairs under STIG_INFO.
-    let stig_info_node = istig_node
+    let stig_info_node = istig
         .children()
         .find(|node| node.tag_name().name() == "STIG_INFO")?;
 
@@ -133,7 +137,7 @@ pub fn load_ckl(xml: &str) -> Option<Benchmark> {
         return None;
     }
 
-    for vuln in istig_node
+    for vuln in istig
         .children()
         .filter(|node| node.tag_name().name() == "VULN")
     {

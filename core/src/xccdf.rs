@@ -1,7 +1,4 @@
-use std::collections::BTreeMap;
-
-use crate::detect_stig_format;
-use crate::{Benchmark, Format, Rule, Severity};
+use crate::{Benchmark, Rule, Severity};
 
 /// Load a benchmark given the string of an XCCDF v1.1 xml data.
 pub fn load_v1_1(xml: &str) -> Option<Benchmark> {

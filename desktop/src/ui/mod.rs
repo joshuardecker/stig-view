@@ -177,7 +177,7 @@ impl App {
         } else {
             let list_col = column![space::vertical()];
             let main_col = column![
-                row![text("Open a file or folder to get started.").size(24)]
+                row![text("Click 'File' to get started.").size(24)]
                     .align_y(Center)
                     .height(Fill),
             ]
@@ -256,11 +256,11 @@ impl App {
                         .padding(8)
                 ],
                 space().width(15),
-                container(scrollable(main_col).spacing(4))
+                container(scrollable(main_col).spacing(15))
                     .style(background_container)
                     .width(Fill)
                     .height(Fill)
-                    .padding(15),
+                    .padding(8),
                 container(
                     mouse_area(container(space::horizontal()).width(15).height(Fill))
                         .on_press(Message::WindowDragResize(East))
@@ -449,6 +449,7 @@ impl App {
         let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
         let square_svg_handle = svg::Handle::from_memory(self.assets.square_svg.clone());
         let down_tick_svg_handle = svg::Handle::from_memory(self.assets.down_tick_svg.clone());
+        let switch_svg_handle = svg::Handle::from_memory(self.assets.switch_svg.clone());
 
         // A complicated way of getting mouse_area to work.
         // Captures mouse input in the window decorations so the window can be dragged.
@@ -492,6 +493,35 @@ impl App {
                             tooltip::Position::Right
                         )
                         .delay(iced::time::Duration::from_secs(1)),
+                        space::horizontal(),
+                        text(&self.benchmark.id).size(14),
+                        {
+                            let switch_element: Element<Message> = if self.benchmarks.len() != 0 {
+                                row![
+                                    space().width(15),
+                                    tooltip(
+                                        button(
+                                            svg(switch_svg_handle)
+                                                .style(colored_svg)
+                                                .width(20)
+                                                .height(20)
+                                        )
+                                        .padding(1)
+                                        .width(Shrink)
+                                        .height(Shrink)
+                                        .style(no_button)
+                                        .on_press(Message::SwitchToBackground),
+                                        container("Switch Benchmark").style(tooltip_container),
+                                        tooltip::Position::Right
+                                    )
+                                    .delay(iced::time::Duration::from_secs(1)),
+                                ]
+                                .into()
+                            } else {
+                                space().width(0).into()
+                            };
+                            switch_element
+                        },
                         space::horizontal(),
                         button(
                             svg(down_tick_svg_handle)
@@ -717,12 +747,12 @@ impl App {
                     .on_press(Message::SwitchDisplayType(DisplayType::GroupId))
                     .style(rounded_boring_button)
                     .width(FillPortion(1)),
-                space().width(5),
+                space().width(8),
                 button(text("Rule ID").size(12).center())
                     .on_press(Message::SwitchDisplayType(DisplayType::RuleId))
                     .style(rounded_boring_button)
                     .width(FillPortion(1)),
-                space().width(5),
+                space().width(8),
                 button(text("STIG ID").size(12).center())
                     .on_press(Message::SwitchDisplayType(DisplayType::STIGId))
                     .style(rounded_boring_button)
@@ -734,7 +764,7 @@ impl App {
         .spacing(8)
         .align_x(Center);
 
-        let mut scrollable_col = column![].padding(1).spacing(8).align_x(Center);
+        let mut scrollable_col = column![].spacing(8).align_x(Center);
 
         // This bool is calculated before items in the vector are consumed.
         // It is needed later.
@@ -763,7 +793,7 @@ impl App {
             scrollable_col = scrollable_col.push(*button);
         }
 
-        col = col.push(scrollable(scrollable_col).spacing(4));
+        col = col.push(scrollable(scrollable_col).spacing(8));
 
         col
     }

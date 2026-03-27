@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use regex::Regex;
 use stig_view_core::Benchmark;
@@ -31,8 +31,8 @@ pub fn parse_command(input: &str) -> Result<Command, CommandErr> {
 pub fn run_search_cmd(
     cmd: Command,
     benchmark: Benchmark,
-    mut pins: BTreeMap<String, Pinned>,
-) -> Result<BTreeMap<String, Pinned>, CommandErr> {
+    mut pins: HashMap<String, Pinned>,
+) -> Result<HashMap<String, Pinned>, CommandErr> {
     match cmd {
         Command::KeywordSearch(keyword) => {
             let re = Regex::new(&keyword).map_err(|_| CommandErr::RegexErr)?;
