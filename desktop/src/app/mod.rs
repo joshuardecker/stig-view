@@ -38,6 +38,7 @@ pub struct App {
 pub enum Popup {
     Filter,
     Settings,
+    Save,
     None,
 }
 
@@ -96,6 +97,8 @@ pub enum Message {
     KeyPressed(keyboard::Event),
 
     SaveSettings,
+    SaveBenchmark,
+    LoadCachedBenchmark(std::path::PathBuf),
 
     SwitchDisplayType(DisplayType),
 

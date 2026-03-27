@@ -6,7 +6,7 @@ use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
 use std::sync::Arc;
-use stig_view_core::{Format, detect_stig_format, load_ckl, load_v1_1};
+use stig_view_core::{Benchmark, Format, detect_stig_format, load_ckl, load_v1_1};
 
 use crate::app::command::*;
 use crate::app::*;
@@ -246,7 +246,12 @@ impl App {
                     // Reset background Benchmarks.
                     self.benchmarks = Vec::new();
 
-                    Task::done(Message::Switch(name))
+                    let tasks = vec![
+                        Task::done(Message::Switch(name)),
+                        Task::done(Message::SwitchPopup(Popup::Save)),
+                    ];
+
+                    Task::batch(tasks)
                 } else {
                     // Do nothing when an attempting to switch an empty benchmark.
                     Task::none()
@@ -480,6 +485,39 @@ impl App {
                     }
                 }
             }
+            Message::SaveBenchmark => {
+                let all = std::iter::once(&self.benchmark).chain(self.benchmarks.iter());
+
+                for benchmark in all {
+                    if let Err(_) = benchmark.save() {
+                        return Task::done(Message::SendErrNotif("Couldn't save benchmark."));
+                    }
+                }
+
+                // After saving, turn off the save menu.
+                Task::done(Message::SwitchPopup(Popup::None))
+            }
+
+            Message::LoadCachedBenchmark(path) => match Benchmark::load(&path) {
+                Ok(benchmark) => {
+                    if let Some((name, _rule)) = benchmark.rules.first_key_value() {
+                        let name = name.to_owned();
+
+                        self.benchmark = benchmark;
+
+                        // Reset pin values.
+                        self.pins = HashMap::new();
+                        // Reset background Benchmarks.
+                        self.benchmarks = Vec::new();
+
+                        Task::done(Message::Switch(name))
+                    } else {
+                        // Do nothing when an attempting to switch an empty benchmark.
+                        Task::none()
+                    }
+                }
+                Err(_) => Task::done(Message::SendErrNotif("Couldn't load cached benchmark.")),
+            },
 
             Message::SwitchDisplayType(display_type) => {
                 self.display_type = display_type;
@@ -489,5 +527,30 @@ impl App {
 
             Message::DoNothing => Task::none(),
         }
+    }
+
+    pub fn load_cache() -> Vec<std::path::PathBuf> {
+        let Some(mut cache_dir) = dirs::cache_dir() else {
+            return Vec::new();
+        };
+
+        cache_dir.push("stig-view/");
+
+        let entries = match std::fs::read_dir(&cache_dir) {
+            Ok(entries) => entries,
+            Err(_) => return Vec::new(),
+        };
+
+        entries
+            .filter_map(|entry| {
+                let path = entry.ok()?.path();
+                let name = path.file_name()?.to_str()?;
+                if name.ends_with(".msgpack.zstd") && name != ".msgpack.zstd" {
+                    Some(path)
+                } else {
+                    None
+                }
+            })
+            .collect()
     }
 }

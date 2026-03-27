@@ -39,6 +39,68 @@ pub fn rounded_primary_button(theme: &Theme, status: button::Status) -> button::
     }
 }
 
+/// A rounded button in the success color.
+#[allow(dead_code)]
+pub fn rounded_success_button(theme: &Theme, status: button::Status) -> button::Style {
+    let palette = theme.extended_palette();
+
+    match status {
+        button::Status::Hovered => button::Style {
+            background: Some(palette.success.weak.color.into()),
+            text_color: palette.background.base.text,
+            border: Border {
+                ..border::rounded(BORDER_RAD)
+            },
+            shadow: Shadow {
+                ..Shadow::default()
+            },
+            snap: false,
+        },
+        _ => button::Style {
+            background: Some(palette.success.base.color.into()),
+            text_color: palette.background.base.text,
+            border: Border {
+                ..border::rounded(BORDER_RAD)
+            },
+            shadow: Shadow {
+                ..Shadow::default()
+            },
+            snap: false,
+        },
+    }
+}
+
+/// A rounded button in the danger color.
+#[allow(dead_code)]
+pub fn rounded_danger_button(theme: &Theme, status: button::Status) -> button::Style {
+    let palette = theme.extended_palette();
+
+    match status {
+        button::Status::Hovered => button::Style {
+            background: Some(palette.danger.weak.color.into()),
+            text_color: palette.background.base.text,
+            border: Border {
+                ..border::rounded(BORDER_RAD)
+            },
+            shadow: Shadow {
+                ..Shadow::default()
+            },
+            snap: false,
+        },
+        _ => button::Style {
+            background: Some(palette.danger.base.color.into()),
+            text_color: palette.background.base.text,
+            border: Border {
+                ..border::rounded(BORDER_RAD)
+            },
+            shadow: Shadow {
+                ..Shadow::default()
+            },
+            snap: false,
+        },
+    }
+}
+
 /// A rounded button in a less obvious background color.
 pub fn rounded_boring_button(theme: &Theme, status: button::Status) -> button::Style {
     let palette = theme.extended_palette();

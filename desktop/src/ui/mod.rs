@@ -157,6 +157,7 @@ impl App {
                     stack![main_gui, self.command_prompt_popup()].into()
                 }
                 (Popup::Settings, ErrNotif::None) => stack![main_gui, self.settings_menu()].into(),
+                (Popup::Save, ErrNotif::None) => stack![main_gui, self.save_menu()].into(),
 
                 (Popup::None, ErrNotif::Err(err_str)) => {
                     stack![main_gui, self.error_notification(err_str.to_owned())].into()
@@ -173,16 +174,51 @@ impl App {
                     self.error_notification(err_str.to_owned())
                 ]
                 .into(),
+                (Popup::Save, ErrNotif::Err(err_str)) => stack![
+                    main_gui,
+                    self.save_menu(),
+                    self.error_notification(err_str.to_owned())
+                ]
+                .into(),
             }
         } else {
+            let right_tick_svg_handle =
+                svg::Handle::from_memory(self.assets.right_tick_svg.clone());
+
             let list_col = column![space::vertical()];
-            let main_col = column![
-                row![text("Click 'File' to get started.").size(24)]
-                    .align_y(Center)
-                    .height(Fill),
+
+            let mut main_col = column![
+                text("Open a Benchmark to get Started").size(24),
+                space().height(20),
             ]
+            .padding(15)
             .align_x(Center)
             .width(Fill);
+
+            for path in App::load_cache() {
+                let label = match path.file_name().and_then(|os_str| os_str.to_str()) {
+                    Some(str) => str.trim_end_matches(".msgpack.zstd").to_string(),
+                    None => continue,
+                };
+
+                main_col = main_col.push(
+                    row![
+                        svg(right_tick_svg_handle.clone())
+                            .style(boring_svg)
+                            .width(20)
+                            .height(20),
+                        button(text(label).center())
+                            .width(Fill)
+                            .style(button::subtle)
+                            .on_press(Message::LoadCachedBenchmark(path)),
+                        //space::horizontal(),
+                    ]
+                    .align_y(Center),
+                );
+
+                main_col = main_col.push(rule::horizontal(2));
+                main_col = main_col.push(space().height(8));
+            }
 
             let main_gui = self.main_gui(self.window_decorations(), list_col, main_col);
 
@@ -192,6 +228,7 @@ impl App {
                     stack![main_gui, self.command_prompt_popup()].into()
                 }
                 (Popup::Settings, ErrNotif::None) => stack![main_gui, self.settings_menu()].into(),
+                (Popup::Save, ErrNotif::None) => stack![main_gui, self.save_menu()].into(),
 
                 (Popup::None, ErrNotif::Err(err_str)) => {
                     stack![main_gui, self.error_notification(err_str.to_owned())].into()
@@ -205,6 +242,12 @@ impl App {
                 (Popup::Settings, ErrNotif::Err(err_str)) => stack![
                     main_gui,
                     self.settings_menu(),
+                    self.error_notification(err_str.to_owned())
+                ]
+                .into(),
+                (Popup::Save, ErrNotif::Err(err_str)) => stack![
+                    main_gui,
+                    self.save_menu(),
                     self.error_notification(err_str.to_owned())
                 ]
                 .into(),
@@ -398,6 +441,59 @@ impl App {
                         pick_list(themes, Some(self.settings.theme), Message::SwitchTheme),
                     ]
                     .align_y(Center)
+                ]
+                .align_x(Center),
+            )
+            .width(375)
+            .height(150)
+            .padding(15)
+            .style(cmd_container),
+        )
+        .center(Fill)
+    }
+
+    fn save_menu(&self) -> Container<'_, Message> {
+        let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
+
+        container(
+            container(
+                column![
+                    row![
+                        space::horizontal(),
+                        space().width(13),
+                        text("Save Benchmark for Later?"),
+                        space::horizontal(),
+                        button(
+                            svg(cross_svg_handle)
+                                .style(colored_svg)
+                                .width(25)
+                                .height(25)
+                        )
+                        .padding(1)
+                        .width(Shrink)
+                        .height(Shrink)
+                        .style(no_button)
+                        .on_press(Message::SwitchPopup(Popup::None)),
+                    ]
+                    .align_y(Center),
+                    space::vertical(),
+                    row![
+                        space::horizontal(),
+                        button(text("Cancel").size(14).center())
+                            .style(rounded_danger_button)
+                            .width(65)
+                            .height(30)
+                            .on_press(Message::SwitchPopup(Popup::None)),
+                        space().width(60),
+                        button(text("Confirm").size(14).center())
+                            .style(rounded_success_button)
+                            .width(70)
+                            .height(30)
+                            .on_press(Message::SaveBenchmark),
+                        space::horizontal()
+                    ]
+                    .align_y(Center),
+                    space().height(15),
                 ]
                 .align_x(Center),
             )

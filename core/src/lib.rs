@@ -47,7 +47,7 @@ pub struct Rule {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(test, derive(PartialEq, Eq))]
-#[serde(try_from = "u64")]
+#[serde(try_from = "u64", into = "u64")]
 pub enum Severity {
     Unknown,
     VeryLow,
@@ -66,6 +66,19 @@ impl std::fmt::Display for Severity {
             Severity::Medium => write!(f, "Medium"),
             Severity::High => write!(f, "High"),
             Severity::VeryHigh => write!(f, "Very High"),
+        }
+    }
+}
+
+impl From<Severity> for u64 {
+    fn from(v: Severity) -> u64 {
+        match v {
+            Severity::Unknown => 0,
+            Severity::VeryLow => 1,
+            Severity::Low => 2,
+            Severity::Medium => 3,
+            Severity::High => 4,
+            Severity::VeryHigh => 5,
         }
     }
 }
