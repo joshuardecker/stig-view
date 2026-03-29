@@ -37,7 +37,7 @@ impl App {
                 window_id: None,
                 settings: settings,
                 load_handle: None,
-                display_type: DisplayType::GroupId,
+                display_type: settings.default_display_type,
             },
             window::oldest().map(Message::InitWindow),
         )
@@ -476,7 +476,7 @@ impl App {
             },
 
             Message::SaveSettings => {
-                let err = AppSettings::save(self.settings.clone());
+                let err = AppSettings::save(self.settings);
 
                 match err {
                     Ok(_) => Task::none(),
@@ -521,6 +521,21 @@ impl App {
 
             Message::SwitchDisplayType(display_type) => {
                 self.display_type = display_type;
+
+                Task::none()
+            }
+            // Instead of just switching display types, save it as the default for next time.
+            Message::SaveDisplayType(display_type) => {
+                self.display_type = display_type;
+                self.settings.default_display_type = display_type;
+
+                Task::done(Message::SaveSettings)
+            }
+
+            Message::ReturnHome => {
+                self.benchmark = Benchmark::empty();
+                self.benchmarks = Vec::new();
+                self.displayed = None;
 
                 Task::none()
             }

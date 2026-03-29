@@ -101,6 +101,9 @@ pub enum Message {
     LoadCachedBenchmark(std::path::PathBuf),
 
     SwitchDisplayType(DisplayType),
+    SaveDisplayType(DisplayType),
+
+    ReturnHome,
 
     DoNothing,
 }
@@ -131,9 +134,10 @@ impl std::fmt::Display for AppTheme {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct AppSettings {
     pub theme: AppTheme,
+    pub default_display_type: DisplayType,
 }
 
 #[derive(Debug, Clone)]
@@ -151,17 +155,28 @@ pub enum Pinned {
 }
 
 /// What name should be displayed on the buttons that switch the displayed STIG.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub enum DisplayType {
     GroupId,
     RuleId,
     STIGId,
 }
 
+impl std::fmt::Display for DisplayType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            DisplayType::GroupId => "Group ID",
+            DisplayType::RuleId => "Rule ID",
+            DisplayType::STIGId => "STIG ID",
+        })
+    }
+}
+
 impl AppSettings {
     pub fn default() -> Self {
         Self {
             theme: AppTheme::Dark,
+            default_display_type: DisplayType::GroupId,
         }
     }
 

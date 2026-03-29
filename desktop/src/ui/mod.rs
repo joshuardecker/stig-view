@@ -4,8 +4,8 @@ use iced::Alignment::End;
 use iced::Element;
 use iced::Length::FillPortion;
 use iced::widget::{
-    Button, Column, Container, button, column, container, mouse_area, row, rule, scrollable,
-    sensor, space, stack, svg, text, text_editor, text_input, tooltip,
+    Button, Column, Container, button, column, container, mouse_area, opaque, row, rule,
+    scrollable, sensor, space, stack, svg, text, text_editor, text_input, tooltip,
 };
 use iced::widget::{Id, pick_list};
 use iced::window::Direction::{
@@ -149,74 +149,100 @@ impl App {
                 ],
             ];
 
+            // A little convoluted, but wrap the main col in a scrollable, and then a column again.
+            // main_gui() takes a column as input, thats why we wrap the scrollable with a col.
+            let main_col = column![scrollable(main_col).spacing(15)];
+
             let main_gui = self.main_gui(self.window_decorations(), list_col, main_col);
 
             match (self.popup.clone(), self.err_notif.clone()) {
                 (Popup::None, ErrNotif::None) => main_gui,
                 (Popup::Filter, ErrNotif::None) => {
-                    stack![main_gui, self.command_prompt_popup()].into()
+                    stack![main_gui, opaque(self.command_prompt_popup())].into()
                 }
-                (Popup::Settings, ErrNotif::None) => stack![main_gui, self.settings_menu()].into(),
-                (Popup::Save, ErrNotif::None) => stack![main_gui, self.save_menu()].into(),
+                (Popup::Settings, ErrNotif::None) => {
+                    stack![main_gui, opaque(self.settings_menu())].into()
+                }
+                (Popup::Save, ErrNotif::None) => stack![main_gui, opaque(self.save_menu())].into(),
 
-                (Popup::None, ErrNotif::Err(err_str)) => {
-                    stack![main_gui, self.error_notification(err_str.to_owned())].into()
-                }
+                (Popup::None, ErrNotif::Err(err_str)) => stack![
+                    main_gui,
+                    opaque(self.error_notification(err_str.to_owned()))
+                ]
+                .into(),
                 (Popup::Filter, ErrNotif::Err(err_str)) => stack![
                     main_gui,
-                    self.command_prompt_popup(),
-                    self.error_notification(err_str.to_owned())
+                    opaque(self.command_prompt_popup()),
+                    opaque(self.error_notification(err_str.to_owned()))
                 ]
                 .into(),
                 (Popup::Settings, ErrNotif::Err(err_str)) => stack![
                     main_gui,
-                    self.settings_menu(),
-                    self.error_notification(err_str.to_owned())
+                    opaque(self.settings_menu()),
+                    opaque(self.error_notification(err_str.to_owned()))
                 ]
                 .into(),
                 (Popup::Save, ErrNotif::Err(err_str)) => stack![
                     main_gui,
-                    self.save_menu(),
-                    self.error_notification(err_str.to_owned())
+                    opaque(self.save_menu()),
+                    opaque(self.error_notification(err_str.to_owned()))
                 ]
                 .into(),
             }
         } else {
-            let right_tick_svg_handle =
-                svg::Handle::from_memory(self.assets.right_tick_svg.clone());
+            let file_svg_handle = svg::Handle::from_memory(self.assets.file_svg.clone());
 
             let list_col = column![space::vertical()];
 
-            let mut main_col = column![
-                text("Open a Benchmark to get Started").size(24),
-                space().height(20),
-            ]
-            .padding(15)
-            .align_x(Center)
-            .width(Fill);
+            let cache = App::load_cache();
 
-            for path in App::load_cache() {
+            // Change the displayed string based on if the cache loaded any items.
+            let displayed_string = if cache.len() == 0 {
+                String::from("Open a File to Get Started")
+            } else {
+                String::from("Recently Saved Files")
+            };
+
+            let mut main_col =
+                column![text(displayed_string).size(24).center(), space().height(20),]
+                    .padding(15)
+                    .align_x(Center)
+                    .width(400);
+
+            // If the cache is empty, add an obvious button for the user to click that opens a new Benchmark.
+            if cache.len() == 0 {
+                main_col = main_col.push(
+                    button(text("Open").center())
+                        .width(80)
+                        .height(40)
+                        .style(rounded_boring_button)
+                        .on_press(Message::OpenFile),
+                )
+            }
+
+            for path in cache {
                 let label = match path.file_name().and_then(|os_str| os_str.to_str()) {
                     Some(str) => str.trim_end_matches(".msgpack.zstd").to_string(),
                     None => continue,
                 };
 
                 main_col = main_col.push(
-                    row![
-                        svg(right_tick_svg_handle.clone())
-                            .style(boring_svg)
-                            .width(20)
-                            .height(20),
-                        button(text(label).center())
-                            .width(Fill)
-                            .style(button::subtle)
-                            .on_press(Message::LoadCachedBenchmark(path)),
-                        //space::horizontal(),
-                    ]
-                    .align_y(Center),
+                    button(
+                        row![
+                            svg(file_svg_handle.clone())
+                                .style(boring_svg)
+                                .width(20)
+                                .height(20),
+                            space().width(15),
+                            text(label).center(),
+                        ]
+                        .align_y(Center),
+                    )
+                    .width(Fill)
+                    .style(rounded_boring_button)
+                    .on_press(Message::LoadCachedBenchmark(path)),
                 );
 
-                main_col = main_col.push(rule::horizontal(2));
                 main_col = main_col.push(space().height(8));
             }
 
@@ -225,30 +251,34 @@ impl App {
             match (self.popup.clone(), self.err_notif.clone()) {
                 (Popup::None, ErrNotif::None) => main_gui,
                 (Popup::Filter, ErrNotif::None) => {
-                    stack![main_gui, self.command_prompt_popup()].into()
+                    stack![main_gui, opaque(self.command_prompt_popup())].into()
                 }
-                (Popup::Settings, ErrNotif::None) => stack![main_gui, self.settings_menu()].into(),
-                (Popup::Save, ErrNotif::None) => stack![main_gui, self.save_menu()].into(),
+                (Popup::Settings, ErrNotif::None) => {
+                    stack![main_gui, opaque(self.settings_menu())].into()
+                }
+                (Popup::Save, ErrNotif::None) => stack![main_gui, opaque(self.save_menu())].into(),
 
-                (Popup::None, ErrNotif::Err(err_str)) => {
-                    stack![main_gui, self.error_notification(err_str.to_owned())].into()
-                }
+                (Popup::None, ErrNotif::Err(err_str)) => stack![
+                    main_gui,
+                    opaque(self.error_notification(err_str.to_owned()))
+                ]
+                .into(),
                 (Popup::Filter, ErrNotif::Err(err_str)) => stack![
                     main_gui,
-                    self.command_prompt_popup(),
-                    self.error_notification(err_str.to_owned())
+                    opaque(self.command_prompt_popup()),
+                    opaque(self.error_notification(err_str.to_owned()))
                 ]
                 .into(),
                 (Popup::Settings, ErrNotif::Err(err_str)) => stack![
                     main_gui,
-                    self.settings_menu(),
-                    self.error_notification(err_str.to_owned())
+                    opaque(self.settings_menu()),
+                    opaque(self.error_notification(err_str.to_owned()))
                 ]
                 .into(),
                 (Popup::Save, ErrNotif::Err(err_str)) => stack![
                     main_gui,
-                    self.save_menu(),
-                    self.error_notification(err_str.to_owned())
+                    opaque(self.save_menu()),
+                    opaque(self.error_notification(err_str.to_owned()))
                 ]
                 .into(),
             }
@@ -299,10 +329,9 @@ impl App {
                         .padding(8)
                 ],
                 space().width(15),
-                container(scrollable(main_col).spacing(15))
+                container(main_col)
                     .style(background_container)
-                    .width(Fill)
-                    .height(Fill)
+                    .center(Fill)
                     .padding(8),
                 container(
                     mouse_area(container(space::horizontal()).width(15).height(Fill))
@@ -412,6 +441,11 @@ impl App {
         let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
 
         let themes = [AppTheme::Dark, AppTheme::Light];
+        let display_types = [
+            DisplayType::GroupId,
+            DisplayType::RuleId,
+            DisplayType::STIGId,
+        ];
 
         container(
             container(
@@ -440,7 +474,18 @@ impl App {
                         space::horizontal(),
                         pick_list(themes, Some(self.settings.theme), Message::SwitchTheme),
                     ]
-                    .align_y(Center)
+                    .align_y(Center),
+                    space().height(5),
+                    row![
+                        text("Default Display Type"),
+                        space::horizontal(),
+                        pick_list(
+                            display_types,
+                            Some(self.settings.default_display_type),
+                            Message::SaveDisplayType
+                        ),
+                    ]
+                    .align_y(Center),
                 ]
                 .align_x(Center),
             )
@@ -573,10 +618,12 @@ impl App {
                                 .height(Shrink)
                                 .style(rounded_dark_button)
                                 .on_press(Message::OpenFile),
-                            container("Ctrl + I").style(tooltip_container).padding(4),
+                            container("Open a New File (Ctrl + I)")
+                                .style(tooltip_container)
+                                .padding(4),
                             tooltip::Position::Right
                         )
-                        .delay(iced::time::Duration::from_secs(1)),
+                        .delay(iced::time::Duration::from_millis(800)),
                         space().width(4),
                         tooltip(
                             button(text("Filter").center().size(14))
@@ -585,10 +632,23 @@ impl App {
                                 .height(Shrink)
                                 .style(rounded_dark_button)
                                 .on_press(Message::SwitchPopup(Popup::Filter)),
-                            container("Ctrl + P").style(tooltip_container),
+                            container("Sort Content Based on a Filter (Ctrl + P)")
+                                .style(tooltip_container),
                             tooltip::Position::Right
                         )
-                        .delay(iced::time::Duration::from_secs(1)),
+                        .delay(iced::time::Duration::from_millis(800)),
+                        space().width(4),
+                        tooltip(
+                            button(text("Home").center().size(15)) // For some reason the word Home looks smaller. I think its just the font.
+                                .padding(6)
+                                .width(Shrink)
+                                .height(Shrink)
+                                .style(rounded_dark_button)
+                                .on_press(Message::ReturnHome),
+                            container("Returns to the Home Menu").style(tooltip_container),
+                            tooltip::Position::Right
+                        )
+                        .delay(iced::time::Duration::from_millis(800)),
                         space::horizontal(),
                         text(&self.benchmark.id).size(14),
                         {
@@ -610,7 +670,7 @@ impl App {
                                         container("Switch Benchmark").style(tooltip_container),
                                         tooltip::Position::Right
                                     )
-                                    .delay(iced::time::Duration::from_secs(1)),
+                                    .delay(iced::time::Duration::from_millis(800)),
                                 ]
                                 .into()
                             } else {
