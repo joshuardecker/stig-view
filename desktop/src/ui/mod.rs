@@ -624,7 +624,7 @@ impl App {
                                 .padding(4),
                             tooltip::Position::Right
                         )
-                        .delay(iced::time::Duration::from_millis(800)),
+                        .delay(iced::time::Duration::from_millis(600)),
                         space().width(4),
                         tooltip(
                             button(text("Filter").center().size(14))
@@ -637,10 +637,10 @@ impl App {
                                 .style(tooltip_container),
                             tooltip::Position::Right
                         )
-                        .delay(iced::time::Duration::from_millis(800)),
+                        .delay(iced::time::Duration::from_millis(600)),
                         space().width(4),
                         tooltip(
-                            button(text("Home").center().size(15)) // For some reason the word Home looks smaller. I think its just the font.
+                            button(text("Home").center().size(14))
                                 .padding(6)
                                 .width(Shrink)
                                 .height(Shrink)
@@ -649,7 +649,7 @@ impl App {
                             container("Returns to the Home Menu").style(tooltip_container),
                             tooltip::Position::Right
                         )
-                        .delay(iced::time::Duration::from_millis(800)),
+                        .delay(iced::time::Duration::from_millis(600)),
                         space::horizontal(),
                         text(&self.benchmark.id).size(14),
                         {
@@ -671,7 +671,7 @@ impl App {
                                         container("Switch Benchmark").style(tooltip_container),
                                         tooltip::Position::Right
                                     )
-                                    .delay(iced::time::Duration::from_millis(800)),
+                                    .delay(iced::time::Duration::from_millis(600)),
                                 ]
                                 .into()
                             } else {

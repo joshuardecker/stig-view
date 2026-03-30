@@ -5,13 +5,17 @@ use crate::app::App;
 
 #[cfg(target_os = "linux")]
 fn main() -> iced::Result {
-    use iced::window::settings::{PlatformSpecific, Settings};
+    use iced::{
+        Font,
+        window::settings::{PlatformSpecific, Settings},
+    };
 
     iced::application(App::new, App::update, App::get_view)
         .subscription(App::subscription)
         .theme(App::theme)
         .title("Stig View")
-        .default_font(iced::font::Font::MONOSPACE)
+        .font(include_bytes!("../../assets/fonts/font.ttf"))
+        .default_font(Font::with_name("CMU Sans Serif"))
         .window(Settings {
             platform_specific: PlatformSpecific {
                 application_id: String::from("io.github.joshuardecker.stig-view"),

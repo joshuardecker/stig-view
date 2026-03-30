@@ -18,7 +18,7 @@
 - [x] After parsing a benchmark, cache it to disk using `rmp-serde` (MessagePack) + `zstd` compression so subsequent loads skip re-parsing the source format. Cache files live in `{cache_dir}/stig-view/`.
 - [x] Add a `Popup::SaveBenchmark` variant that prompts the user to save a compressed local copy of a just-opened XCCDF/ZIP benchmark. This lets the user retain a fast-loading copy independent of the original DISA file.
 - [x] When a filter is applied, automatically switch the content pane to the first matching result if the currently displayed STIG does not match.
-- [ ] Move the Flatpak build out of the CI/CD pipeline into `scripts/build-linux.sh`. CI only needs to call the script.
+- [x] Move the Flatpak build out of the CI/CD pipeline into `scripts/build-linux.sh`. CI only needs to call the script.
 
 ## 0.4 - Animation Support
 - [ ] Set up a clean pattern for composing multiple time subscriptions in `subscription()` before animations and loading indicators are both active simultaneously.
