@@ -134,6 +134,7 @@ impl XylokRule {
             false_positives: None,
             false_negatives: None,
             documentable: None,
+            ckl_status: None,
         })
     }
 }

@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{Benchmark, Rule, Severity};
 
@@ -34,11 +34,24 @@ pub struct CKLBRule {
     pub false_positives: Option<String>,
     pub false_negatives: Option<String>,
     pub documentable: Option<String>,
+    #[serde(default)]
+    pub ckl_status: Option<CKLStatus>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum CKLStatus {
+    NotAFinding,
+    Open,
+    NotApplicable,
+    NotReviewed,
 }
 
 impl CKLB {
     pub fn convert(self) -> Vec<Benchmark> {
-        self.stigs.into_iter().filter_map(|stig| stig.convert()).collect()
+        self.stigs
+            .into_iter()
+            .filter_map(|stig| stig.convert())
+            .collect()
     }
 }
 
@@ -84,6 +97,7 @@ impl CKLBRule {
             false_positives: self.false_positives.filter(|s| !s.is_empty()),
             false_negatives: self.false_negatives.filter(|s| !s.is_empty()),
             documentable: self.documentable.map(|s| s.trim() == "true"),
+            ckl_status: Some(self.ckl_status.unwrap_or(CKLStatus::NotReviewed)),
         })
     }
 }
@@ -153,6 +167,7 @@ fn parse_istig(istig: roxmltree::Node) -> Option<Benchmark> {
         let mut false_positives: Option<String> = None;
         let mut false_negatives: Option<String> = None;
         let mut documentable: Option<bool> = None;
+        let mut ckl_status = CKLStatus::NotReviewed;
 
         for stig_data in vuln
             .children()
@@ -191,6 +206,14 @@ fn parse_istig(istig: roxmltree::Node) -> Option<Benchmark> {
             }
         }
 
+        if let Some(status_text) = vuln
+            .children()
+            .find(|node| node.tag_name().name() == "STATUS")
+            .and_then(|node| node.text())
+        {
+            ckl_status = parse_ckl_status(status_text);
+        }
+
         if group_id.is_empty()
             || rule_id.is_empty()
             || title.is_empty()
@@ -214,6 +237,7 @@ fn parse_istig(istig: roxmltree::Node) -> Option<Benchmark> {
             false_positives,
             false_negatives,
             documentable,
+            ckl_status: Some(ckl_status),
         };
 
         benchmark.rules.insert(group_id, rule);
@@ -224,6 +248,15 @@ fn parse_istig(istig: roxmltree::Node) -> Option<Benchmark> {
     }
 
     Some(benchmark)
+}
+
+fn parse_ckl_status(s: &str) -> CKLStatus {
+    match s {
+        "NotAFinding" => CKLStatus::NotAFinding,
+        "Open" => CKLStatus::Open,
+        "Not_Applicable" => CKLStatus::NotApplicable,
+        _ => CKLStatus::NotReviewed,
+    }
 }
 
 fn parse_severity(str: &str) -> Severity {

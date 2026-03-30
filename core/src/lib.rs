@@ -43,6 +43,9 @@ pub struct Rule {
     pub false_positives: Option<String>,
     pub false_negatives: Option<String>,
     pub documentable: Option<bool>,
+
+    // If this is derived from a CKL, this field can be filled.
+    pub ckl_status: Option<CKLStatus>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

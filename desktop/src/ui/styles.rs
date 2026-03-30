@@ -267,6 +267,24 @@ pub fn good_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
     }
 }
 
+/// A svg with the danger color.
+pub fn bad_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
+    let palette = theme.extended_palette();
+
+    svg::Style {
+        color: Some(palette.danger.base.color),
+    }
+}
+
+/// A svg with the warning color.
+pub fn warning_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
+    let palette = theme.extended_palette();
+
+    svg::Style {
+        color: Some(palette.warning.base.color),
+    }
+}
+
 /// A rounded container to place elements into, lives in the backgound.
 pub fn background_container(theme: &Theme) -> container::Style {
     let palette = theme.extended_palette();

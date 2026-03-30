@@ -126,6 +126,7 @@ pub fn load_v1_1(xml: &str) -> Option<Benchmark> {
             false_positives,
             false_negatives,
             documentable,
+            ckl_status: None,
         };
 
         benchmark.rules.insert(group_id, rule);
@@ -271,6 +272,7 @@ pub fn load_v1_2(xml: &str) -> Option<Benchmark> {
             false_positives,
             false_negatives,
             documentable,
+            ckl_status: None,
         };
 
         benchmark.rules.insert(group_id, rule);

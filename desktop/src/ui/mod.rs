@@ -12,6 +12,7 @@ use iced::window::Direction::{
     East, North, NorthEast, NorthWest, South, SouthEast, SouthWest, West,
 };
 use iced::{Center, Fill, Shrink};
+use stig_view_core::CKLStatus;
 
 use crate::app::*;
 use crate::ui::styles::*;
@@ -739,6 +740,10 @@ impl App {
         let filled_bookmark_svg_handle =
             svg::Handle::from_memory(self.assets.bookmark_filled_svg.clone());
 
+        let check_handle = svg::Handle::from_memory(self.assets.check_circle_svg.clone());
+        let cross_handle = svg::Handle::from_memory(self.assets.cross_circle_svg.clone());
+        let minus_handle = svg::Handle::from_memory(self.assets.minus_circle_svg.clone());
+
         for (name, rule) in self.benchmark.rules.iter() {
             let pin_type = self.pins.get(name).unwrap_or(&Pinned::Not);
 
@@ -748,6 +753,77 @@ impl App {
                         button(
                             column![
                                 row![
+                                    {
+                                        let cki_status: Element<'_, Message> = match &self.displayed
+                                        {
+                                            Some(rule) => {
+                                                if let Some(status) = rule.ckl_status.clone() {
+                                                    match status {
+                                                        CKLStatus::NotAFinding => row![
+                                                            tooltip(
+                                                                svg(check_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(good_svg),
+                                                                container("Compliant.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::Open => row![
+                                                            tooltip(
+                                                                svg(cross_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(bad_svg),
+                                                                container("Non-Compliant.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::NotApplicable => row![
+                                                            tooltip(
+                                                                svg(minus_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(warning_svg),
+                                                                container("Not Applicable.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::NotReviewed => row![
+                                                            tooltip(
+                                                                svg(minus_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(warning_svg),
+                                                                container("Not Reviewed.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                    }
+                                                } else {
+                                                    space().width(0).into()
+                                                }
+                                            }
+                                            None => space().width(0).into(),
+                                        };
+                                        cki_status
+                                    },
                                     text(match self.display_type {
                                         DisplayType::GroupId => name.to_owned(),
                                         DisplayType::RuleId => rule.rule_id.clone(),
@@ -785,6 +861,77 @@ impl App {
                         button(
                             column![
                                 row![
+                                    {
+                                        let cki_status: Element<'_, Message> = match &self.displayed
+                                        {
+                                            Some(rule) => {
+                                                if let Some(status) = rule.ckl_status.clone() {
+                                                    match status {
+                                                        CKLStatus::NotAFinding => row![
+                                                            tooltip(
+                                                                svg(check_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(good_svg),
+                                                                container("Compliant.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::Open => row![
+                                                            tooltip(
+                                                                svg(cross_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(bad_svg),
+                                                                container("Non-Compliant.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::NotApplicable => row![
+                                                            tooltip(
+                                                                svg(minus_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(warning_svg),
+                                                                container("Not Applicable.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::NotReviewed => row![
+                                                            tooltip(
+                                                                svg(minus_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(warning_svg),
+                                                                container("Not Reviewed.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                    }
+                                                } else {
+                                                    space().width(0).into()
+                                                }
+                                            }
+                                            None => space().width(0).into(),
+                                        };
+                                        cki_status
+                                    },
                                     text(match self.display_type {
                                         DisplayType::GroupId => name.to_owned(),
                                         DisplayType::RuleId => rule.rule_id.clone(),
@@ -822,6 +969,77 @@ impl App {
                         button(
                             column![
                                 row![
+                                    {
+                                        let cki_status: Element<'_, Message> = match &self.displayed
+                                        {
+                                            Some(rule) => {
+                                                if let Some(status) = rule.ckl_status.clone() {
+                                                    match status {
+                                                        CKLStatus::NotAFinding => row![
+                                                            tooltip(
+                                                                svg(check_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(good_svg),
+                                                                container("Compliant.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::Open => row![
+                                                            tooltip(
+                                                                svg(cross_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(bad_svg),
+                                                                container("Non-Compliant.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::NotApplicable => row![
+                                                            tooltip(
+                                                                svg(minus_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(warning_svg),
+                                                                container("Not Applicable.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::NotReviewed => row![
+                                                            tooltip(
+                                                                svg(minus_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(warning_svg),
+                                                                container("Not Reviewed.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                    }
+                                                } else {
+                                                    space().width(0).into()
+                                                }
+                                            }
+                                            None => space().width(0).into(),
+                                        };
+                                        cki_status
+                                    },
                                     text(match self.display_type {
                                         DisplayType::GroupId => name.to_owned(),
                                         DisplayType::RuleId => rule.rule_id.clone(),
@@ -859,6 +1077,77 @@ impl App {
                         button(
                             column![
                                 row![
+                                    {
+                                        let cki_status: Element<'_, Message> = match &self.displayed
+                                        {
+                                            Some(rule) => {
+                                                if let Some(status) = rule.ckl_status.clone() {
+                                                    match status {
+                                                        CKLStatus::NotAFinding => row![
+                                                            tooltip(
+                                                                svg(check_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(good_svg),
+                                                                container("Compliant.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::Open => row![
+                                                            tooltip(
+                                                                svg(cross_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(bad_svg),
+                                                                container("Non-Compliant.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::NotApplicable => row![
+                                                            tooltip(
+                                                                svg(minus_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(warning_svg),
+                                                                container("Not Applicable.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                        CKLStatus::NotReviewed => row![
+                                                            tooltip(
+                                                                svg(minus_handle.clone())
+                                                                    .width(20)
+                                                                    .height(20)
+                                                                    .style(warning_svg),
+                                                                container("Not Reviewed.")
+                                                                    .style(tooltip_container)
+                                                                    .padding(4),
+                                                                tooltip::Position::Right
+                                                            ),
+                                                            space().width(5)
+                                                        ]
+                                                        .into(),
+                                                    }
+                                                } else {
+                                                    space().width(0).into()
+                                                }
+                                            }
+                                            None => space().width(0).into(),
+                                        };
+                                        cki_status
+                                    },
                                     text(match self.display_type {
                                         DisplayType::GroupId => name.to_owned(),
                                         DisplayType::RuleId => rule.rule_id.clone(),

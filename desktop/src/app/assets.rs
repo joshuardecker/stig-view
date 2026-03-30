@@ -11,6 +11,10 @@ pub struct Assets {
     pub switch_svg: Vec<u8>,
     pub file_svg: Vec<u8>,
 
+    pub check_circle_svg: Vec<u8>,
+    pub cross_circle_svg: Vec<u8>,
+    pub minus_circle_svg: Vec<u8>,
+
     pub app_icon: Vec<u8>,
 }
 
@@ -27,6 +31,10 @@ impl Assets {
             settings_svg: include_bytes!("../../../assets/images/settings.svg").to_vec(),
             switch_svg: include_bytes!("../../../assets/images/switch.svg").to_vec(),
             file_svg: include_bytes!("../../../assets/images/file.svg").to_vec(),
+
+            check_circle_svg: include_bytes!("../../../assets/images/check-circle.svg").to_vec(),
+            cross_circle_svg: include_bytes!("../../../assets/images/cross-circle.svg").to_vec(),
+            minus_circle_svg: include_bytes!("../../../assets/images/minus-circle.svg").to_vec(),
 
             app_icon: include_bytes!("../../../assets/io.github.joshuardecker.stig-view.png")
                 .to_vec(),
