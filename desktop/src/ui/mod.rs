@@ -5,7 +5,7 @@ use iced::Element;
 use iced::Length::FillPortion;
 use iced::widget::{
     Button, Column, Container, button, column, container, mouse_area, opaque, row, rule,
-    scrollable, sensor, space, stack, svg, text, text_editor, text_input, tooltip,
+    scrollable, sensor, space, stack, svg, text, text_editor, text_input, toggler, tooltip,
 };
 use iced::widget::{Id, pick_list};
 use iced::window::Direction::{
@@ -486,11 +486,20 @@ impl App {
                         ),
                     ]
                     .align_y(Center),
+                    space().height(5),
+                    row![
+                        text("Animations"),
+                        space::horizontal(),
+                        toggler(self.settings.animate)
+                            .on_toggle(Message::SaveAnimate)
+                            .style(toggler_theme),
+                    ]
+                    .align_y(Center),
                 ]
                 .align_x(Center),
             )
             .width(375)
-            .height(150)
+            .height(200)
             .padding(15)
             .style(cmd_container),
         ))

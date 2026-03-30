@@ -106,6 +106,8 @@ pub enum Message {
     SwitchDisplayType(DisplayType),
     SaveDisplayType(DisplayType),
 
+    SaveAnimate(bool),
+
     ReturnHome,
 
     Tick(Instant),
@@ -143,6 +145,7 @@ impl std::fmt::Display for AppTheme {
 pub struct AppSettings {
     pub theme: AppTheme,
     pub default_display_type: DisplayType,
+    pub animate: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -182,6 +185,7 @@ impl AppSettings {
         Self {
             theme: AppTheme::Dark,
             default_display_type: DisplayType::GroupId,
+            animate: true,
         }
     }
 

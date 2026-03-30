@@ -4,7 +4,7 @@ use iced::border::Border;
 use iced::border::Radius;
 use iced::color;
 use iced::theme::Theme;
-use iced::widget::{button, container, svg, text_editor};
+use iced::widget::{button, container, svg, text_editor, toggler};
 
 const BORDER_RAD: f32 = 8.0;
 
@@ -391,5 +391,79 @@ pub fn no_text_editor(theme: &Theme, _status: text_editor::Status) -> text_edito
         placeholder: color!(0, 0, 0, 0.0),
         value: palette.background.base.text,
         selection: palette.primary.weak.color,
+    }
+}
+
+/// Default theme for togglers does not look good in the settings menu.
+pub fn toggler_theme(theme: &Theme, status: toggler::Status) -> toggler::Style {
+    let palette = theme.extended_palette();
+
+    match status {
+        toggler::Status::Active { is_toggled: true } => toggler::Style {
+            background: palette.primary.base.color.into(),
+            background_border_width: 0.0,
+            background_border_color: palette.primary.base.color,
+            foreground: palette.background.weakest.color.into(),
+            foreground_border_width: 0.0,
+            foreground_border_color: palette.background.weakest.color,
+            text_color: None,
+            border_radius: None,
+            padding_ratio: 0.15,
+        },
+        toggler::Status::Active { is_toggled: false } => toggler::Style {
+            background: palette.background.weakest.color.into(),
+            background_border_width: 2.0,
+            background_border_color: palette.background.strong.color,
+            foreground: palette.primary.base.color.into(),
+            foreground_border_width: 0.0,
+            foreground_border_color: palette.primary.base.color,
+            text_color: None,
+            border_radius: None,
+            padding_ratio: 0.15,
+        },
+        toggler::Status::Hovered { is_toggled: true } => toggler::Style {
+            background: palette.primary.weak.color.into(),
+            background_border_width: 0.0,
+            background_border_color: palette.primary.weak.color,
+            foreground: palette.background.weakest.color.into(),
+            foreground_border_width: 0.0,
+            foreground_border_color: palette.background.weakest.color,
+            text_color: None,
+            border_radius: None,
+            padding_ratio: 0.15,
+        },
+        toggler::Status::Hovered { is_toggled: false } => toggler::Style {
+            background: palette.background.weakest.color.into(),
+            background_border_width: 2.0,
+            background_border_color: palette.background.base.color,
+            foreground: palette.primary.weak.color.into(),
+            foreground_border_width: 0.0,
+            foreground_border_color: palette.primary.weak.color,
+            text_color: None,
+            border_radius: None,
+            padding_ratio: 0.15,
+        },
+        toggler::Status::Disabled { is_toggled: true } => toggler::Style {
+            background: palette.primary.weak.color.into(),
+            background_border_width: 0.0,
+            background_border_color: palette.primary.weak.color,
+            foreground: palette.background.base.color.into(),
+            foreground_border_width: 0.0,
+            foreground_border_color: palette.background.base.color,
+            text_color: None,
+            border_radius: None,
+            padding_ratio: 0.15,
+        },
+        toggler::Status::Disabled { is_toggled: false } => toggler::Style {
+            background: palette.background.weakest.color.into(),
+            background_border_width: 2.0,
+            background_border_color: palette.background.weak.color,
+            foreground: palette.background.strong.color.into(),
+            foreground_border_width: 0.0,
+            foreground_border_color: palette.background.strong.color,
+            text_color: None,
+            border_radius: None,
+            padding_ratio: 0.15,
+        },
     }
 }

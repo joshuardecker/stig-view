@@ -385,8 +385,12 @@ impl App {
                     Content::with_text(&rule.false_negatives.clone().unwrap_or("".to_string()));
 
                 self.displayed = Some(rule);
-                self.main_col_opacity = MAIN_FADE_START;
-                self.main_col_last_tick = Some(Instant::now());
+
+                // Only animate if configured to.
+                if self.settings.animate {
+                    self.main_col_opacity = MAIN_FADE_START;
+                    self.main_col_last_tick = Some(Instant::now());
+                }
 
                 Task::none()
             }
@@ -548,6 +552,12 @@ impl App {
             Message::SaveDisplayType(display_type) => {
                 self.display_type = display_type;
                 self.settings.default_display_type = display_type;
+
+                Task::done(Message::SaveSettings)
+            }
+
+            Message::SaveAnimate(animate) => {
+                self.settings.animate = animate;
 
                 Task::done(Message::SaveSettings)
             }
