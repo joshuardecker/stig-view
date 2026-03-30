@@ -6,10 +6,14 @@ use iced::{keyboard, keyboard::key};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
 use std::sync::Arc;
+use std::time::Instant;
 use stig_view_core::{Benchmark, Format, detect_stig_format, load_ckl, load_v1_1};
 
 use crate::app::command::*;
 use crate::app::*;
+
+const MAIN_FADE_START: f32 = 0.20;
+const MAIN_FADE_DURATION_SECS: f32 = 0.2;
 
 impl App {
     pub fn new() -> (Self, Task<Message>) {
@@ -38,13 +42,22 @@ impl App {
                 settings: settings,
                 load_handle: None,
                 display_type: settings.default_display_type,
+                main_col_opacity: 1.0,
+                main_col_last_tick: None,
             },
             window::oldest().map(Message::InitWindow),
         )
     }
 
     pub fn subscription(&self) -> Subscription<Message> {
-        keyboard::listen().filter_map(|event| Some(Message::KeyPressed(event)))
+        let keyboard = keyboard::listen().filter_map(|event| Some(Message::KeyPressed(event)));
+
+        if self.main_col_last_tick.is_some() {
+            let tick = window::frames().map(Message::Tick);
+            Subscription::batch([keyboard, tick])
+        } else {
+            keyboard
+        }
     }
 
     pub fn theme(&self) -> Theme {
@@ -223,17 +236,22 @@ impl App {
             }
 
             Message::Switch(id) => {
+                // If the rule already displayed is being switched to, do nothing.
+                if let Some(rule) = &self.displayed {
+                    if rule.group_id == id {
+                        return Task::none();
+                    }
+                }
+
                 let benchmark = self.benchmark.clone();
 
-                Task::future(async move {
-                    let rule = benchmark.rules.get(&id);
+                let rule = benchmark.rules.get(&id);
 
-                    if let Some(rule) = rule {
-                        Message::Display(rule.to_owned())
-                    } else {
-                        Message::DoNothing
-                    }
-                })
+                if let Some(rule) = rule {
+                    Task::done(Message::Display(rule.to_owned()))
+                } else {
+                    Task::done(Message::DoNothing)
+                }
             }
             Message::SwitchBenchmark(benchmark) => {
                 if let Some((name, _rule)) = benchmark.rules.first_key_value() {
@@ -367,6 +385,8 @@ impl App {
                     Content::with_text(&rule.false_negatives.clone().unwrap_or("".to_string()));
 
                 self.displayed = Some(rule);
+                self.main_col_opacity = MAIN_FADE_START;
+                self.main_col_last_tick = Some(Instant::now());
 
                 Task::none()
             }
@@ -536,6 +556,21 @@ impl App {
                 self.benchmark = Benchmark::empty();
                 self.benchmarks = Vec::new();
                 self.displayed = None;
+
+                Task::none()
+            }
+
+            Message::Tick(now) => {
+                if let Some(last) = self.main_col_last_tick {
+                    let dt = now.duration_since(last).as_secs_f32();
+                    self.main_col_opacity =
+                        (self.main_col_opacity + dt / MAIN_FADE_DURATION_SECS).min(1.0);
+                    if self.main_col_opacity >= 1.0 {
+                        self.main_col_last_tick = None;
+                    } else {
+                        self.main_col_last_tick = Some(now);
+                    }
+                }
 
                 Task::none()
             }

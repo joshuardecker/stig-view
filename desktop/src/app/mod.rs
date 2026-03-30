@@ -3,6 +3,7 @@ mod assets;
 mod command;
 
 use std::collections::HashMap;
+use std::time::Instant;
 
 // Re-exports:
 pub use crate::app::assets::Assets;
@@ -32,6 +33,8 @@ pub struct App {
     pub settings: AppSettings,
     pub load_handle: Option<Handle>,
     pub display_type: DisplayType,
+    pub main_col_opacity: f32,
+    pub main_col_last_tick: Option<Instant>,
 }
 
 #[derive(Debug, Clone)]
@@ -105,6 +108,8 @@ pub enum Message {
 
     ReturnHome,
 
+    Tick(Instant),
+
     DoNothing,
 }
 
@@ -155,7 +160,7 @@ pub enum Pinned {
 }
 
 /// What name should be displayed on the buttons that switch the displayed STIG.
-#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash, Deserialize, Serialize)]
 pub enum DisplayType {
     GroupId,
     RuleId,

@@ -365,6 +365,20 @@ pub fn err_container(theme: &Theme) -> container::Style {
     }
 }
 
+/// An overlay container that fades content in. Pass `1.0 - main_col_opacity` as the alpha.
+/// Used in a stack on top of content to simulate fade-in since iced 0.14 has no general opacity widget.
+pub fn fade_overlay(alpha: f32) -> impl Fn(&Theme) -> container::Style {
+    move |theme: &Theme| {
+        let palette = theme.extended_palette();
+        let mut bg = palette.background.weakest.color;
+        bg.a = alpha;
+        container::Style {
+            background: Some(bg.into()),
+            ..container::Style::default()
+        }
+    }
+}
+
 /// Removes visible styling from a text editor.
 pub fn no_text_editor(theme: &Theme, _status: text_editor::Status) -> text_editor::Style {
     let palette = theme.extended_palette();

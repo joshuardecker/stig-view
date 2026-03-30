@@ -21,10 +21,9 @@
 - [x] Move the Flatpak build out of the CI/CD pipeline into `scripts/build-linux.sh`. CI only needs to call the script.
 
 ## 0.4 - Animation Support
-- [ ] Set up a clean pattern for composing multiple time subscriptions in `subscription()` before animations and loading indicators are both active simultaneously.
-- [ ] Add a loading indicator (spinner) when a folder is being loaded or a filter is being processed. Drive via a time subscription active only while loading, using an `is_loading` flag in app state.
+- [ ] Set up a clean pattern for composing multiple time subscriptions in `subscription()`.
 - [ ] Add fade-in/fade-out transition animations wherever content changes — switching the displayed STIG, popups appearing, and elements loading.
-
+main_col_anim_pending
 ## 0.5 — Windows Support
 
 ### Installer
