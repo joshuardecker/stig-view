@@ -14,7 +14,7 @@ echo "==> Building stig-view..."
 cargo build --release -p stig-view-desktop
 
 echo "==> Assembling Flatpak..."
-flatpak run org.flatpak.Builder \
+flatpak-builder \
     --repo "$REPO_DIR" \
     "$BUILD_DIR" \
     flatpak_builder.yml \
