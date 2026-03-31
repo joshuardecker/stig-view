@@ -6,19 +6,8 @@ fn main() {
             .unwrap()
             .join("assets/icon.ico");
 
-        let icon_path_str = icon_path.display().to_string().replace('\\', "/");
-        println!("cargo:warning=icon path: {icon_path_str}");
-        println!("cargo:warning=icon exists: {}", icon_path.exists());
-
-        let rc_content = format!("1 ICON \"{icon_path_str}\"\n");
-        let out_dir = std::env::var("OUT_DIR").unwrap();
-        let rc_path = std::path::Path::new(&out_dir).join("resources.rc");
-        std::fs::write(&rc_path, &rc_content).unwrap();
-        println!("cargo:warning=rc content: {rc_content}");
-
-        embed_resource::compile(&rc_path, embed_resource::NONE)
-            .manifest_required()
-            .expect("Failed to compile Windows resource file");
-        println!("cargo:warning=resource compiled ok");
+        let mut res = winresource::WindowsResource::new();
+        res.set_icon(icon_path.to_str().unwrap());
+        res.compile().unwrap();
     }
 }
