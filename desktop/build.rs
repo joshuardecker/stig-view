@@ -6,7 +6,8 @@ fn main() {
             .unwrap()
             .join("assets/icon.ico");
 
-        let rc_content = format!("1 ICON \"{}\"\n", icon_path.display());
+        let icon_path_str = icon_path.display().to_string().replace('\\', "/");
+        let rc_content = format!("1 ICON \"{icon_path_str}\"\n");
         let out_dir = std::env::var("OUT_DIR").unwrap();
         let rc_path = std::path::Path::new(&out_dir).join("resources.rc");
         std::fs::write(&rc_path, rc_content).unwrap();
