@@ -17,6 +17,7 @@
       Languages='1033'
       Compressed='yes'
       SummaryCodepage='1252'
+      InstallScope='perMachine'
       Platform='x64' />
 
     <MajorUpgrade
@@ -38,7 +39,8 @@
                 Directory='ProgramMenuFolder'
                 Name='Stig View'
                 Description='DISA STIG viewer'
-                Advertise='yes'
+                Advertise='no'
+                Icon='ProductICO'
                 WorkingDirectory='APPLICATIONROOTDIRECTORY' />
             </File>
           </Component>
@@ -50,6 +52,9 @@
              DiskId='1'
              Language='0' />
     </Directory>
+
+    <Icon Id='ProductICO' SourceFile='..\assets\io.github.joshuardecker.stig-view.ico' />
+    <Property Id='ARPPRODUCTICON' Value='ProductICO' />
 
     <Feature Id='MainFeature' Title='Application' Level='1'>
       <ComponentRef Id='MainExecutable' />
