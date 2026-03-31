@@ -53,7 +53,7 @@
              Language='0' />
     </Directory>
 
-    <Icon Id='ProductICO' SourceFile='..\assets\io.github.joshuardecker.stig-view.ico' />
+    <Icon Id='ProductICO' SourceFile='..\..\assets\io.github.joshuardecker.stig-view.ico' />
     <Property Id='ARPPRODUCTICON' Value='ProductICO' />
 
     <Feature Id='MainFeature' Title='Application' Level='1'>
