@@ -15,6 +15,9 @@ use crate::app::*;
 const MAIN_FADE_START: f32 = 0.20;
 const MAIN_FADE_DURATION_SECS: f32 = 0.2;
 
+const POPUP_FADE_START: f32 = 0.0;
+const POPUP_FADE_DURATION_SECS: f32 = 0.15;
+
 impl App {
     pub fn new() -> (Self, Task<Message>) {
         let settings = AppSettings::load().unwrap_or(AppSettings::default());
@@ -44,6 +47,8 @@ impl App {
                 display_type: settings.default_display_type,
                 main_col_opacity: 1.0,
                 main_col_last_tick: None,
+                popup_opacity: 1.0,
+                popup_last_tick: None,
             },
             window::oldest().map(Message::InitWindow),
         )
@@ -52,7 +57,7 @@ impl App {
     pub fn subscription(&self) -> Subscription<Message> {
         let keyboard = keyboard::listen().filter_map(|event| Some(Message::KeyPressed(event)));
 
-        if self.main_col_last_tick.is_some() {
+        if self.main_col_last_tick.is_some() || self.popup_last_tick.is_some() {
             let tick = window::frames().map(Message::Tick);
             Subscription::batch([keyboard, tick])
         } else {
@@ -83,6 +88,28 @@ impl App {
                     danger: color!(0xC0393A),
                 },
                 String::from("Custom Light"),
+            ),
+            AppTheme::HighContrast => (
+                Palette {
+                    background: color!(0x181818),
+                    text: color!(0xFFFFFF),
+                    primary: color!(0xFFD700),
+                    success: color!(0x00FF7F),
+                    warning: color!(0xFF8C00),
+                    danger: color!(0xFF3333),
+                },
+                String::from("High Contrast"),
+            ),
+            AppTheme::Coffee => (
+                Palette {
+                    background: color!(0x1A1714),
+                    text: color!(0xC8BAA8),
+                    primary: color!(0x9E7840),
+                    success: color!(0x5A7A4E),
+                    warning: color!(0x9E7828),
+                    danger: color!(0x8A3C3C),
+                },
+                String::from("Coffee"),
             ),
         };
 
@@ -399,7 +426,13 @@ impl App {
                 match (&self.popup, &popup) {
                     (Popup::Filter, Popup::Filter) => self.popup = Popup::None,
                     (Popup::Settings, Popup::Settings) => self.popup = Popup::None,
-                    _ => self.popup = popup,
+                    _ => {
+                        if self.settings.animate && popup != Popup::None {
+                            self.popup_opacity = POPUP_FADE_START;
+                            self.popup_last_tick = Some(Instant::now());
+                        }
+                        self.popup = popup;
+                    }
                 }
 
                 Task::none()
@@ -572,13 +605,28 @@ impl App {
 
             Message::Tick(now) => {
                 if let Some(last) = self.main_col_last_tick {
-                    let dt = now.duration_since(last).as_secs_f32();
+                    let delta_t = now.duration_since(last).as_secs_f32();
+
                     self.main_col_opacity =
-                        (self.main_col_opacity + dt / MAIN_FADE_DURATION_SECS).min(1.0);
+                        (self.main_col_opacity + delta_t / MAIN_FADE_DURATION_SECS).min(1.0);
+
                     if self.main_col_opacity >= 1.0 {
                         self.main_col_last_tick = None;
                     } else {
                         self.main_col_last_tick = Some(now);
+                    }
+                }
+
+                if let Some(last) = self.popup_last_tick {
+                    let delta_t = now.duration_since(last).as_secs_f32();
+
+                    self.popup_opacity =
+                        (self.popup_opacity + delta_t / POPUP_FADE_DURATION_SECS).min(1.0);
+
+                    if self.popup_opacity >= 1.0 {
+                        self.popup_last_tick = None;
+                    } else {
+                        self.popup_last_tick = Some(now);
                     }
                 }
 

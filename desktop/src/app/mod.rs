@@ -33,11 +33,15 @@ pub struct App {
     pub settings: AppSettings,
     pub load_handle: Option<Handle>,
     pub display_type: DisplayType,
+
+    // Fields that have to due with animation.
     pub main_col_opacity: f32,
     pub main_col_last_tick: Option<Instant>,
+    pub popup_opacity: f32,
+    pub popup_last_tick: Option<Instant>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Popup {
     Filter,
     Settings,
@@ -130,6 +134,8 @@ pub enum ContentIndex {
 pub enum AppTheme {
     Dark,
     Light,
+    HighContrast,
+    Coffee,
 }
 
 impl std::fmt::Display for AppTheme {
@@ -137,6 +143,8 @@ impl std::fmt::Display for AppTheme {
         f.write_str(match self {
             AppTheme::Dark => "Dark",
             AppTheme::Light => "Light",
+            AppTheme::HighContrast => "High Contrast",
+            AppTheme::Coffee => "Coffee",
         })
     }
 }

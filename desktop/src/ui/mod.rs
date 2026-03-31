@@ -357,14 +357,14 @@ impl App {
     }
 
     /// A function that returns the cmd prompt popup ui as a container.
-    fn command_prompt_popup(&self) -> Container<'_, Message> {
+    fn command_prompt_popup(&self) -> Element<'_, Message> {
         let right_tick_svg_handle = svg::Handle::from_memory(self.assets.right_tick_svg.clone());
         let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
 
         let id = Id::new("filter_text_input");
 
         container(
-            sensor(opaque(
+            sensor(opaque(stack![
                 container(
                     column![
                         row![
@@ -431,23 +431,33 @@ impl App {
                 .height(200)
                 .padding(15)
                 .style(cmd_container),
-            ))
+                container(space())
+                    .width(Fill)
+                    .height(Fill)
+                    .style(fade_overlay(1.0 - self.popup_opacity)),
+            ]))
             .on_show(move |_| Message::FocusWidget(id.clone())),
         )
         .center(Fill)
+        .into()
     }
 
-    fn settings_menu(&self) -> Container<'_, Message> {
+    fn settings_menu(&self) -> Element<'_, Message> {
         let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
 
-        let themes = [AppTheme::Dark, AppTheme::Light];
+        let themes = [
+            AppTheme::Dark,
+            AppTheme::Light,
+            AppTheme::HighContrast,
+            AppTheme::Coffee,
+        ];
         let display_types = [
             DisplayType::GroupId,
             DisplayType::RuleId,
             DisplayType::STIGId,
         ];
 
-        container(opaque(
+        container(opaque(stack![
             container(
                 column![
                     row![
@@ -502,14 +512,19 @@ impl App {
             .height(200)
             .padding(15)
             .style(cmd_container),
-        ))
+            container(space())
+                .width(Fill)
+                .height(Fill)
+                .style(fade_overlay(1.0 - self.popup_opacity)),
+        ]))
         .center(Fill)
+        .into()
     }
 
-    fn save_menu(&self) -> Container<'_, Message> {
+    fn save_menu(&self) -> Element<'_, Message> {
         let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
 
-        container(opaque(
+        container(opaque(stack![
             container(
                 column![
                     row![
@@ -555,11 +570,16 @@ impl App {
             .height(150)
             .padding(15)
             .style(cmd_container),
-        ))
+            container(space())
+                .width(Fill)
+                .height(Fill)
+                .style(fade_overlay(1.0 - self.popup_opacity)),
+        ]))
         .center(Fill)
+        .into()
     }
 
-    fn error_notification(&self, err_str: String) -> Container<'_, Message> {
+    fn error_notification(&self, err_str: String) -> Element<'_, Message> {
         let cross_svg_handle = svg::Handle::from_memory(self.assets.cross_svg.clone());
 
         container(opaque(
@@ -591,6 +611,7 @@ impl App {
         .align_right(Fill)
         .align_bottom(Fill)
         .padding(30)
+        .into()
     }
 
     /// Return the window decorations container.
@@ -767,8 +788,8 @@ impl App {
                                                 Some(CKLStatus::NotAFinding) => row![
                                                     tooltip(
                                                         svg(check_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(good_svg),
                                                         container("Compliant.")
                                                             .style(tooltip_container)
@@ -781,8 +802,8 @@ impl App {
                                                 Some(CKLStatus::Open) => row![
                                                     tooltip(
                                                         svg(cross_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(bad_svg),
                                                         container("Non-Compliant.")
                                                             .style(tooltip_container)
@@ -795,8 +816,8 @@ impl App {
                                                 Some(CKLStatus::NotApplicable) => row![
                                                     tooltip(
                                                         svg(minus_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(warning_svg),
                                                         container("Not Applicable.")
                                                             .style(tooltip_container)
@@ -809,8 +830,8 @@ impl App {
                                                 Some(CKLStatus::NotReviewed) => row![
                                                     tooltip(
                                                         svg(minus_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(warning_svg),
                                                         container("Not Reviewed.")
                                                             .style(tooltip_container)
@@ -867,8 +888,8 @@ impl App {
                                                 Some(CKLStatus::NotAFinding) => row![
                                                     tooltip(
                                                         svg(check_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(good_svg),
                                                         container("Compliant.")
                                                             .style(tooltip_container)
@@ -881,8 +902,8 @@ impl App {
                                                 Some(CKLStatus::Open) => row![
                                                     tooltip(
                                                         svg(cross_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(bad_svg),
                                                         container("Non-Compliant.")
                                                             .style(tooltip_container)
@@ -895,8 +916,8 @@ impl App {
                                                 Some(CKLStatus::NotApplicable) => row![
                                                     tooltip(
                                                         svg(minus_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(warning_svg),
                                                         container("Not Applicable.")
                                                             .style(tooltip_container)
@@ -909,8 +930,8 @@ impl App {
                                                 Some(CKLStatus::NotReviewed) => row![
                                                     tooltip(
                                                         svg(minus_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(warning_svg),
                                                         container("Not Reviewed.")
                                                             .style(tooltip_container)
@@ -967,8 +988,8 @@ impl App {
                                                 Some(CKLStatus::NotAFinding) => row![
                                                     tooltip(
                                                         svg(check_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(good_svg),
                                                         container("Compliant.")
                                                             .style(tooltip_container)
@@ -981,8 +1002,8 @@ impl App {
                                                 Some(CKLStatus::Open) => row![
                                                     tooltip(
                                                         svg(cross_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(bad_svg),
                                                         container("Non-Compliant.")
                                                             .style(tooltip_container)
@@ -995,8 +1016,8 @@ impl App {
                                                 Some(CKLStatus::NotApplicable) => row![
                                                     tooltip(
                                                         svg(minus_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(warning_svg),
                                                         container("Not Applicable.")
                                                             .style(tooltip_container)
@@ -1009,8 +1030,8 @@ impl App {
                                                 Some(CKLStatus::NotReviewed) => row![
                                                     tooltip(
                                                         svg(minus_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(warning_svg),
                                                         container("Not Reviewed.")
                                                             .style(tooltip_container)
@@ -1067,8 +1088,8 @@ impl App {
                                                 Some(CKLStatus::NotAFinding) => row![
                                                     tooltip(
                                                         svg(check_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(good_svg),
                                                         container("Compliant.")
                                                             .style(tooltip_container)
@@ -1081,8 +1102,8 @@ impl App {
                                                 Some(CKLStatus::Open) => row![
                                                     tooltip(
                                                         svg(cross_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(bad_svg),
                                                         container("Non-Compliant.")
                                                             .style(tooltip_container)
@@ -1095,8 +1116,8 @@ impl App {
                                                 Some(CKLStatus::NotApplicable) => row![
                                                     tooltip(
                                                         svg(minus_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(warning_svg),
                                                         container("Not Applicable.")
                                                             .style(tooltip_container)
@@ -1109,8 +1130,8 @@ impl App {
                                                 Some(CKLStatus::NotReviewed) => row![
                                                     tooltip(
                                                         svg(minus_handle.clone())
-                                                            .width(20)
-                                                            .height(20)
+                                                            .width(24)
+                                                            .height(24)
                                                             .style(warning_svg),
                                                         container("Not Reviewed.")
                                                             .style(tooltip_container)

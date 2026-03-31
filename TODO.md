@@ -21,9 +21,8 @@
 - [x] Move the Flatpak build out of the CI/CD pipeline into `scripts/build-linux.sh`. CI only needs to call the script.
 
 ## 0.4 - Animation Support
-- [ ] Set up a clean pattern for composing multiple time subscriptions in `subscription()`.
-- [ ] Add fade-in/fade-out transition animations wherever content changes — switching the displayed STIG, popups appearing, and elements loading.
-main_col_anim_pending
+- [x] Set up a clean pattern for composing multiple time subscriptions in `subscription()`.
+- [x] Add fade-in/fade-out transition animations when switching the displayed STIG.
 ## 0.5 — Windows Support
 
 ### Installer
