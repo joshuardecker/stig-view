@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+  <Product
+    Id='*'
+    Name='Stig View'
+    UpgradeCode='1D585B9B-17D8-45C0-9586-A14AFE62E32C'
+    Manufacturer='Joshua Decker'
+    Language='1033'
+    Codepage='1252'
+    Version='$(var.Version)'>
+
+    <Package Id='*'
+      Keywords='Installer'
+      Description='DISA STIG viewer'
+      Manufacturer='Joshua Decker'
+      InstallerVersion='450'
+      Languages='1033'
+      Compressed='yes'
+      SummaryCodepage='1252'
+      Platform='x64' />
+
+    <MajorUpgrade
+      Schedule='afterInstallInitialize'
+      DowngradeErrorMessage='A newer version of Stig View is already installed.' />
+
+    <Media Id='1' Cabinet='media1.cab' EmbedCab='yes' />
+
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+      <Directory Id='ProgramFiles64Folder'>
+        <Directory Id='APPLICATIONROOTDIRECTORY' Name='Stig View'>
+          <Component Id='MainExecutable' Guid='*'>
+            <File Id='StigViewEXE'
+              Name='stig-view.exe'
+              DiskId='1'
+              Source='$(var.CargoTargetDir)\$(var.Profile)\stig-view.exe'
+              KeyPath='yes'>
+              <Shortcut Id='StartMenuShortcut'
+                Directory='ProgramMenuFolder'
+                Name='Stig View'
+                Description='DISA STIG viewer'
+                Advertise='yes'
+                WorkingDirectory='APPLICATIONROOTDIRECTORY' />
+            </File>
+          </Component>
+        </Directory>
+      </Directory>
+      <Merge Id='VCRedist'
+             SourceFile='$(env.VCToolsRedistMSMDir)Microsoft_VC143_CRT_x64.msm'
+             DiskId='1'
+             Language='0' />
+    </Directory>
+
+    <Feature Id='MainFeature' Title='Application' Level='1'>
+      <ComponentRef Id='MainExecutable' />
+    </Feature>
+
+    <Feature Id='VCRedist' Title='Visual C++ Runtime' AllowAdvertise='no' Display='hidden' Level='1'>
+      <MergeRef Id='VCRedist' />
+    </Feature>
+
+  </Product>
+</Wix>

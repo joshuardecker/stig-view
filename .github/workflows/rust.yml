@@ -37,16 +37,34 @@ jobs:
   #       with:
   #         name: stig-view-macos
   #         path: target/release/stig_view_desktop
-  # build-windows:
-  #   runs-on: windows-latest
-  #
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Build
-  #       run: cargo build --release -p stig-view-desktop
-  #
-  #     - name: Upload
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: stig-view-windows
-  #         path: target/release/stig_view_desktop.exe
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: windows-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-wix
+        run: cargo install cargo-wix
+
+      - name: Build
+        shell: bash
+        run: bash scripts/windows.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: stig-view-windows
+          path: target/wix/*.msi
