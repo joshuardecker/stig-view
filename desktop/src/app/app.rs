@@ -270,11 +270,7 @@ impl App {
                     }
                 }
 
-                let benchmark = self.benchmark.clone();
-
-                let rule = benchmark.rules.get(&id);
-
-                if let Some(rule) = rule {
+                if let Some(rule) = self.benchmark.rules.get(&id) {
                     Task::done(Message::Display(rule.to_owned()))
                 } else {
                     Task::done(Message::DoNothing)
@@ -303,7 +299,7 @@ impl App {
                 }
             }
             Message::SwitchBenchmarks(mut benchmarks) => {
-                if benchmarks.len() == 0 {
+                if benchmarks.is_empty() {
                     return Task::none();
                 }
 
@@ -366,29 +362,24 @@ impl App {
                 Task::none()
             }
             Message::SwitchNext => {
-                let benchmark = self.benchmark.clone();
-                let displayed_name = self.displayed.clone();
+                if let Some(displayed_name) = &self.displayed {
+                    let mut iter = self.benchmark.rules.iter();
 
-                if let Some(displayed_name) = displayed_name {
-                    Task::future(async move {
-                        let mut iter = benchmark.rules.iter();
+                    let _ = iter.find(|entry| *entry.0 == displayed_name.group_id);
 
-                        let _ = iter.find(|entry| *entry.0 == displayed_name.group_id);
+                    let entry: Option<(&String, &Rule)> = iter.next();
 
-                        let entry: Option<(&String, &Rule)> = iter.next();
+                    if let Some(entry) = entry {
+                        return Task::done(Message::Switch(entry.0.to_owned()));
+                    }
 
-                        if let Some(entry) = entry {
-                            return Message::Switch(entry.0.to_owned());
-                        }
+                    let first = self.benchmark.rules.first_key_value();
 
-                        let first = benchmark.rules.first_key_value();
+                    if let Some(first) = first {
+                        return Task::done(Message::Switch(first.0.clone()));
+                    }
 
-                        if let Some(first) = first {
-                            return Message::Switch(first.0.clone());
-                        }
-
-                        Message::DoNothing
-                    })
+                    Task::done(Message::DoNothing)
                 } else {
                     Task::none()
                 }
@@ -481,29 +472,19 @@ impl App {
                 Task::none()
             }
             Message::ProcessCmd(command_str) => {
-                let benchmark = self.benchmark.clone();
-                let pins = self.pins.clone();
+                let command = parse_command(&command_str);
 
-                Task::future(async move {
-                    let command = parse_command(&command_str);
+                match command {
+                    Some(command) => {
+                        let new_pins = run_search_cmd(command, &self.benchmark, self.pins.clone());
 
-                    match command {
-                        Ok(command) => {
-                            let new_pins = run_search_cmd(command.clone(), benchmark, pins);
-
-                            match new_pins {
-                                Ok(new_pins) => Message::SetPins(new_pins),
-                                Err(_) => Message::SendErrNotif("Error when running the command."),
-                            }
+                        match new_pins {
+                            Some(new_pins) => Task::done(Message::SetPins(new_pins)),
+                            None => Task::done(Message::SendErrNotif("Error when running the command.")),
                         }
-                        Err(e) => match e {
-                            CommandErr::RegexErr => {
-                                Message::SendErrNotif("Error when parsing the command.")
-                            }
-                            _ => Message::DoNothing,
-                        },
                     }
-                })
+                    None => Task::done(Message::SendErrNotif("Error when parsing the command.")),
+                }
             }
 
             Message::KeyPressed(event) => match &event {
@@ -546,7 +527,7 @@ impl App {
                 let all = std::iter::once(&self.benchmark).chain(self.benchmarks.iter());
 
                 for benchmark in all {
-                    if let Err(_) = benchmark.save() {
+                    if let None = benchmark.save() {
                         return Task::done(Message::SendErrNotif("Couldn't save benchmark."));
                     }
                 }
@@ -556,7 +537,7 @@ impl App {
             }
 
             Message::LoadCachedBenchmark(path) => match Benchmark::load(&path) {
-                Ok(benchmark) => {
+                Some(benchmark) => {
                     if let Some((name, _rule)) = benchmark.rules.first_key_value() {
                         let name = name.to_owned();
 
@@ -573,7 +554,7 @@ impl App {
                         Task::none()
                     }
                 }
-                Err(_) => Task::done(Message::SendErrNotif("Couldn't load cached benchmark.")),
+                None => Task::done(Message::SendErrNotif("Couldn't load cached benchmark.")),
             },
 
             Message::SwitchDisplayType(display_type) => {

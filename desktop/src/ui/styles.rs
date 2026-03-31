@@ -8,39 +8,7 @@ use iced::widget::{button, container, svg, text_editor, toggler};
 
 const BORDER_RAD: f32 = 8.0;
 
-/// A rounded button in the primary color.
-#[allow(dead_code)]
-pub fn rounded_primary_button(theme: &Theme, status: button::Status) -> button::Style {
-    let palette = theme.extended_palette();
-
-    match status {
-        button::Status::Hovered => button::Style {
-            background: Some(palette.primary.weak.color.into()),
-            text_color: palette.background.base.text,
-            border: Border {
-                ..border::rounded(BORDER_RAD)
-            },
-            shadow: Shadow {
-                ..Shadow::default()
-            },
-            snap: false,
-        },
-        _ => button::Style {
-            background: Some(palette.primary.base.color.into()),
-            text_color: palette.background.base.text,
-            border: Border {
-                ..border::rounded(BORDER_RAD)
-            },
-            shadow: Shadow {
-                ..Shadow::default()
-            },
-            snap: false,
-        },
-    }
-}
-
 /// A rounded button in the success color.
-#[allow(dead_code)]
 pub fn rounded_success_button(theme: &Theme, status: button::Status) -> button::Style {
     let palette = theme.extended_palette();
 
@@ -71,7 +39,6 @@ pub fn rounded_success_button(theme: &Theme, status: button::Status) -> button::
 }
 
 /// A rounded button in the danger color.
-#[allow(dead_code)]
 pub fn rounded_danger_button(theme: &Theme, status: button::Status) -> button::Style {
     let palette = theme.extended_palette();
 
@@ -287,25 +254,6 @@ pub fn warning_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
 
 /// A rounded container to place elements into, lives in the backgound.
 pub fn background_container(theme: &Theme) -> container::Style {
-    let palette = theme.extended_palette();
-
-    container::Style {
-        text_color: Some(palette.background.base.text),
-        background: Some(palette.background.weakest.color.into()),
-        border: Border {
-            color: palette.background.base.color,
-            width: 2.0,
-            radius: BORDER_RAD.into(),
-        },
-        shadow: Shadow {
-            ..Shadow::default()
-        },
-        snap: false,
-    }
-}
-
-/// The container style tooltips will display.
-pub fn tooltip_container(theme: &Theme) -> container::Style {
     let palette = theme.extended_palette();
 
     container::Style {

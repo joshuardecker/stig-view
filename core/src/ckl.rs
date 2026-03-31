@@ -5,14 +5,14 @@ use serde::{Deserialize, Serialize};
 use crate::{Benchmark, Rule, Severity};
 
 /// A struct representing a JSON CKLB.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct CKLB {
     pub title: String,
     pub id: String,
     pub stigs: Vec<CKLBStig>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct CKLBStig {
     pub stig_name: String,
     pub stig_id: String,
@@ -20,7 +20,7 @@ pub struct CKLBStig {
     pub rules: Vec<CKLBRule>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct CKLBRule {
     pub group_id: String,
     pub rule_id: String,
@@ -38,7 +38,7 @@ pub struct CKLBRule {
     pub ckl_status: Option<CKLStatus>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CKLStatus {
     NotAFinding,
     Open,

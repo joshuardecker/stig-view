@@ -200,7 +200,7 @@ impl App {
             let cache = App::load_cache();
 
             // Change the displayed string based on if the cache loaded any items.
-            let displayed_string = if cache.len() == 0 {
+            let displayed_string = if cache.is_empty() {
                 String::from("Open a File to Get Started")
             } else {
                 String::from("Recently Saved Files")
@@ -213,7 +213,7 @@ impl App {
                     .width(400);
 
             // If the cache is empty, add an obvious button for the user to click that opens a new Benchmark.
-            if cache.len() == 0 {
+            if cache.is_empty() {
                 main_col = main_col.push(
                     button(text("Open").center())
                         .width(80)
@@ -649,7 +649,7 @@ impl App {
                                 .style(rounded_dark_button)
                                 .on_press(Message::OpenFile),
                             container("Open a New File (Ctrl + I)")
-                                .style(tooltip_container)
+                                .style(background_container)
                                 .padding(4),
                             tooltip::Position::Right
                         )
@@ -663,7 +663,7 @@ impl App {
                                 .style(rounded_dark_button)
                                 .on_press(Message::SwitchPopup(Popup::Filter)),
                             container("Sort Content Based on a Filter (Ctrl + P)")
-                                .style(tooltip_container),
+                                .style(background_container),
                             tooltip::Position::Right
                         )
                         .delay(iced::time::Duration::from_millis(600)),
@@ -675,7 +675,7 @@ impl App {
                                 .height(Shrink)
                                 .style(rounded_dark_button)
                                 .on_press(Message::ReturnHome),
-                            container("Returns to the Home Menu").style(tooltip_container),
+                            container("Returns to the Home Menu").style(background_container),
                             tooltip::Position::Right
                         )
                         .delay(iced::time::Duration::from_millis(600)),
@@ -697,7 +697,7 @@ impl App {
                                         .height(Shrink)
                                         .style(no_button)
                                         .on_press(Message::SwitchToBackground),
-                                        container("Switch Benchmark").style(tooltip_container),
+                                        container("Switch Benchmark").style(background_container),
                                         tooltip::Position::Right
                                     )
                                     .delay(iced::time::Duration::from_millis(600)),
@@ -792,7 +792,7 @@ impl App {
                                                             .height(24)
                                                             .style(good_svg),
                                                         container("Compliant.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -806,7 +806,7 @@ impl App {
                                                             .height(24)
                                                             .style(bad_svg),
                                                         container("Non-Compliant.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -820,7 +820,7 @@ impl App {
                                                             .height(24)
                                                             .style(warning_svg),
                                                         container("Not Applicable.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -834,7 +834,7 @@ impl App {
                                                             .height(24)
                                                             .style(warning_svg),
                                                         container("Not Reviewed.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -892,7 +892,7 @@ impl App {
                                                             .height(24)
                                                             .style(good_svg),
                                                         container("Compliant.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -906,7 +906,7 @@ impl App {
                                                             .height(24)
                                                             .style(bad_svg),
                                                         container("Non-Compliant.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -920,7 +920,7 @@ impl App {
                                                             .height(24)
                                                             .style(warning_svg),
                                                         container("Not Applicable.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -934,7 +934,7 @@ impl App {
                                                             .height(24)
                                                             .style(warning_svg),
                                                         container("Not Reviewed.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -992,7 +992,7 @@ impl App {
                                                             .height(24)
                                                             .style(good_svg),
                                                         container("Compliant.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -1006,7 +1006,7 @@ impl App {
                                                             .height(24)
                                                             .style(bad_svg),
                                                         container("Non-Compliant.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -1020,7 +1020,7 @@ impl App {
                                                             .height(24)
                                                             .style(warning_svg),
                                                         container("Not Applicable.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -1034,7 +1034,7 @@ impl App {
                                                             .height(24)
                                                             .style(warning_svg),
                                                         container("Not Reviewed.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -1092,7 +1092,7 @@ impl App {
                                                             .height(24)
                                                             .style(good_svg),
                                                         container("Compliant.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -1106,7 +1106,7 @@ impl App {
                                                             .height(24)
                                                             .style(bad_svg),
                                                         container("Non-Compliant.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -1120,7 +1120,7 @@ impl App {
                                                             .height(24)
                                                             .style(warning_svg),
                                                         container("Not Applicable.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),
@@ -1134,7 +1134,7 @@ impl App {
                                                             .height(24)
                                                             .style(warning_svg),
                                                         container("Not Reviewed.")
-                                                            .style(tooltip_container)
+                                                            .style(background_container)
                                                             .padding(4),
                                                         tooltip::Position::Right
                                                     ),

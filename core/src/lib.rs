@@ -22,12 +22,6 @@ pub struct Benchmark {
     pub rules: BTreeMap<String, Rule>,
 }
 
-#[derive(Debug, Clone)]
-pub enum BenchmarkErr {
-    SaveErr(&'static str),
-    LoadErr(&'static str),
-}
-
 /// Each check / rule of a benchmark.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Rule {
@@ -135,54 +129,45 @@ impl Benchmark {
         }
     }
 
-    pub fn save(&self) -> Result<(), BenchmarkErr> {
+    pub fn save(&self) -> Option<()> {
         use std::fs::File;
         use std::fs::create_dir_all;
         use std::io::Write;
 
-        let mut cache_dir =
-            dirs::cache_dir().ok_or(BenchmarkErr::SaveErr("Error finding cache directory."))?;
+        let mut cache_dir = dirs::cache_dir()?;
 
         // Create the save directory if it does not exist.
         cache_dir.push("stig-view/");
-        create_dir_all(&cache_dir)
-            .map_err(|_| BenchmarkErr::SaveErr("Error creating benchmark cache file directory."))?;
+        create_dir_all(&cache_dir).ok()?;
 
         // Add proper file extensions.
         cache_dir.push(self.id.clone() + ".msgpack.zstd");
 
-        let mut file = File::create(cache_dir)
-            .map_err(|_| BenchmarkErr::SaveErr("Error creating benchmark cache file."))?;
+        let mut file = File::create(cache_dir).ok()?;
 
         // Serialize the benchmark into bytes in the MessagePack format.
-        let benchmark_bytes = rmp_serde::to_vec(self)
-            .map_err(|_| BenchmarkErr::SaveErr("Error serializing benchmark."))?;
+        let benchmark_bytes = rmp_serde::to_vec(self).ok()?;
 
         // Compress it to shrink file size using zstd.
-        let compressed = zstd::encode_all(&*benchmark_bytes, 3)
-            .map_err(|_| BenchmarkErr::SaveErr("Error compressing benchmark."))?;
+        let compressed = zstd::encode_all(&*benchmark_bytes, 3).ok()?;
 
-        file.write_all(&compressed)
-            .map_err(|_| BenchmarkErr::SaveErr("Error writing benchmark to disk."))?;
+        file.write_all(&compressed).ok()?;
 
-        Ok(())
+        Some(())
     }
 
     /// Load the given file path as a benchmark.
     /// Does not check if path is a valid benchmark, will just return an error.
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<Benchmark, BenchmarkErr> {
+    pub fn load<P: AsRef<Path>>(path: P) -> Option<Benchmark> {
         use std::fs::read;
 
-        let compressed_bytes =
-            read(path).map_err(|_| BenchmarkErr::LoadErr("Failed to open file."))?;
+        let compressed_bytes = read(path).ok()?;
 
-        let benchmark_bytes = zstd::decode_all(&*compressed_bytes)
-            .map_err(|_| BenchmarkErr::LoadErr("Failed to uncompress file."))?;
+        let benchmark_bytes = zstd::decode_all(&*compressed_bytes).ok()?;
 
-        let benchmark: Benchmark = rmp_serde::from_slice(benchmark_bytes.as_slice())
-            .map_err(|_| BenchmarkErr::LoadErr("Failed to deserialize file."))?;
+        let benchmark: Benchmark = rmp_serde::from_slice(benchmark_bytes.as_slice()).ok()?;
 
-        Ok(benchmark)
+        Some(benchmark)
     }
 }
 
