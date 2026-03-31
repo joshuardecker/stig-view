@@ -1,5 +1,4 @@
-# Stig View
-![](https://github.com/joshuardecker/stig-view/blob/road-to-0.1/showcase.gif)
+![](https://github.com/joshuardecker/stig-view/blob/master/showcase.gif)
 
 # How to Build and Run the Application
 To run the application:
