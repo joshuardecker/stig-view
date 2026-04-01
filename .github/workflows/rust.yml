@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-linux:
+  build-linux-flatpak:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,8 +21,48 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: stig-view
+          name: stig-view-flatpak
           path: stig-view.flatpak
+
+  build-linux-appimage:
+    runs-on: ubuntu-latest
+    # AlmaLinux 8 provides glibc 2.28, giving compatibility with RHEL 8+
+    # and Ubuntu 18.04+. The binary links against this older glibc at build
+    # time, so the AppImage runs on any distro with glibc >= 2.28.
+    container:
+      image: almalinux:8
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          dnf install -y dnf-plugins-core epel-release
+          dnf config-manager --set-enabled powertools
+          dnf install -y \
+            gcc curl pkg-config file \
+            wayland-devel libxkbcommon-devel fontconfig-devel \
+            libX11-devel libXcursor-devel libXrandr-devel libXi-devel \
+            mesa-libGL-devel mesa-libEGL-devel
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install appimagetool
+        run: |
+          curl -Lo /usr/local/bin/appimagetool \
+            https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
+          chmod +x /usr/local/bin/appimagetool
+
+      - name: Build
+        run: bash scripts/linux.sh
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: stig-view-appimage
+          path: stig-view.AppImage
+
   # build-macos:
   #   runs-on: macos-latest
   #
@@ -36,6 +76,7 @@ jobs:
   #       with:
   #         name: stig-view-macos
   #         path: target/release/stig_view_desktop
+
   build-windows:
     runs-on: windows-latest
 
