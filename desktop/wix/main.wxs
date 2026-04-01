@@ -17,6 +17,7 @@
       Languages='1033'
       Compressed='yes'
       SummaryCodepage='1252'
+      InstallScope='perMachine'
       Platform='x64' />
 
     <MajorUpgrade
@@ -33,16 +34,25 @@
               Name='stig-view.exe'
               DiskId='1'
               Source='$(var.CargoTargetDir)\$(var.Profile)\stig-view.exe'
-              KeyPath='yes'>
-              <Shortcut Id='StartMenuShortcut'
-                Directory='ProgramMenuFolder'
-                Name='Stig View'
-                Description='DISA STIG viewer'
-                Advertise='yes'
-                WorkingDirectory='APPLICATIONROOTDIRECTORY' />
-            </File>
+              KeyPath='yes' />
           </Component>
         </Directory>
+      </Directory>
+      <Directory Id='ProgramMenuFolder'>
+        <Component Id='StartMenuShortcut' Guid='*'>
+          <Shortcut Id='StartMenuShortcutEntry'
+            Name='Stig View'
+            Description='DISA STIG viewer'
+            Target='[APPLICATIONROOTDIRECTORY]stig-view.exe'
+            WorkingDirectory='APPLICATIONROOTDIRECTORY' />
+          <RemoveFolder Id='CleanUpStartMenuFolder' On='uninstall' />
+          <RegistryValue Root='HKCU'
+            Key='Software\Joshua Decker\Stig View'
+            Name='installed'
+            Type='integer'
+            Value='1'
+            KeyPath='yes' />
+        </Component>
       </Directory>
       <Merge Id='VCRedist'
              SourceFile='$(env.VCToolsRedistMSMDir)Microsoft_VC143_CRT_x64.msm'
@@ -52,6 +62,7 @@
 
     <Feature Id='MainFeature' Title='Application' Level='1'>
       <ComponentRef Id='MainExecutable' />
+      <ComponentRef Id='StartMenuShortcut' />
     </Feature>
 
     <Feature Id='VCRedist' Title='Visual C++ Runtime' AllowAdvertise='no' Display='hidden' Level='1'>
