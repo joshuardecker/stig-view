@@ -50,9 +50,12 @@ jobs:
 
       - name: Install appimagetool
         run: |
-          curl -Lo /usr/local/bin/appimagetool \
-            https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
-          chmod +x /usr/local/bin/appimagetool
+          curl -fsSL -o /tmp/appimagetool.AppImage \
+            https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x /tmp/appimagetool.AppImage
+          cd /tmp && APPIMAGE_EXTRACT_AND_RUN=1 /tmp/appimagetool.AppImage --appimage-extract
+          mv /tmp/squashfs-root /opt/appimagetool
+          ln -sf /opt/appimagetool/AppRun /usr/local/bin/appimagetool
 
       - name: Build
         run: bash scripts/linux.sh
