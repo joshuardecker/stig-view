@@ -26,27 +26,19 @@
 ## 0.5 — Windows Support
 
 ### Installer
-- [ ] Build a WiX/MSI installer. The installer must bundle the Visual C++ Redistributable (`vcruntime140.dll`) to resolve the missing runtime error on clean Windows installs.
+- [x] Build a WiX/MSI installer. The installer must bundle the Visual C++ Redistributable (`vcruntime140.dll`) to resolve the missing runtime error on clean Windows installs.
 
 ### Console Window
-- [ ] Add `#![windows_subsystem = "windows"]` to `main.rs` to suppress the blank terminal window that appears when launching the application on Windows.
+- [x] Add `#![windows_subsystem = "windows"]` to `main.rs` to suppress the blank terminal window that appears when launching the application on Windows.
 
 ### App Icon
-- [ ] Embed a `.ico` file as a Windows resource via `build.rs`. Without this, the app shows a generic Windows icon in Explorer, the taskbar, and the UAC elevation prompt. Prefer writing the logic directly in `build.rs` (~40 lines: locate `rc.exe`, write a `.rc` resource script, invoke it via `std::process::Command`, emit `cargo:rustc-link-lib`) to avoid a dependency. If that proves brittle, `embed-resource` is the better-maintained crate alternative (`winres` has not been updated in 5 years).
+- [x] Embed a `.ico` file as a Windows resource via `build.rs`. Without this, the app shows a generic Windows icon in Explorer, the taskbar, and the UAC elevation prompt. Prefer writing the logic directly in `build.rs` (~40 lines: locate `rc.exe`, write a `.rc` resource script, invoke it via `std::process::Command`, emit `cargo:rustc-link-lib`) to avoid a dependency. If that proves brittle, `embed-resource` is the better-maintained crate alternative (`winres` has not been updated in 5 years).
 
 ### Code Signing
-- [ ] Investigate **SignPath Foundation** (free for open-source projects on GitHub) as the primary signing path before committing to a paid CA.
-- [ ] If SignPath Foundation is unavailable or insufficient, use **Azure Trusted Signing** (~$10/month) as the next option.
-
-### SmartScreen Reputation
-- [ ] On first release, submit the signed installer to the [Microsoft malware submission portal](https://www.microsoft.com/en-us/wdsi/filesubmission) for review to accelerate SmartScreen clearance.
-- [ ] Include a note in Windows release instructions explaining that SmartScreen may show a warning on first install ("Click 'More info → Run anyway'") and that this is expected behavior for a new release.
-
-### Build Script
-- [ ] Create `scripts/build-windows.sh` to handle all post-compilation steps: sign the binary with `signtool.exe`, build the WiX MSI installer, and sign the installer. The script reads signing credentials from environment variables. CI only needs to set those variables and call the script.
+- [x] If SignPath Foundation is unavailable or insufficient, use **Azure Trusted Signing** (~$10/month) as the next option.
 
 ### Validation
-- [ ] Verify that file/folder path handling works correctly on Windows — confirm no assumptions about `/` separators in path display or regex logic.
+- [x] Verify that file/folder path handling works correctly on Windows — confirm no assumptions about `/` separators in path display or regex logic.
 
 ## 0.6 — macOS Support
 
@@ -72,9 +64,3 @@
 - [ ] Add a `macos-15` job to the GitHub Actions workflow that sets signing credentials as environment variables and calls `scripts/build-macos.sh`.
 
 ## Backlog
-- [ ] Write hand-crafted tests for all of the below using known good/bad cases and real sample files as fixtures before reaching for fuzz testing. Add fuzz testing for `detect_stig_format()` in `core/src/detection.rs` using `cargo-fuzz` as a one-time hardening step before a release, to catch panics on arbitrary input.
-- [x] Expand unit tests for `core/src/detection.rs` — cover all three formats (`XccdfV1_1`, `XccdfV1_2`, `Xylok`): valid files, files with missing fields, non-matching files returning `None`, and edge cases like empty fields or unusual whitespace.
-- [ ] Expand unit tests for `core/src/load.rs` — cover loading each format (`XccdfV1_1`, `Xylok`) from known-good sample files and verify the resulting `Benchmark` fields are correct; cover bad/corrupt inputs returning errors cleanly.
-- [ ] Add unit tests for `core/src/db.rs` — verify that `insert` and `clean` keep the `std::sync::RwLock` cache consistent with the underlying tokio `RwLock` data.
-- [ ] Add unit tests for `desktop/src/app/command.rs` — cover each valid command keyword, invalid input returning the correct error, and regex errors in search terms being handled gracefully.
-- [ ] Benchmark load performance over all formats (`XccdfV1_1`, `Xylok`).
