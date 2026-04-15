@@ -1,12 +1,8 @@
 pub mod app;
-mod assets;
 mod command;
 
 use std::collections::HashMap;
 use std::time::Instant;
-
-// Re-exports:
-pub use crate::app::assets::Assets;
 
 use iced::keyboard;
 use iced::widget::Id;
@@ -28,7 +24,6 @@ pub struct App {
     pub filter_input: String,
     pub popup: Popup,
     pub err_notif: ErrNotif,
-    pub assets: Assets,
     pub window_id: Option<window::Id>,
     pub settings: AppSettings,
     pub load_handle: Option<Handle>,

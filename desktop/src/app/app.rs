@@ -11,6 +11,7 @@ use stig_view_core::{Benchmark, Format, detect_stig_format, load_ckl, load_v1_1}
 
 use crate::app::command::*;
 use crate::app::*;
+use crate::ui::assets::APP_ICON;
 
 const MAIN_FADE_START: f32 = 0.20;
 const MAIN_FADE_DURATION_SECS: f32 = 0.2;
@@ -40,7 +41,6 @@ impl App {
                 filter_input: String::new(),
                 popup: Popup::None,
                 err_notif: ErrNotif::None,
-                assets: Assets::new(),
                 window_id: None,
                 settings: settings,
                 load_handle: None,
@@ -128,7 +128,7 @@ impl App {
                     window::set_resizable(id, true),
                     window::set_icon(
                         id,
-                        from_file_data(&self.assets.app_icon, Some(ImageFormat::Png))
+                        from_file_data(APP_ICON, Some(ImageFormat::Png))
                             .expect("Could not load app icon!"),
                     ),
                 ])
@@ -480,7 +480,9 @@ impl App {
 
                         match new_pins {
                             Some(new_pins) => Task::done(Message::SetPins(new_pins)),
-                            None => Task::done(Message::SendErrNotif("Error when running the command.")),
+                            None => {
+                                Task::done(Message::SendErrNotif("Error when running the command."))
+                            }
                         }
                     }
                     None => Task::done(Message::SendErrNotif("Error when parsing the command.")),

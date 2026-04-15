@@ -9,7 +9,7 @@ use crate::app::App;
 fn main() -> iced::Result {
     use iced::Font;
 
-    iced::application(App::new, App::update, App::get_view)
+    iced::application(App::new, App::update, App::view)
         .subscription(App::subscription)
         .theme(App::theme)
         .title("Stig View")
@@ -25,7 +25,7 @@ fn main() -> iced::Result {
         window::settings::{PlatformSpecific, Settings},
     };
 
-    iced::application(App::new, App::update, App::get_view)
+    iced::application(App::new, App::update, App::view)
         .subscription(App::subscription)
         .theme(App::theme)
         .title("Stig View")
