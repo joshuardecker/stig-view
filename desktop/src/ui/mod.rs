@@ -198,6 +198,7 @@ impl App {
             }
         }
 
+        // Place a horizontal rule if there are any STIGs that have been filtered.
         let horizontal_rule: Element<'_, Message> = if total_filtered != 0 {
             column![rule::horizontal(2), space().height(8)].into()
         } else {
@@ -882,7 +883,7 @@ impl App {
                                 .height(Shrink)
                                 .style(rounded_dark_button)
                                 .on_press(Message::SwitchPopup(Popup::Filter)),
-                            container("Sort Content Based on a Filter (Ctrl + P)")
+                            container("Sort Content Based on Keywords (Ctrl + F)")
                                 .style(background_container),
                             tooltip::Position::Right
                         )

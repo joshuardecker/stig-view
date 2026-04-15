@@ -497,7 +497,7 @@ impl App {
                 } => match key_smolstr.as_str() {
                     "q" if modifiers.control() => return Task::done(Message::WindowClose),
                     "i" if modifiers.control() => return Task::done(Message::OpenFile),
-                    "p" if modifiers.control() => {
+                    "f" if modifiers.control() => {
                         return Task::done(Message::SwitchPopup(Popup::Filter));
                     }
                     _ => Task::none(),
