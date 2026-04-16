@@ -485,7 +485,7 @@ impl App {
                             }
                         }
                     }
-                    None => Task::done(Message::SendErrNotif("Error when parsing the command.")),
+                    None => Task::none(),
                 }
             }
 

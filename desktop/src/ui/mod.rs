@@ -576,78 +576,53 @@ impl App {
 
     /// Display of the filter menu, gets stacked on top of the main application view.
     fn filter_menu(&self) -> Element<'_, Message> {
-        let right_tick_svg_handle = svg::Handle::from_memory(RIGHT_TICK);
+        let refresh_svg_handle = svg::Handle::from_memory(REFRESH);
         let cross_svg_handle = svg::Handle::from_memory(CROSS);
 
         let id = Id::new("filter_text_input");
 
-        container(
+        // The filter popup itself.
+        let popup: Element<'_, Message> = container(
             sensor(opaque(stack![
                 container(
-                    column![
-                        row![
-                            space::horizontal(),
-                            space().width(13),
-                            text("Filter Menu"),
-                            space::horizontal(),
-                            button(
-                                svg(cross_svg_handle)
-                                    .style(colored_svg)
-                                    .width(25)
-                                    .height(25)
-                            )
-                            .padding(1)
-                            .width(Shrink)
-                            .height(Shrink)
-                            .style(no_button)
-                            .on_press(Message::SwitchPopup(Popup::None)),
-                        ]
-                        .align_y(Center),
-                        space().height(20),
+                    row![
+                        button(
+                            svg(refresh_svg_handle)
+                                .style(colored_svg)
+                                .width(25)
+                                .height(25)
+                        )
+                        .padding(1)
+                        .width(Shrink)
+                        .height(Shrink)
+                        .style(no_button)
+                        .on_press(Message::ProcessCmd("reset".to_string())),
+                        space().width(8),
                         text_input(
-                            "Type commands here, then press enter...",
+                            "Type keywords here, then press enter...",
                             &self.filter_input
                         )
                         .on_input(Message::TypeCmd)
                         .on_submit(Message::ProcessCmd(self.filter_input.clone()))
                         .id(id.clone()),
-                        space().height(20),
-                        row![
-                            svg(right_tick_svg_handle.clone())
-                                .style(boring_svg)
-                                .width(Shrink),
-                            space().width(5),
-                            text("(name|title)  (...) to filter by title."),
-                            space::horizontal(),
-                        ]
-                        .height(24)
-                        .align_y(Center),
-                        row![
-                            svg(right_tick_svg_handle.clone())
-                                .style(boring_svg)
-                                .width(Shrink),
-                            space().width(5),
-                            text("(find|search) (...) to filter by keywords."),
-                            space::horizontal(),
-                        ]
-                        .height(24)
-                        .align_y(Center),
-                        row![
-                            svg(right_tick_svg_handle.clone())
-                                .style(boring_svg)
-                                .width(Shrink),
-                            space().width(5),
-                            text("(reset) to undo applied filters."),
-                            space::horizontal(),
-                        ]
-                        .height(24)
-                        .align_y(Center),
+                        space().width(8),
+                        button(
+                            svg(cross_svg_handle)
+                                .style(colored_svg)
+                                .width(25)
+                                .height(25)
+                        )
+                        .padding(1)
+                        .width(Shrink)
+                        .height(Shrink)
+                        .style(no_button)
+                        .on_press(Message::SwitchPopup(Popup::None)),
                     ]
-                    .align_x(Center),
+                    .align_y(Center),
                 )
-                .width(500)
-                .height(200)
-                .padding(15)
+                .width(400)
+                .height(Shrink)
+                .padding(8)
                 .style(cmd_container),
                 container(space())
                     .width(Fill)
@@ -656,8 +631,15 @@ impl App {
             ]))
             .on_show(move |_| Message::FocusWidget(id.clone())),
         )
-        .center(Fill)
-        .into()
+        .width(Fill)
+        .height(Fill)
+        .align_x(Center)
+        .align_y(End)
+        .into();
+
+        // Add some space below it, that way it is not hugging the bottom of the window.
+        // Looks nicer this way.
+        column![popup, space().height(30)].into()
     }
 
     /// Display of the settings menu, gets stacked on top of the main application view.

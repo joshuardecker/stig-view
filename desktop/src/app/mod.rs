@@ -52,8 +52,7 @@ pub enum ErrNotif {
 
 #[derive(Debug, Clone)]
 pub enum Command {
-    NameSearch(String),
-    KeywordSearch(String),
+    Phrase(String),
     Reset,
 }
 
