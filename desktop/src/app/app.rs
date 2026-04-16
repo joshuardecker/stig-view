@@ -41,7 +41,7 @@ impl App {
                 ],
                 filter_input: String::new(),
                 popup: Popup::None,
-                err_notif: ErrNotif::None,
+                err_notif: None,
                 window_id: None,
                 settings: settings,
                 load_handle: None,
@@ -431,14 +431,14 @@ impl App {
             }
 
             Message::SendErrNotif(err_str) => {
-                if let ErrNotif::None = self.err_notif {
-                    self.err_notif = ErrNotif::Err(err_str);
+                if let None = self.err_notif {
+                    self.err_notif = Some(err_str.to_string());
                 }
 
                 Task::none()
             }
             Message::ClearErrNotif => {
-                self.err_notif = ErrNotif::None;
+                self.err_notif = None;
 
                 Task::none()
             }

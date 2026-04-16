@@ -26,7 +26,7 @@ pub struct App {
     pub contents: [Content; 7],
     pub filter_input: String,
     pub popup: Popup,
-    pub err_notif: ErrNotif,
+    pub err_notif: Option<String>,
     pub window_id: Option<window::Id>,
     pub settings: AppSettings,
     pub load_handle: Option<Handle>,
@@ -44,12 +44,6 @@ pub enum Popup {
     Filter,
     Settings,
     Save,
-    None,
-}
-
-#[derive(Debug, Clone)]
-pub enum ErrNotif {
-    Err(&'static str),
     None,
 }
 

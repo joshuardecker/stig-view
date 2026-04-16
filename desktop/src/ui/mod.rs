@@ -29,9 +29,9 @@ impl App {
             _ => space().into(),
         };
 
-        let err_notification = match self.err_notif {
-            ErrNotif::Err(err_str) => self.display_error(err_str),
-            _ => space().into(),
+        let err_notification = match &self.err_notif {
+            Some(err_str) => self.display_error(&err_str),
+            None => space().into(),
         };
 
         stack![padded_content, popup, err_notification].into()
@@ -147,13 +147,29 @@ impl App {
         let mut filter_pin_col = column![];
         let mut filter_user_pin_col = column![];
 
+        // Counters used to keep track of the total number of compliant,
+        // noncompliant, and manual review recommendations.
+        let mut compliant_counter = 0;
+        let mut manual_counter = 0;
+        let mut noncompliant_counter = 0;
+
         // The amount of filtered STIGs.
         // Columns do not have a len() function, so I keep track here.
         // If this is greater than 0, a seperating rule will be placed between
         // filtered and non filtered STIGs.
         let mut total_filtered = 0;
 
+        let dot_handle = svg::Handle::from_memory(SQUARE);
+
         for (name, rule) in self.benchmark.rules.iter() {
+            match &rule.ckl_status {
+                Some(CKLStatus::NotAFinding) => compliant_counter += 1,
+                Some(CKLStatus::Open) => noncompliant_counter += 1,
+                Some(CKLStatus::NotApplicable) => manual_counter += 1,
+                Some(CKLStatus::NotReviewed) => manual_counter += 1,
+                None => (),
+            }
+
             let pin_type = self.pins.get(name).unwrap_or(&Pinned::Not);
 
             let button = self.stig_button(pin_type.to_owned(), name, rule);
@@ -198,6 +214,56 @@ impl App {
             }
         }
 
+        // Counters visually displays how many of each ckl status is present.
+        // If a non ckl was loaded, this will not be displayed.
+        let counters: Element<'_, Message> =
+            if (compliant_counter + manual_counter + noncompliant_counter) != 0 {
+                column![
+                    rule::horizontal(2),
+                    space().height(4),
+                    row![
+                        tooltip(
+                            svg(dot_handle.clone()).width(12).height(12).style(good_svg),
+                            container("Total Compliant.")
+                                .style(background_container)
+                                .padding(1),
+                            tooltip::Position::Bottom
+                        ),
+                        space().width(4),
+                        text(compliant_counter.to_string()),
+                        space().width(15),
+                        tooltip(
+                            svg(dot_handle.clone()).width(12).height(12).style(bad_svg),
+                            container("Total Non-Compliant.")
+                                .style(background_container)
+                                .padding(1),
+                            tooltip::Position::Bottom
+                        ),
+                        space().width(4),
+                        text(noncompliant_counter.to_string()),
+                        space().width(15),
+                        tooltip(
+                            svg(dot_handle.clone())
+                                .width(12)
+                                .height(12)
+                                .style(warning_svg),
+                            container("Total Manual Review.")
+                                .style(background_container)
+                                .padding(1),
+                            tooltip::Position::Bottom
+                        ),
+                        space().width(4),
+                        text(manual_counter.to_string()),
+                    ]
+                    .align_y(Center),
+                    space().height(4),
+                ]
+                .align_x(Center)
+                .into()
+            } else {
+                space().into()
+            };
+
         // Place a horizontal rule if there are any STIGs that have been filtered.
         let horizontal_rule: Element<'_, Message> = if total_filtered != 0 {
             column![rule::horizontal(2), space().height(8)].into()
@@ -207,6 +273,7 @@ impl App {
 
         container(column![
             header,
+            counters,
             scrollable(column![
                 filter_user_pin_col,
                 filter_pin_col,
@@ -240,8 +307,8 @@ impl App {
             Some(CKLStatus::NotAFinding) => row![
                 tooltip(
                     svg(check_handle.clone())
-                        .width(24)
-                        .height(24)
+                        .width(18)
+                        .height(18)
                         .style(good_svg),
                     container("Compliant.")
                         .style(background_container)
@@ -254,8 +321,8 @@ impl App {
             Some(CKLStatus::Open) => row![
                 tooltip(
                     svg(cross_handle.clone())
-                        .width(24)
-                        .height(24)
+                        .width(18)
+                        .height(18)
                         .style(bad_svg),
                     container("Non-Compliant.")
                         .style(background_container)
@@ -268,8 +335,8 @@ impl App {
             Some(CKLStatus::NotApplicable) => row![
                 tooltip(
                     svg(minus_handle.clone())
-                        .width(24)
-                        .height(24)
+                        .width(18)
+                        .height(18)
                         .style(warning_svg),
                     container("Not Applicable.")
                         .style(background_container)
@@ -282,8 +349,8 @@ impl App {
             Some(CKLStatus::NotReviewed) => row![
                 tooltip(
                     svg(minus_handle.clone())
-                        .width(24)
-                        .height(24)
+                        .width(18)
+                        .height(18)
                         .style(warning_svg),
                     container("Not Reviewed.")
                         .style(background_container)
@@ -609,8 +676,8 @@ impl App {
                         button(
                             svg(cross_svg_handle)
                                 .style(colored_svg)
-                                .width(25)
-                                .height(25)
+                                .width(15)
+                                .height(15)
                         )
                         .padding(1)
                         .width(Shrink)
@@ -669,8 +736,8 @@ impl App {
                         button(
                             svg(cross_svg_handle)
                                 .style(colored_svg)
-                                .width(25)
-                                .height(25)
+                                .width(15)
+                                .height(15)
                         )
                         .padding(1)
                         .width(Shrink)
@@ -734,7 +801,7 @@ impl App {
                         space().width(13),
                         text("Error Occurred"),
                         space::horizontal(),
-                        button(svg(cross_svg_handle).style(boring_svg).width(25).height(25))
+                        button(svg(cross_svg_handle).style(boring_svg).width(15).height(15))
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
@@ -773,8 +840,8 @@ impl App {
                         button(
                             svg(cross_svg_handle)
                                 .style(colored_svg)
-                                .width(25)
-                                .height(25)
+                                .width(15)
+                                .height(15)
                         )
                         .padding(1)
                         .width(Shrink)
@@ -820,6 +887,7 @@ impl App {
     /// Return the window decorations container.
     fn window_decorations(&self) -> Element<'_, Message> {
         let settings_svg_handle = svg::Handle::from_memory(SETTINGS);
+        let home_svg_handle = svg::Handle::from_memory(HOME);
         let cross_svg_handle = svg::Handle::from_memory(CROSS);
         let square_svg_handle = svg::Handle::from_memory(SQUARE);
         let down_tick_svg_handle = svg::Handle::from_memory(DOWN_TICK);
@@ -831,21 +899,28 @@ impl App {
             mouse_area(
                 container(
                     row![
-                        space().width(11),
+                        space().width(15),
                         button(
                             svg(settings_svg_handle)
                                 .style(colored_svg)
-                                .width(20)
-                                .height(20)
+                                .width(18)
+                                .height(18)
                         )
                         .padding(1)
                         .width(Shrink)
                         .height(Shrink)
                         .style(no_button)
                         .on_press(Message::SwitchPopup(Popup::Settings)),
+                        space().width(11),
+                        button(svg(home_svg_handle).style(colored_svg).width(18).height(18))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::ReturnHome),
                         space().width(8),
                         tooltip(
-                            button(text("File").center().size(14))
+                            button(text("File").center().size(15))
                                 .padding(6)
                                 .width(Shrink)
                                 .height(Shrink)
@@ -859,7 +934,7 @@ impl App {
                         .delay(iced::time::Duration::from_millis(600)),
                         space().width(4),
                         tooltip(
-                            button(text("Filter").center().size(14))
+                            button(text("Filter").center().size(15))
                                 .padding(6)
                                 .width(Shrink)
                                 .height(Shrink)
@@ -867,18 +942,6 @@ impl App {
                                 .on_press(Message::SwitchPopup(Popup::Filter)),
                             container("Sort Content Based on Keywords (Ctrl + F)")
                                 .style(background_container),
-                            tooltip::Position::Right
-                        )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space().width(4),
-                        tooltip(
-                            button(text("Home").center().size(14))
-                                .padding(6)
-                                .width(Shrink)
-                                .height(Shrink)
-                                .style(rounded_dark_button)
-                                .on_press(Message::ReturnHome),
-                            container("Returns to the Home Menu").style(background_container),
                             tooltip::Position::Right
                         )
                         .delay(iced::time::Duration::from_millis(600)),
@@ -892,8 +955,8 @@ impl App {
                                         button(
                                             svg(switch_svg_handle)
                                                 .style(colored_svg)
-                                                .width(20)
-                                                .height(20)
+                                                .width(18)
+                                                .height(18)
                                         )
                                         .padding(1)
                                         .width(Shrink)
@@ -927,27 +990,27 @@ impl App {
                         button(
                             svg(square_svg_handle)
                                 .style(colored_svg)
-                                .width(16)
-                                .height(16)
+                                .width(15)
+                                .height(15)
                         )
                         .padding(1)
                         .width(Shrink)
                         .height(Shrink)
                         .style(no_button)
                         .on_press(Message::WindowFullscreenToggle),
-                        space().width(15),
+                        space().width(17),
                         button(
                             svg(cross_svg_handle)
                                 .style(colored_svg)
-                                .width(25)
-                                .height(25)
+                                .width(15)
+                                .height(15)
                         )
                         .padding(1)
                         .width(Shrink)
                         .height(Shrink)
                         .style(no_button)
                         .on_press(Message::WindowClose),
-                        space().width(8)
+                        space().width(15)
                     ]
                     .align_y(Center),
                 )
