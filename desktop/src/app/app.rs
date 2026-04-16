@@ -1,8 +1,9 @@
-use iced::Subscription;
-use iced::color;
-use iced::theme::{Custom, Palette, Theme};
-use iced::window::icon::from_file_data;
-use iced::{keyboard, keyboard::key};
+use iced::{
+    Subscription, Theme, color, keyboard,
+    keyboard::key,
+    theme::{Custom, Palette},
+    window::icon::from_file_data,
+};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
 use std::sync::Arc;
@@ -84,7 +85,7 @@ impl App {
                     text: color!(0x1E1A2E),
                     primary: color!(0x6B4FA0),
                     success: color!(0x1A8A63),
-                    warning: color!(0xB45309),
+                    warning: color!(0xD4860A),
                     danger: color!(0xC0393A),
                 },
                 String::from("Custom Light"),
@@ -106,8 +107,8 @@ impl App {
                     text: color!(0xC8BAA8),
                     primary: color!(0x9E7840),
                     success: color!(0x5A7A4E),
-                    warning: color!(0x9E7828),
-                    danger: color!(0x8A3C3C),
+                    warning: color!(0xC49A18),
+                    danger: color!(0xAC4444),
                 },
                 String::from("Coffee"),
             ),

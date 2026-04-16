@@ -1,16 +1,19 @@
 pub mod app;
 mod command;
 
+use iced::{
+    Task, keyboard,
+    task::Handle,
+    widget::{
+        Id,
+        text_editor::{Action, Content},
+    },
+    window,
+    window::Direction,
+};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Instant;
-
-use iced::keyboard;
-use iced::widget::Id;
-use iced::widget::text_editor::{Action, Content};
-use iced::window;
-use iced::window::Direction;
-use iced::{Task, task::Handle};
-use serde::{Deserialize, Serialize};
 use stig_view_core::{Benchmark, Rule};
 
 #[derive(Debug, Clone)]
