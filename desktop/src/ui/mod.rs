@@ -228,7 +228,7 @@ impl App {
                             svg(dot_handle.clone()).width(12).height(12).style(good_svg),
                             container("Total Compliant.")
                                 .style(background_container)
-                                .padding(1),
+                                .padding(4),
                             tooltip::Position::Bottom
                         ),
                         space().width(SEPERATION * 0.5),
@@ -238,7 +238,7 @@ impl App {
                             svg(dot_handle.clone()).width(12).height(12).style(bad_svg),
                             container("Total Non-Compliant.")
                                 .style(background_container)
-                                .padding(1),
+                                .padding(4),
                             tooltip::Position::Bottom
                         ),
                         space().width(SEPERATION * 0.5),
@@ -251,7 +251,7 @@ impl App {
                                 .style(warning_svg),
                             container("Total Manual Review.")
                                 .style(background_container)
-                                .padding(1),
+                                .padding(4),
                             tooltip::Position::Bottom
                         ),
                         space().width(SEPERATION * 0.5),
@@ -826,12 +826,18 @@ impl App {
                     ]
                     .align_y(Center),
                     space().height(SEPERATION * 2.0),
-                    row![text(err_str).size(12).height(Fill)].align_y(Center)
+                    row![
+                        text(err_str)
+                            .size(12)
+                            .height(Fill)
+                            .wrapping(text::Wrapping::None)
+                    ]
+                    .align_y(Center)
                 ]
                 .align_x(Center),
             )
             .width(250)
-            .height(100)
+            .height(80)
             .padding(8)
             .style(err_container),
         ))
@@ -949,7 +955,7 @@ impl App {
                         space().width(8),
                         tooltip(
                             button(text("File").center().size(15))
-                                .padding(6)
+                                .padding(4)
                                 .width(Shrink)
                                 .height(Shrink)
                                 .style(rounded_dark_button)
@@ -963,13 +969,14 @@ impl App {
                         space().width(4),
                         tooltip(
                             button(text("Filter").center().size(15))
-                                .padding(6)
+                                .padding(4)
                                 .width(Shrink)
                                 .height(Shrink)
                                 .style(rounded_dark_button)
                                 .on_press(Message::SwitchPopup(Popup::Filter)),
                             container("Sort Content Based on Keywords (Ctrl + F)")
-                                .style(background_container),
+                                .style(background_container)
+                                .padding(4),
                             tooltip::Position::Right
                         )
                         .delay(iced::time::Duration::from_millis(600)),
@@ -982,7 +989,7 @@ impl App {
                                 .replace("-", " ")
                                 .to_lowercase()
                         )
-                        .size(14),
+                        .size(16),
                         {
                             let switch_element: Element<Message> = if self.benchmarks.len() != 0 {
                                 row![
@@ -999,7 +1006,9 @@ impl App {
                                         .height(Shrink)
                                         .style(no_button)
                                         .on_press(Message::SwitchToBackground),
-                                        container("Switch Benchmark").style(background_container),
+                                        container("Switch Benchmark")
+                                            .style(background_container)
+                                            .padding(4),
                                         tooltip::Position::Right
                                     )
                                     .delay(iced::time::Duration::from_millis(600)),
