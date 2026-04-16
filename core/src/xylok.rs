@@ -97,6 +97,7 @@ impl XylokToml {
             title: self.benchmark.title,
 
             rules,
+            cache_version: CACHE_VERSION,
         })
     }
 }

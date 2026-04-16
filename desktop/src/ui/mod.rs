@@ -14,6 +14,10 @@ use stig_view_core::{CKLStatus, Rule};
 use crate::app::*;
 use crate::ui::{assets::*, styles::*};
 
+/// The default seperation between elements.
+/// I use magic values around because they look better.
+const SEPERATION: f32 = 8.0;
+
 impl App {
     /// Get the view of the application.
     pub fn view(&self) -> Element<'_, Message> {
@@ -74,7 +78,7 @@ impl App {
                 ),
             ],
             window_decorations,
-            space().height(10),
+            space().height(SEPERATION),
             // The main area of the application.
             // Surrounded on left and right by drag click resize areas.
             row![
@@ -123,23 +127,21 @@ impl App {
             row![
                 button(text("Group ID").size(12).center())
                     .on_press(Message::SwitchDisplayType(DisplayType::GroupId))
-                    .style(rounded_boring_button)
+                    .style(rounded_primary_button)
                     .width(FillPortion(1)),
-                space().width(8),
+                space().width(SEPERATION),
                 button(text("Rule ID").size(12).center())
                     .on_press(Message::SwitchDisplayType(DisplayType::RuleId))
-                    .style(rounded_boring_button)
+                    .style(rounded_primary_button)
                     .width(FillPortion(1)),
-                space().width(8),
+                space().width(SEPERATION),
                 button(text("STIG ID").size(12).center())
                     .on_press(Message::SwitchDisplayType(DisplayType::STIGId))
-                    .style(rounded_boring_button)
+                    .style(rounded_primary_button)
                     .width(FillPortion(1)),
             ],
-            space().height(2)
+            space().height(SEPERATION)
         ]
-        .padding(1)
-        .spacing(8)
         .align_x(Center);
 
         let mut not_pin_col = column![];
@@ -190,7 +192,7 @@ impl App {
 
                     filter_pin_col = filter_pin_col
                         .push(button_with_accent)
-                        .push(space().height(8));
+                        .push(space().height(SEPERATION));
 
                     total_filtered += 1;
                 }
@@ -207,7 +209,7 @@ impl App {
 
                     filter_user_pin_col = filter_user_pin_col
                         .push(button_with_accent)
-                        .push(space().height(8));
+                        .push(space().height(SEPERATION));
 
                     total_filtered += 1
                 }
@@ -220,7 +222,7 @@ impl App {
             if (compliant_counter + manual_counter + noncompliant_counter) != 0 {
                 column![
                     rule::horizontal(2),
-                    space().height(4),
+                    space().height(SEPERATION),
                     row![
                         tooltip(
                             svg(dot_handle.clone()).width(12).height(12).style(good_svg),
@@ -229,9 +231,9 @@ impl App {
                                 .padding(1),
                             tooltip::Position::Bottom
                         ),
-                        space().width(4),
+                        space().width(SEPERATION * 0.5),
                         text(compliant_counter.to_string()),
-                        space().width(15),
+                        space().width(SEPERATION * 2.0),
                         tooltip(
                             svg(dot_handle.clone()).width(12).height(12).style(bad_svg),
                             container("Total Non-Compliant.")
@@ -239,9 +241,9 @@ impl App {
                                 .padding(1),
                             tooltip::Position::Bottom
                         ),
-                        space().width(4),
+                        space().width(SEPERATION * 0.5),
                         text(noncompliant_counter.to_string()),
-                        space().width(15),
+                        space().width(SEPERATION * 2.0),
                         tooltip(
                             svg(dot_handle.clone())
                                 .width(12)
@@ -252,11 +254,11 @@ impl App {
                                 .padding(1),
                             tooltip::Position::Bottom
                         ),
-                        space().width(4),
+                        space().width(SEPERATION * 0.5),
                         text(manual_counter.to_string()),
                     ]
                     .align_y(Center),
-                    space().height(4),
+                    space().height(SEPERATION),
                 ]
                 .align_x(Center)
                 .into()
@@ -266,7 +268,7 @@ impl App {
 
         // Place a horizontal rule if there are any STIGs that have been filtered.
         let horizontal_rule: Element<'_, Message> = if total_filtered != 0 {
-            column![rule::horizontal(2), space().height(8)].into()
+            column![rule::horizontal(2), space().height(SEPERATION)].into()
         } else {
             space().into()
         };
@@ -282,7 +284,7 @@ impl App {
                 not_pin_col,
                 space::vertical(), // Ensures this container is proper size.
             ])
-            .spacing(8),
+            .spacing(SEPERATION),
         ])
         .width(300)
         .style(background_container)
@@ -307,57 +309,57 @@ impl App {
             Some(CKLStatus::NotAFinding) => row![
                 tooltip(
                     svg(check_handle.clone())
-                        .width(18)
-                        .height(18)
+                        .width(16)
+                        .height(16)
                         .style(good_svg),
                     container("Compliant.")
                         .style(background_container)
                         .padding(4),
                     tooltip::Position::Right
                 ),
-                space().width(5)
+                space().width(SEPERATION)
             ]
             .into(),
             Some(CKLStatus::Open) => row![
                 tooltip(
                     svg(cross_handle.clone())
-                        .width(18)
-                        .height(18)
+                        .width(16)
+                        .height(16)
                         .style(bad_svg),
                     container("Non-Compliant.")
                         .style(background_container)
                         .padding(4),
                     tooltip::Position::Right
                 ),
-                space().width(5)
+                space().width(SEPERATION)
             ]
             .into(),
             Some(CKLStatus::NotApplicable) => row![
                 tooltip(
                     svg(minus_handle.clone())
-                        .width(18)
-                        .height(18)
+                        .width(16)
+                        .height(16)
                         .style(warning_svg),
                     container("Not Applicable.")
                         .style(background_container)
                         .padding(4),
                     tooltip::Position::Right
                 ),
-                space().width(5)
+                space().width(SEPERATION)
             ]
             .into(),
             Some(CKLStatus::NotReviewed) => row![
                 tooltip(
                     svg(minus_handle.clone())
-                        .width(18)
-                        .height(18)
+                        .width(16)
+                        .height(16)
                         .style(warning_svg),
                     container("Not Reviewed.")
                         .style(background_container)
                         .padding(4),
                     tooltip::Position::Right
                 ),
-                space().width(5)
+                space().width(SEPERATION)
             ]
             .into(),
 
@@ -397,7 +399,7 @@ impl App {
                     text(button_text).center(),
                     space::horizontal(),
                     button(svg(bookmark_symbol).width(32).height(32).style(colored_svg))
-                        .padding(2)
+                        .padding(1)
                         .style(no_button)
                         .on_press(Message::Pin(name.to_owned()))
                 ]
@@ -428,104 +430,104 @@ impl App {
         let content = column![
             row![
                 column![
-                    text("Group ID").size(24),
-                    space().height(5),
+                    text("Group ID").size(18),
+                    space().height(SEPERATION),
                     text(&stig_rule.group_id),
-                    space().height(7),
+                    space().height(SEPERATION),
                     rule::horizontal(2),
-                    space().height(7),
-                    text("Severity").size(24),
-                    space().height(5),
+                    space().height(SEPERATION),
+                    text("Severity").size(18),
+                    space().height(SEPERATION),
                     text(stig_rule.severity.clone().to_string()),
                 ]
                 .align_x(Center)
                 .width(FillPortion(1)),
-                space().width(5),
+                space().width(SEPERATION),
                 rule::vertical(2),
-                space().width(5),
+                space().width(SEPERATION),
                 column![
-                    text("Rule ID").size(24),
-                    space().height(5),
+                    text("Rule ID").size(18),
+                    space().height(SEPERATION),
                     text(&stig_rule.rule_id),
-                    space().height(7),
+                    space().height(SEPERATION),
                     rule::horizontal(2),
-                    space().height(7),
+                    space().height(SEPERATION),
                 ]
                 .align_x(Center)
                 .width(FillPortion(1)),
-                space().width(5),
+                space().width(SEPERATION),
                 rule::vertical(2),
-                space().width(5),
+                space().width(SEPERATION),
                 column![
-                    text("STIG ID").size(24),
-                    space().height(5),
+                    text("STIG ID").size(18),
+                    space().height(SEPERATION),
                     text(stig_rule.stig_id.clone().unwrap_or("None".to_string())),
-                    space().height(7),
+                    space().height(SEPERATION),
                     rule::horizontal(2),
-                    space().height(7),
-                    text("Documentable").size(24),
-                    space().height(5),
+                    space().height(SEPERATION),
+                    text("Documentable").size(18),
+                    space().height(SEPERATION),
                     text(stig_rule.documentable_str()),
                 ]
                 .align_x(Center)
                 .width(FillPortion(1)),
             ],
-            space().height(15),
+            space().height(SEPERATION),
             text("Introduction").size(32),
             rule::horizontal(2),
-            space().height(15),
+            space().height(SEPERATION),
             row![
-                space().width(10),
+                space().width(SEPERATION),
                 text_editor(&self.contents[ContentIndex::Title as usize])
                     .style(no_text_editor)
                     .on_action(|action| Message::SelectContent(action, ContentIndex::Title))
             ],
-            space().height(15),
+            space().height(SEPERATION),
             text("Description").size(32),
             rule::horizontal(2),
-            space().height(15),
+            space().height(SEPERATION),
             row![
-                space().width(10),
+                space().width(SEPERATION),
                 text_editor(&self.contents[ContentIndex::Discussion as usize])
                     .style(no_text_editor)
                     .on_action(|action| Message::SelectContent(action, ContentIndex::Discussion))
             ],
-            space().height(15),
+            space().height(SEPERATION),
             text("Check").size(32),
             rule::horizontal(2),
-            space().height(15),
+            space().height(SEPERATION),
             row![
-                space().width(10),
+                space().width(SEPERATION),
                 text_editor(&self.contents[ContentIndex::Check as usize])
                     .style(no_text_editor)
                     .on_action(|action| Message::SelectContent(action, ContentIndex::Check))
             ],
-            space().height(15),
+            space().height(SEPERATION),
             text("Fix").size(32),
             rule::horizontal(2),
-            space().height(15),
+            space().height(SEPERATION),
             row![
-                space().width(10),
+                space().width(SEPERATION),
                 text_editor(&self.contents[ContentIndex::Fix as usize])
                     .style(no_text_editor)
                     .on_action(|action| Message::SelectContent(action, ContentIndex::Fix))
             ],
-            space().height(15),
+            space().height(SEPERATION),
             text("CCIs").size(32),
             rule::horizontal(2),
-            space().height(15),
+            space().height(SEPERATION),
             row![
-                space().width(10),
+                space().width(SEPERATION),
                 text_editor(&self.contents[ContentIndex::CCIRefs as usize])
                     .style(no_text_editor)
                     .on_action(|action| Message::SelectContent(action, ContentIndex::CCIRefs))
             ],
-            space().height(15),
+            space().height(SEPERATION),
             text("False Positives").size(32),
             rule::horizontal(2),
-            space().height(15),
+            space().height(SEPERATION),
             row![
-                space().width(10),
+                space().width(SEPERATION),
                 text_editor(&self.contents[ContentIndex::FalsePositives as usize])
                     .style(no_text_editor)
                     .on_action(|action| Message::SelectContent(
@@ -533,12 +535,12 @@ impl App {
                         ContentIndex::FalsePositives
                     ))
             ],
-            space().height(15),
+            space().height(SEPERATION),
             text("False Negatives").size(32),
             rule::horizontal(2),
-            space().height(15),
+            space().height(SEPERATION),
             row![
-                space().width(10),
+                space().width(SEPERATION),
                 text_editor(&self.contents[ContentIndex::FalseNegatives as usize])
                     .style(no_text_editor)
                     .on_action(|action| Message::SelectContent(
@@ -549,7 +551,7 @@ impl App {
         ];
 
         // Wrap it in a scrollable.
-        let content = scrollable(content).spacing(8);
+        let content = scrollable(content);
 
         let content = container(content)
             .center(Fill)
@@ -573,6 +575,7 @@ impl App {
     /// A button prompting the user to choose a benchmark to load into the viewer.
     fn display_empty(&self) -> Element<'_, Message> {
         let file_svg_handle = svg::Handle::from_memory(FILE_ICON);
+        let trash_svg_handle = svg::Handle::from_memory(TRASH);
 
         // Load any benchmarks the user opted to save in the past.
         let cache = App::load_cache();
@@ -584,9 +587,12 @@ impl App {
             "Recently Saved Files".to_string()
         };
 
-        let mut main_col = column![text(displayed_string).size(24).center(), space().height(20),]
-            .align_x(Center)
-            .width(400);
+        let mut main_col = column![
+            text(displayed_string).size(24).center(),
+            space().height(SEPERATION * 3.0),
+        ]
+        .align_x(Center)
+        .width(400);
 
         // If the cache is empty, add an obvious button for the user to click that opens a new benchmark.
         if cache.is_empty() {
@@ -607,8 +613,11 @@ impl App {
                         continue;
                     }
 
-                    // Trim the file extension off, the user doesnt need to see it.
-                    str.trim_end_matches(".msgpack.zstd").to_string()
+                    // Trim the file extension off, and make the name a little prettier.
+                    str.trim_end_matches(".msgpack.zstd")
+                        .replace("_", " ")
+                        .replace("-", " ")
+                        .to_lowercase()
                 }
 
                 None => continue,
@@ -621,8 +630,17 @@ impl App {
                             .style(boring_svg)
                             .width(20)
                             .height(20),
-                        space().width(15),
+                        space().width(SEPERATION),
                         text(name).center(),
+                        space::horizontal(),
+                        button(
+                            svg(trash_svg_handle.clone())
+                                .style(colored_svg)
+                                .width(20)
+                                .height(20)
+                        )
+                        .style(no_button)
+                        .on_press(Message::DeleteCachedBenchmark(path.clone())),
                     ]
                     .align_y(Center),
                 )
@@ -632,7 +650,7 @@ impl App {
             );
 
             // Space out each file entry nicely.
-            main_col = main_col.push(space().height(8));
+            main_col = main_col.push(space().height(SEPERATION));
         }
 
         container(main_col)
@@ -664,7 +682,7 @@ impl App {
                         .height(Shrink)
                         .style(no_button)
                         .on_press(Message::ProcessCmd("reset".to_string())),
-                        space().width(8),
+                        space().width(SEPERATION),
                         text_input(
                             "Type keywords here, then press enter...",
                             &self.filter_input
@@ -672,7 +690,7 @@ impl App {
                         .on_input(Message::TypeCmd)
                         .on_submit(Message::ProcessCmd(self.filter_input.clone()))
                         .id(id.clone()),
-                        space().width(8),
+                        space().width(SEPERATION),
                         button(
                             svg(cross_svg_handle)
                                 .style(colored_svg)
@@ -706,7 +724,7 @@ impl App {
 
         // Add some space below it, that way it is not hugging the bottom of the window.
         // Looks nicer this way.
-        column![popup, space().height(30)].into()
+        column![popup, space().height(SEPERATION * 4.0)].into()
     }
 
     /// Display of the settings menu, gets stacked on top of the main application view.
@@ -730,7 +748,6 @@ impl App {
                 column![
                     row![
                         space::horizontal(),
-                        space().width(13),
                         text("Settings Menu"),
                         space::horizontal(),
                         button(
@@ -746,14 +763,14 @@ impl App {
                         .on_press(Message::SwitchPopup(Popup::None)),
                     ]
                     .align_y(Center),
-                    space().height(20),
+                    space().height(SEPERATION * 4.0),
                     row![
                         text("Theme"),
                         space::horizontal(),
                         pick_list(themes, Some(self.settings.theme), Message::SwitchTheme),
                     ]
                     .align_y(Center),
-                    space().height(5),
+                    space().height(SEPERATION),
                     row![
                         text("Default Display Type"),
                         space::horizontal(),
@@ -764,7 +781,7 @@ impl App {
                         ),
                     ]
                     .align_y(Center),
-                    space().height(5),
+                    space().height(SEPERATION),
                     row![
                         text("Animations"),
                         space::horizontal(),
@@ -778,7 +795,7 @@ impl App {
             )
             .width(375)
             .height(200)
-            .padding(15)
+            .padding(8)
             .style(cmd_container),
             container(space())
                 .width(Fill)
@@ -798,7 +815,6 @@ impl App {
                 column![
                     row![
                         space::horizontal(),
-                        space().width(13),
                         text("Error Occurred"),
                         space::horizontal(),
                         button(svg(cross_svg_handle).style(boring_svg).width(15).height(15))
@@ -809,19 +825,19 @@ impl App {
                             .on_press(Message::ClearErrNotif),
                     ]
                     .align_y(Center),
-                    space().height(10),
+                    space().height(SEPERATION * 2.0),
                     row![text(err_str).size(12).height(Fill)].align_y(Center)
                 ]
                 .align_x(Center),
             )
             .width(250)
             .height(100)
-            .padding(15)
+            .padding(8)
             .style(err_container),
         ))
         .align_right(Fill)
         .align_bottom(Fill)
-        .padding(30)
+        .padding(SEPERATION * 4.0)
         .into()
     }
 
@@ -834,7 +850,6 @@ impl App {
                 column![
                     row![
                         space::horizontal(),
-                        space().width(13),
                         text("Save Benchmark for Later?"),
                         space::horizontal(),
                         button(
@@ -858,7 +873,7 @@ impl App {
                             .width(65)
                             .height(30)
                             .on_press(Message::SwitchPopup(Popup::None)),
-                        space().width(60),
+                        space().width(SEPERATION * 8.0),
                         button(text("Confirm").size(14).center())
                             .style(rounded_success_button)
                             .width(70)
@@ -867,13 +882,12 @@ impl App {
                         space::horizontal()
                     ]
                     .align_y(Center),
-                    space().height(15),
                 ]
                 .align_x(Center),
             )
-            .width(375)
-            .height(150)
-            .padding(15)
+            .width(270)
+            .height(120)
+            .padding(8)
             .style(cmd_container),
             container(space())
                 .width(Fill)
@@ -960,7 +974,15 @@ impl App {
                         )
                         .delay(iced::time::Duration::from_millis(600)),
                         space::horizontal(),
-                        text(&self.benchmark.id).size(14),
+                        // Make the window title look nice.
+                        text(
+                            self.benchmark
+                                .id
+                                .replace("_", " ")
+                                .replace("-", " ")
+                                .to_lowercase()
+                        )
+                        .size(14),
                         {
                             let switch_element: Element<Message> = if self.benchmarks.len() != 0 {
                                 row![

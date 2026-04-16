@@ -11,6 +11,7 @@ pub static CROSS_CIRCLE: &[u8] = include_bytes!("../../../assets/images/cross-ci
 pub static MINUS_CIRCLE: &[u8] = include_bytes!("../../../assets/images/minus-circle.svg");
 pub static HOME: &[u8] = include_bytes!("../../../assets/images/home.svg");
 pub static REFRESH: &[u8] = include_bytes!("../../../assets/images/refresh.svg");
+pub static TRASH: &[u8] = include_bytes!("../../../assets/images/trash.svg");
 
 pub static APP_ICON: &[u8] =
     include_bytes!("../../../assets/io.github.joshuardecker.stig-view.png");

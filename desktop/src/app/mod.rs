@@ -97,6 +97,7 @@ pub enum Message {
     SaveSettings,
     SaveBenchmark,
     LoadCachedBenchmark(std::path::PathBuf),
+    DeleteCachedBenchmark(std::path::PathBuf),
 
     SwitchDisplayType(DisplayType),
     SaveDisplayType(DisplayType),

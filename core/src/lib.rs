@@ -13,6 +13,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::Path;
 
+/// If file format ever changes, this number will to.
+/// It will make deserialization of old format fail.
+const CACHE_VERSION: u16 = 2;
+
 /// The overarching benchmark.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Benchmark {
@@ -20,6 +24,8 @@ pub struct Benchmark {
     pub title: String,
 
     pub rules: BTreeMap<String, Rule>,
+
+    cache_version: u16,
 }
 
 /// Each check / rule of a benchmark.
@@ -126,6 +132,8 @@ impl Benchmark {
             title: String::new(),
 
             rules: BTreeMap::new(),
+
+            cache_version: CACHE_VERSION,
         }
     }
 
@@ -166,6 +174,10 @@ impl Benchmark {
         let benchmark_bytes = zstd::decode_all(&*compressed_bytes).ok()?;
 
         let benchmark: Benchmark = rmp_serde::from_slice(benchmark_bytes.as_slice()).ok()?;
+
+        if benchmark.cache_version != CACHE_VERSION {
+            return None;
+        }
 
         Some(benchmark)
     }

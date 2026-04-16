@@ -81,11 +81,11 @@ impl App {
             ),
             AppTheme::Light => (
                 Palette {
-                    background: color!(0xF5F2F7),
+                    background: color!(0xF4F4F6),
                     text: color!(0x1E1A2E),
-                    primary: color!(0x6B4FA0),
-                    success: color!(0x1A8A63),
-                    warning: color!(0xD4860A),
+                    primary: color!(0x5A5A8E),
+                    success: color!(0x0E9E6A),
+                    warning: color!(0xE07B00),
                     danger: color!(0xC0393A),
                 },
                 String::from("Custom Light"),
@@ -557,8 +557,19 @@ impl App {
                         Task::none()
                     }
                 }
-                None => Task::done(Message::SendErrNotif("Couldn't load cached benchmark.")),
+                None => Task::done(Message::SendErrNotif(
+                    "Couldn't load cached benchmark. File version may be unsupported.",
+                )),
             },
+            Message::DeleteCachedBenchmark(path) => {
+                let err = std::fs::remove_file(path);
+
+                if err.is_err() {
+                    Task::done(Message::SendErrNotif("Couldn't delete cached benchmark."))
+                } else {
+                    Task::none()
+                }
+            }
 
             Message::SwitchDisplayType(display_type) => {
                 self.display_type = display_type;

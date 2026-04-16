@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Benchmark, Rule, Severity};
+use crate::{Benchmark, CACHE_VERSION, Rule, Severity};
 
 /// A struct representing a JSON CKLB.
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
@@ -78,6 +78,7 @@ impl CKLBStig {
             id: self.stig_id,
             title: self.stig_name,
             rules,
+            cache_version: CACHE_VERSION,
         })
     }
 }
