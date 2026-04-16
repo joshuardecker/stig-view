@@ -900,24 +900,38 @@ impl App {
                 container(
                     row![
                         space().width(15),
-                        button(
-                            svg(settings_svg_handle)
-                                .style(colored_svg)
-                                .width(18)
-                                .height(18)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::SwitchPopup(Popup::Settings)),
-                        space().width(11),
-                        button(svg(home_svg_handle).style(colored_svg).width(18).height(18))
+                        tooltip(
+                            button(
+                                svg(settings_svg_handle)
+                                    .style(colored_svg)
+                                    .width(18)
+                                    .height(18)
+                            )
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
-                            .on_press(Message::ReturnHome),
+                            .on_press(Message::SwitchPopup(Popup::Settings)),
+                            container("Customize Settings.")
+                                .style(background_container)
+                                .padding(4),
+                            tooltip::Position::Right
+                        )
+                        .delay(iced::time::Duration::from_millis(600)),
+                        space().width(11),
+                        tooltip(
+                            button(svg(home_svg_handle).style(colored_svg).width(18).height(18))
+                                .padding(1)
+                                .width(Shrink)
+                                .height(Shrink)
+                                .style(no_button)
+                                .on_press(Message::ReturnHome),
+                            container("Return to the Start Screen.")
+                                .style(background_container)
+                                .padding(4),
+                            tooltip::Position::Right
+                        )
+                        .delay(iced::time::Duration::from_millis(600)),
                         space().width(8),
                         tooltip(
                             button(text("File").center().size(15))
@@ -978,8 +992,8 @@ impl App {
                         button(
                             svg(down_tick_svg_handle)
                                 .style(colored_svg)
-                                .width(20)
-                                .height(20)
+                                .width(22)
+                                .height(22)
                         )
                         .padding(1)
                         .width(Shrink)

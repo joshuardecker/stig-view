@@ -260,7 +260,7 @@ pub fn background_container(theme: &Theme) -> container::Style {
         text_color: Some(palette.background.base.text),
         background: Some(palette.background.weakest.color.into()),
         border: Border {
-            color: palette.background.base.color,
+            color: palette.background.weakest.color,
             width: 2.0,
             radius: BORDER_RAD.into(),
         },
