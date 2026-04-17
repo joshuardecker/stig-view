@@ -589,12 +589,7 @@ impl App {
             "Recently Saved Files".to_string()
         };
 
-        let mut main_col = column![
-            text(displayed_string).size(24).center(),
-            space().height(SEPERATION * 3.0),
-        ]
-        .align_x(Center)
-        .width(400);
+        let mut main_col = column![];
 
         // If the cache is empty, add an obvious button for the user to click that opens a new benchmark.
         if cache.is_empty() {
@@ -669,10 +664,19 @@ impl App {
             main_col = main_col.push(space().height(SEPERATION));
         }
 
-        container(main_col)
-            .center(Fill)
-            .style(background_container)
-            .into()
+        container(
+            column![
+                text(displayed_string).size(24).center(),
+                space().height(SEPERATION * 3.0),
+                scrollable(main_col).spacing(SEPERATION)
+            ]
+            .align_x(Center)
+            .width(400),
+        )
+        .padding(30)
+        .center(Fill)
+        .style(background_container)
+        .into()
     }
 
     /// Display of the filter menu, gets stacked on top of the main application view.
@@ -1040,8 +1044,8 @@ impl App {
                         button(
                             svg(down_tick_svg_handle)
                                 .style(colored_svg)
-                                .width(22)
-                                .height(22)
+                                .width(24)
+                                .height(24)
                         )
                         .padding(1)
                         .width(Shrink)
@@ -1052,20 +1056,20 @@ impl App {
                         button(
                             svg(square_svg_handle)
                                 .style(colored_svg)
-                                .width(15)
-                                .height(15)
+                                .width(16)
+                                .height(16)
                         )
                         .padding(1)
                         .width(Shrink)
                         .height(Shrink)
                         .style(no_button)
                         .on_press(Message::WindowFullscreenToggle),
-                        space().width(17),
+                        space().width(18),
                         button(
                             svg(cross_svg_handle)
                                 .style(colored_svg)
-                                .width(15)
-                                .height(15)
+                                .width(16)
+                                .height(16)
                         )
                         .padding(1)
                         .width(Shrink)
