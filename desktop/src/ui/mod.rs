@@ -702,20 +702,21 @@ impl App {
                         .height(Shrink)
                         .style(no_button)
                         .on_press(Message::ProcessCmd("reset".to_string())),
-                        space().width(SEPERATION),
+                        space::horizontal(),
                         text_input(
                             "Type keywords here, then press enter...",
                             &self.filter_input
                         )
                         .on_input(Message::TypeCmd)
                         .on_submit(Message::ProcessCmd(self.filter_input.clone()))
-                        .id(id.clone()),
-                        space().width(SEPERATION),
+                        .id(id.clone())
+                        .width(320),
+                        space::horizontal(),
                         button(
                             svg(cross_svg_handle)
                                 .style(colored_svg)
-                                .width(15)
-                                .height(15)
+                                .width(16)
+                                .height(16)
                         )
                         .padding(1)
                         .width(Shrink)
@@ -773,8 +774,8 @@ impl App {
                         button(
                             svg(cross_svg_handle)
                                 .style(colored_svg)
-                                .width(15)
-                                .height(15)
+                                .width(16)
+                                .height(16)
                         )
                         .padding(1)
                         .width(Shrink)
@@ -837,7 +838,7 @@ impl App {
                         space::horizontal(),
                         text("Error Occurred"),
                         space::horizontal(),
-                        button(svg(cross_svg_handle).style(boring_svg).width(15).height(15))
+                        button(svg(cross_svg_handle).style(boring_svg).width(16).height(16))
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
@@ -881,8 +882,8 @@ impl App {
                         button(
                             svg(cross_svg_handle)
                                 .style(colored_svg)
-                                .width(15)
-                                .height(15)
+                                .width(16)
+                                .height(16)
                         )
                         .padding(1)
                         .width(Shrink)

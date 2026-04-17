@@ -14,8 +14,8 @@ use crate::app::command::*;
 use crate::app::*;
 use crate::ui::assets::APP_ICON;
 
-const MAIN_FADE_START: f32 = 0.20;
-const MAIN_FADE_DURATION_SECS: f32 = 0.2;
+const MAIN_FADE_START: f32 = 0.0;
+const MAIN_FADE_DURATION_SECS: f32 = 0.15;
 
 const POPUP_FADE_START: f32 = 0.0;
 const POPUP_FADE_DURATION_SECS: f32 = 0.15;
