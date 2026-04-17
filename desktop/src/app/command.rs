@@ -1,42 +1,35 @@
-use std::collections::HashMap;
-
 use regex::Regex;
+use std::collections::HashMap;
 use stig_view_core::Benchmark;
 
 use crate::app::*;
 
+/// Parse the given str into a command that can be run on a benchmark.
 pub fn parse_command(input: &str) -> Option<Command> {
-    let cmd_regex: Regex =
-        Regex::new(r"(\w+)\s*(.*)").expect("Error in creating command parse regex.");
+    let phrase = input.trim().to_string();
 
-    let captures = cmd_regex.captures(input)?;
-
-    match captures[1].to_string().as_str() {
-        "name" => Some(Command::NameSearch(captures[2].to_string())),
-        "title" => Some(Command::NameSearch(captures[2].to_string())),
-
-        "find" => Some(Command::KeywordSearch(captures[2].to_string())),
-        "search" => Some(Command::KeywordSearch(captures[2].to_string())),
-
-        "reset" => Some(Command::Reset),
-
-        _ => None,
+    if phrase.is_empty() {
+        None
+    } else if &phrase == "reset" {
+        Some(Command::Reset)
+    } else {
+        Some(Command::Phrase(phrase))
     }
 }
 
+/// Run the given command on a given benchmark, updating what STIGs are pinned.
 pub fn run_search_cmd(
     cmd: Command,
     benchmark: &Benchmark,
     mut pins: HashMap<String, Pinned>,
 ) -> Option<HashMap<String, Pinned>> {
     match cmd {
-        Command::KeywordSearch(keyword) => {
-            let re = Regex::new(&keyword).ok()?;
+        Command::Phrase(phrase) => {
+            let re = Regex::new(&phrase).ok()?;
 
             for (name, rule) in benchmark.rules.iter() {
                 let mut is_match = false;
 
-                // Search through all string fields for a match.map_err(|_| CommandErr::RegexErr)
                 is_match |= re.is_match(&rule.group_id);
                 is_match |= re.is_match(&rule.rule_id);
 
@@ -85,46 +78,7 @@ pub fn run_search_cmd(
                 }
             }
         }
-        Command::NameSearch(name) => {
-            let re = Regex::new(&name).ok()?;
 
-            for (name, rule) in benchmark.rules.iter() {
-                let mut is_match = false;
-
-                is_match |= re.is_match(&rule.group_id);
-                is_match |= re.is_match(&rule.rule_id);
-
-                if let Some(stig_id) = &rule.stig_id {
-                    is_match |= re.is_match(stig_id);
-                }
-
-                if is_match {
-                    match pins.get(name).unwrap_or(&Pinned::Not) {
-                        Pinned::Not => {
-                            let _ = pins.insert(name.to_owned(), Pinned::ByFilter);
-                        }
-                        Pinned::ByUser => {
-                            let _ = pins.insert(name.to_owned(), Pinned::ByFilterAndUser);
-                        }
-                        Pinned::ByFilter => (),
-                        Pinned::ByFilterAndUser => (),
-                    }
-
-                    continue;
-                } else {
-                    match pins.get(name).unwrap_or(&Pinned::Not) {
-                        Pinned::Not => (),
-                        Pinned::ByUser => (),
-                        Pinned::ByFilter => {
-                            let _ = pins.insert(name.to_owned(), Pinned::Not);
-                        }
-                        Pinned::ByFilterAndUser => {
-                            let _ = pins.insert(name.to_owned(), Pinned::ByUser);
-                        }
-                    }
-                }
-            }
-        }
         Command::Reset => {
             pins.iter_mut()
                 .for_each(|(_name, value)| *value = Pinned::Not);

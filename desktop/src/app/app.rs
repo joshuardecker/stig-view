@@ -1,8 +1,9 @@
-use iced::Subscription;
-use iced::color;
-use iced::theme::{Custom, Palette, Theme};
-use iced::window::icon::from_file_data;
-use iced::{keyboard, keyboard::key};
+use iced::{
+    Subscription, Theme, color, keyboard,
+    keyboard::key,
+    theme::{Custom, Palette},
+    window::icon::from_file_data,
+};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
 use std::sync::Arc;
@@ -11,9 +12,10 @@ use stig_view_core::{Benchmark, Format, detect_stig_format, load_ckl, load_v1_1}
 
 use crate::app::command::*;
 use crate::app::*;
+use crate::ui::assets::APP_ICON;
 
-const MAIN_FADE_START: f32 = 0.20;
-const MAIN_FADE_DURATION_SECS: f32 = 0.2;
+const MAIN_FADE_START: f32 = 0.0;
+const MAIN_FADE_DURATION_SECS: f32 = 0.15;
 
 const POPUP_FADE_START: f32 = 0.0;
 const POPUP_FADE_DURATION_SECS: f32 = 0.15;
@@ -21,11 +23,12 @@ const POPUP_FADE_DURATION_SECS: f32 = 0.15;
 impl App {
     pub fn new() -> (Self, Task<Message>) {
         let settings = AppSettings::load().unwrap_or(AppSettings::default());
+        let saved_when = SavedWhen::load().unwrap_or(SavedWhen::new());
 
         (
             Self {
                 benchmark: Benchmark::empty(),
-                benchmarks: Vec::new(),
+                background_benchmarks: Vec::new(),
                 pins: HashMap::new(),
                 displayed: None,
                 contents: [
@@ -39,11 +42,11 @@ impl App {
                 ],
                 filter_input: String::new(),
                 popup: Popup::None,
-                err_notif: ErrNotif::None,
-                assets: Assets::new(),
+                err_notif: None,
                 window_id: None,
                 settings: settings,
-                load_handle: None,
+                saved_when,
+
                 display_type: settings.default_display_type,
                 main_col_opacity: 1.0,
                 main_col_last_tick: None,
@@ -80,11 +83,11 @@ impl App {
             ),
             AppTheme::Light => (
                 Palette {
-                    background: color!(0xF5F2F7),
+                    background: color!(0xF4F4F6),
                     text: color!(0x1E1A2E),
-                    primary: color!(0x6B4FA0),
-                    success: color!(0x1A8A63),
-                    warning: color!(0xB45309),
+                    primary: color!(0x5A5A8E),
+                    success: color!(0x0E9E6A),
+                    warning: color!(0xE07B00),
                     danger: color!(0xC0393A),
                 },
                 String::from("Custom Light"),
@@ -106,8 +109,8 @@ impl App {
                     text: color!(0xC8BAA8),
                     primary: color!(0x9E7840),
                     success: color!(0x5A7A4E),
-                    warning: color!(0x9E7828),
-                    danger: color!(0x8A3C3C),
+                    warning: color!(0xC49A18),
+                    danger: color!(0xAC4444),
                 },
                 String::from("Coffee"),
             ),
@@ -128,18 +131,12 @@ impl App {
                     window::set_resizable(id, true),
                     window::set_icon(
                         id,
-                        from_file_data(&self.assets.app_icon, Some(ImageFormat::Png))
+                        from_file_data(APP_ICON, Some(ImageFormat::Png))
                             .expect("Could not load app icon!"),
                     ),
                 ])
             }
-            Message::WindowClose => {
-                if let Some(handle) = self.load_handle.take() {
-                    handle.abort();
-                }
-
-                iced::exit()
-            }
+            Message::WindowClose => iced::exit(),
             Message::WindowMin => {
                 if let Some(id) = self.window_id {
                     window::minimize(id, true)
@@ -285,7 +282,10 @@ impl App {
                     // Reset pin values.
                     self.pins = HashMap::new();
                     // Reset background Benchmarks.
-                    self.benchmarks = Vec::new();
+                    self.background_benchmarks = Vec::new();
+
+                    // Remember when this was opened.
+                    self.saved_when.insert(self.benchmark.id.clone());
 
                     let tasks = vec![
                         Task::done(Message::Switch(name)),
@@ -313,23 +313,29 @@ impl App {
                 Task::batch(tasks)
             }
             Message::PushBackgroundBenchmark(benchmark) => {
-                self.benchmarks.push(benchmark);
+                self.background_benchmarks.push(benchmark);
 
                 Task::none()
             }
             Message::SwitchToBackground => {
-                match (!self.benchmarks.is_empty()).then(|| self.benchmarks.remove(0)) {
-                    Some(benchmark) => {
-                        let old = std::mem::replace(&mut self.benchmark, benchmark);
-                        self.benchmarks.push(old);
-
-                        // Reset pin values when switching to this new benchmark.
-                        self.pins = HashMap::new();
-
-                        Task::done(Message::DoNothing)
-                    }
-                    None => Task::none(),
+                if self.background_benchmarks.is_empty() {
+                    return Task::none();
                 }
+
+                // Get the benchmark that has been setting in the background for
+                // the longest.
+                let new_benchmark = self.background_benchmarks.remove(0);
+
+                let old_benchmark = std::mem::replace(&mut self.benchmark, new_benchmark);
+                self.background_benchmarks.push(old_benchmark);
+
+                // Reset pin values when switching to this new benchmark.
+                self.pins = HashMap::new();
+
+                // Remember when this was opened.
+                self.saved_when.insert(self.benchmark.id.clone());
+
+                Task::none()
             }
 
             Message::SetPins(pins) => {
@@ -430,14 +436,14 @@ impl App {
             }
 
             Message::SendErrNotif(err_str) => {
-                if let ErrNotif::None = self.err_notif {
-                    self.err_notif = ErrNotif::Err(err_str);
+                if let None = self.err_notif {
+                    self.err_notif = Some(err_str.to_string());
                 }
 
                 Task::none()
             }
             Message::ClearErrNotif => {
-                self.err_notif = ErrNotif::None;
+                self.err_notif = None;
 
                 Task::none()
             }
@@ -480,10 +486,12 @@ impl App {
 
                         match new_pins {
                             Some(new_pins) => Task::done(Message::SetPins(new_pins)),
-                            None => Task::done(Message::SendErrNotif("Error when running the command.")),
+                            None => {
+                                Task::done(Message::SendErrNotif("Error when running the command."))
+                            }
                         }
                     }
-                    None => Task::done(Message::SendErrNotif("Error when parsing the command.")),
+                    None => Task::none(),
                 }
             }
 
@@ -495,7 +503,7 @@ impl App {
                 } => match key_smolstr.as_str() {
                     "q" if modifiers.control() => return Task::done(Message::WindowClose),
                     "i" if modifiers.control() => return Task::done(Message::OpenFile),
-                    "p" if modifiers.control() => {
+                    "f" if modifiers.control() => {
                         return Task::done(Message::SwitchPopup(Popup::Filter));
                     }
                     _ => Task::none(),
@@ -514,7 +522,7 @@ impl App {
             },
 
             Message::SaveSettings => {
-                let err = AppSettings::save(self.settings);
+                let err = &self.settings.save();
 
                 match err {
                     Ok(_) => Task::none(),
@@ -524,7 +532,7 @@ impl App {
                 }
             }
             Message::SaveBenchmark => {
-                let all = std::iter::once(&self.benchmark).chain(self.benchmarks.iter());
+                let all = std::iter::once(&self.benchmark).chain(self.background_benchmarks.iter());
 
                 for benchmark in all {
                     if let None = benchmark.save() {
@@ -546,7 +554,10 @@ impl App {
                         // Reset pin values.
                         self.pins = HashMap::new();
                         // Reset background Benchmarks.
-                        self.benchmarks = Vec::new();
+                        self.background_benchmarks = Vec::new();
+
+                        // Remember when this was opened.
+                        self.saved_when.insert(self.benchmark.id.clone());
 
                         Task::done(Message::Switch(name))
                     } else {
@@ -554,8 +565,19 @@ impl App {
                         Task::none()
                     }
                 }
-                None => Task::done(Message::SendErrNotif("Couldn't load cached benchmark.")),
+                None => Task::done(Message::SendErrNotif(
+                    "Couldn't load cached benchmark. File version may be unsupported.",
+                )),
             },
+            Message::DeleteCachedBenchmark(path) => {
+                let err = std::fs::remove_file(path);
+
+                if err.is_err() {
+                    Task::done(Message::SendErrNotif("Couldn't delete cached benchmark."))
+                } else {
+                    Task::none()
+                }
+            }
 
             Message::SwitchDisplayType(display_type) => {
                 self.display_type = display_type;
@@ -578,7 +600,7 @@ impl App {
 
             Message::ReturnHome => {
                 self.benchmark = Benchmark::empty();
-                self.benchmarks = Vec::new();
+                self.background_benchmarks = Vec::new();
                 self.displayed = None;
 
                 Task::none()

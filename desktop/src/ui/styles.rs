@@ -8,6 +8,36 @@ use iced::widget::{button, container, svg, text_editor, toggler};
 
 const BORDER_RAD: f32 = 8.0;
 
+/// A rounded button in the primary color.
+pub fn rounded_primary_button(theme: &Theme, status: button::Status) -> button::Style {
+    let palette = theme.extended_palette();
+
+    match status {
+        button::Status::Hovered => button::Style {
+            background: Some(palette.primary.base.color.into()),
+            text_color: palette.primary.base.text,
+            border: Border {
+                ..border::rounded(BORDER_RAD)
+            },
+            shadow: Shadow {
+                ..Shadow::default()
+            },
+            snap: false,
+        },
+        _ => button::Style {
+            background: Some(palette.primary.strong.color.into()),
+            text_color: palette.primary.strong.text,
+            border: Border {
+                ..border::rounded(BORDER_RAD)
+            },
+            shadow: Shadow {
+                ..Shadow::default()
+            },
+            snap: false,
+        },
+    }
+}
+
 /// A rounded button in the success color.
 pub fn rounded_success_button(theme: &Theme, status: button::Status) -> button::Style {
     let palette = theme.extended_palette();
@@ -15,7 +45,7 @@ pub fn rounded_success_button(theme: &Theme, status: button::Status) -> button::
     match status {
         button::Status::Hovered => button::Style {
             background: Some(palette.success.weak.color.into()),
-            text_color: palette.background.base.text,
+            text_color: palette.success.weak.text,
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
@@ -26,7 +56,7 @@ pub fn rounded_success_button(theme: &Theme, status: button::Status) -> button::
         },
         _ => button::Style {
             background: Some(palette.success.base.color.into()),
-            text_color: palette.background.base.text,
+            text_color: palette.success.base.text,
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
@@ -45,7 +75,7 @@ pub fn rounded_danger_button(theme: &Theme, status: button::Status) -> button::S
     match status {
         button::Status::Hovered => button::Style {
             background: Some(palette.danger.weak.color.into()),
-            text_color: palette.background.base.text,
+            text_color: palette.danger.weak.text,
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
@@ -56,7 +86,7 @@ pub fn rounded_danger_button(theme: &Theme, status: button::Status) -> button::S
         },
         _ => button::Style {
             background: Some(palette.danger.base.color.into()),
-            text_color: palette.background.base.text,
+            text_color: palette.danger.base.text,
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
@@ -75,7 +105,7 @@ pub fn rounded_boring_button(theme: &Theme, status: button::Status) -> button::S
     match status {
         button::Status::Hovered => button::Style {
             background: Some(palette.background.weak.color.into()),
-            text_color: palette.background.base.text,
+            text_color: palette.background.weak.text,
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
@@ -86,7 +116,7 @@ pub fn rounded_boring_button(theme: &Theme, status: button::Status) -> button::S
         },
         _ => button::Style {
             background: Some(palette.background.strong.color.into()),
-            text_color: palette.background.base.text,
+            text_color: palette.background.strong.text,
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
@@ -98,13 +128,15 @@ pub fn rounded_boring_button(theme: &Theme, status: button::Status) -> button::S
     }
 }
 
+/// A button thats invisible unless hovered over, then its dark theme.
+/// Also makes its text color the primary color.
 pub fn rounded_dark_button(theme: &Theme, status: button::Status) -> button::Style {
     let palette = theme.extended_palette();
 
     match status {
         button::Status::Hovered => button::Style {
             background: Some(palette.background.weakest.color.into()),
-            text_color: palette.background.base.text,
+            text_color: palette.background.weakest.text,
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
@@ -151,7 +183,7 @@ pub fn rounded_boring_button_right(theme: &Theme, status: button::Status) -> but
     match status {
         button::Status::Hovered => button::Style {
             background: Some(palette.background.weak.color.into()),
-            text_color: palette.background.base.text,
+            text_color: palette.background.weak.text,
             border: Border {
                 radius: Radius {
                     top_left: 0.0,
@@ -167,7 +199,7 @@ pub fn rounded_boring_button_right(theme: &Theme, status: button::Status) -> but
         },
         _ => button::Style {
             background: Some(palette.background.strong.color.into()),
-            text_color: palette.background.base.text,
+            text_color: palette.background.strong.text,
             border: Border {
                 radius: Radius {
                     top_left: 0.0,
@@ -257,10 +289,10 @@ pub fn background_container(theme: &Theme) -> container::Style {
     let palette = theme.extended_palette();
 
     container::Style {
-        text_color: Some(palette.background.base.text),
+        text_color: Some(palette.background.weakest.text),
         background: Some(palette.background.weakest.color.into()),
         border: Border {
-            color: palette.background.base.color,
+            color: palette.background.weakest.color,
             width: 2.0,
             radius: BORDER_RAD.into(),
         },
@@ -276,7 +308,7 @@ pub fn cmd_container(theme: &Theme) -> container::Style {
     let palette = theme.extended_palette();
 
     container::Style {
-        text_color: Some(palette.background.base.text),
+        text_color: Some(palette.background.strong.text),
         background: Some(palette.background.strong.color.into()),
         border: Border {
             color: palette.background.weak.color,
@@ -297,7 +329,7 @@ pub fn err_container(theme: &Theme) -> container::Style {
     let palette = theme.extended_palette();
 
     container::Style {
-        text_color: Some(palette.background.base.text),
+        text_color: Some(palette.danger.base.text),
         background: Some(palette.danger.base.color.into()),
         border: Border {
             color: palette.danger.base.color,
@@ -348,12 +380,12 @@ pub fn toggler_theme(theme: &Theme, status: toggler::Status) -> toggler::Style {
 
     match status {
         toggler::Status::Active { is_toggled: true } => toggler::Style {
-            background: palette.primary.base.color.into(),
-            background_border_width: 0.0,
-            background_border_color: palette.primary.base.color,
-            foreground: palette.background.weakest.color.into(),
+            background: palette.background.weakest.color.into(),
+            background_border_width: 2.0,
+            background_border_color: palette.background.strong.color,
+            foreground: palette.primary.base.color.into(),
             foreground_border_width: 0.0,
-            foreground_border_color: palette.background.weakest.color,
+            foreground_border_color: palette.primary.base.color,
             text_color: None,
             border_radius: None,
             padding_ratio: 0.15,
@@ -370,12 +402,12 @@ pub fn toggler_theme(theme: &Theme, status: toggler::Status) -> toggler::Style {
             padding_ratio: 0.15,
         },
         toggler::Status::Hovered { is_toggled: true } => toggler::Style {
-            background: palette.primary.weak.color.into(),
-            background_border_width: 0.0,
-            background_border_color: palette.primary.weak.color,
-            foreground: palette.background.weakest.color.into(),
+            background: palette.background.weakest.color.into(),
+            background_border_width: 2.0,
+            background_border_color: palette.background.strong.color,
+            foreground: palette.primary.weak.color.into(),
             foreground_border_width: 0.0,
-            foreground_border_color: palette.background.weakest.color,
+            foreground_border_color: palette.primary.weak.color,
             text_color: None,
             border_radius: None,
             padding_ratio: 0.15,
@@ -383,7 +415,7 @@ pub fn toggler_theme(theme: &Theme, status: toggler::Status) -> toggler::Style {
         toggler::Status::Hovered { is_toggled: false } => toggler::Style {
             background: palette.background.weakest.color.into(),
             background_border_width: 2.0,
-            background_border_color: palette.background.base.color,
+            background_border_color: palette.background.strong.color,
             foreground: palette.primary.weak.color.into(),
             foreground_border_width: 0.0,
             foreground_border_color: palette.primary.weak.color,
@@ -392,12 +424,12 @@ pub fn toggler_theme(theme: &Theme, status: toggler::Status) -> toggler::Style {
             padding_ratio: 0.15,
         },
         toggler::Status::Disabled { is_toggled: true } => toggler::Style {
-            background: palette.primary.weak.color.into(),
-            background_border_width: 0.0,
-            background_border_color: palette.primary.weak.color,
-            foreground: palette.background.base.color.into(),
+            background: palette.background.weakest.color.into(),
+            background_border_width: 2.0,
+            background_border_color: palette.background.weak.color,
+            foreground: palette.background.strong.color.into(),
             foreground_border_width: 0.0,
-            foreground_border_color: palette.background.base.color,
+            foreground_border_color: palette.background.strong.color,
             text_color: None,
             border_radius: None,
             padding_ratio: 0.15,
