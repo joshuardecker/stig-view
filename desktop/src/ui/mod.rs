@@ -574,6 +574,8 @@ impl App {
     /// This gets displayed when no STIG is selected:
     /// A button prompting the user to choose a benchmark to load into the viewer.
     fn display_empty(&self) -> Element<'_, Message> {
+        use std::path::PathBuf;
+
         let file_svg_handle = svg::Handle::from_memory(FILE_ICON);
         let trash_svg_handle = svg::Handle::from_memory(TRASH);
 
@@ -605,24 +607,38 @@ impl App {
             )
         }
 
+        // A vector that contains the unix time when this cache entry was last opened,
+        // its path, and its nicely formatted name.
+        let mut times_last_loaded: Vec<(u64, PathBuf, String)> = Vec::new();
+
         for path in cache {
-            let name = match path.file_name().and_then(|os_str| os_str.to_str()) {
+            match path.file_name().and_then(|os_str| os_str.to_str()) {
                 Some(str) => {
                     // If this file for whatever reason isnt the type we are looking for.
                     if !str.ends_with(".msgpack.zstd") {
                         continue;
                     }
 
+                    let str = str.trim_end_matches(".msgpack.zstd");
+
+                    // Get the last time this benchmark was accessed.
+                    let time_last = self.saved_when.get_time_used(str);
+
                     // Trim the file extension off, and make the name a little prettier.
-                    str.trim_end_matches(".msgpack.zstd")
-                        .replace("_", " ")
-                        .replace("-", " ")
-                        .to_lowercase()
+                    let name = str.replace("_", " ").replace("-", " ").to_lowercase();
+
+                    // Save the time last accessed, path, and formatted name.
+                    times_last_loaded.push((time_last, path, name));
                 }
 
                 None => continue,
             };
+        }
 
+        // Sort most recent to oldest.
+        times_last_loaded.sort_by(|a, b| b.0.cmp(&a.0));
+
+        for time_loaded in times_last_loaded {
             main_col = main_col.push(
                 button(
                     row![
@@ -631,7 +647,7 @@ impl App {
                             .width(20)
                             .height(20),
                         space().width(SEPERATION),
-                        text(name).center(),
+                        text(time_loaded.2).center(),
                         space::horizontal(),
                         button(
                             svg(trash_svg_handle.clone())
@@ -640,13 +656,13 @@ impl App {
                                 .height(20)
                         )
                         .style(no_button)
-                        .on_press(Message::DeleteCachedBenchmark(path.clone())),
+                        .on_press(Message::DeleteCachedBenchmark(time_loaded.1.clone())),
                     ]
                     .align_y(Center),
                 )
                 .width(Fill)
                 .style(rounded_boring_button)
-                .on_press(Message::LoadCachedBenchmark(path)),
+                .on_press(Message::LoadCachedBenchmark(time_loaded.1)),
             );
 
             // Space out each file entry nicely.
@@ -991,32 +1007,33 @@ impl App {
                         )
                         .size(16),
                         {
-                            let switch_element: Element<Message> = if self.benchmarks.len() != 0 {
-                                row![
-                                    space().width(15),
-                                    tooltip(
-                                        button(
-                                            svg(switch_svg_handle)
-                                                .style(colored_svg)
-                                                .width(18)
-                                                .height(18)
+                            let switch_element: Element<Message> =
+                                if !self.background_benchmarks.is_empty() {
+                                    row![
+                                        space().width(15),
+                                        tooltip(
+                                            button(
+                                                svg(switch_svg_handle)
+                                                    .style(colored_svg)
+                                                    .width(18)
+                                                    .height(18)
+                                            )
+                                            .padding(1)
+                                            .width(Shrink)
+                                            .height(Shrink)
+                                            .style(no_button)
+                                            .on_press(Message::SwitchToBackground),
+                                            container("Switch Benchmark")
+                                                .style(background_container)
+                                                .padding(4),
+                                            tooltip::Position::Right
                                         )
-                                        .padding(1)
-                                        .width(Shrink)
-                                        .height(Shrink)
-                                        .style(no_button)
-                                        .on_press(Message::SwitchToBackground),
-                                        container("Switch Benchmark")
-                                            .style(background_container)
-                                            .padding(4),
-                                        tooltip::Position::Right
-                                    )
-                                    .delay(iced::time::Duration::from_millis(600)),
-                                ]
-                                .into()
-                            } else {
-                                space().width(0).into()
-                            };
+                                        .delay(iced::time::Duration::from_millis(600)),
+                                    ]
+                                    .into()
+                                } else {
+                                    space().width(0).into()
+                                };
                             switch_element
                         },
                         space::horizontal(),

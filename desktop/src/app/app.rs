@@ -23,11 +23,12 @@ const POPUP_FADE_DURATION_SECS: f32 = 0.15;
 impl App {
     pub fn new() -> (Self, Task<Message>) {
         let settings = AppSettings::load().unwrap_or(AppSettings::default());
+        let saved_when = SavedWhen::load().unwrap_or(SavedWhen::new());
 
         (
             Self {
                 benchmark: Benchmark::empty(),
-                benchmarks: Vec::new(),
+                background_benchmarks: Vec::new(),
                 pins: HashMap::new(),
                 displayed: None,
                 contents: [
@@ -44,7 +45,8 @@ impl App {
                 err_notif: None,
                 window_id: None,
                 settings: settings,
-                load_handle: None,
+                saved_when,
+
                 display_type: settings.default_display_type,
                 main_col_opacity: 1.0,
                 main_col_last_tick: None,
@@ -134,13 +136,7 @@ impl App {
                     ),
                 ])
             }
-            Message::WindowClose => {
-                if let Some(handle) = self.load_handle.take() {
-                    handle.abort();
-                }
-
-                iced::exit()
-            }
+            Message::WindowClose => iced::exit(),
             Message::WindowMin => {
                 if let Some(id) = self.window_id {
                     window::minimize(id, true)
@@ -286,7 +282,10 @@ impl App {
                     // Reset pin values.
                     self.pins = HashMap::new();
                     // Reset background Benchmarks.
-                    self.benchmarks = Vec::new();
+                    self.background_benchmarks = Vec::new();
+
+                    // Remember when this was opened.
+                    self.saved_when.insert(self.benchmark.id.clone());
 
                     let tasks = vec![
                         Task::done(Message::Switch(name)),
@@ -314,23 +313,29 @@ impl App {
                 Task::batch(tasks)
             }
             Message::PushBackgroundBenchmark(benchmark) => {
-                self.benchmarks.push(benchmark);
+                self.background_benchmarks.push(benchmark);
 
                 Task::none()
             }
             Message::SwitchToBackground => {
-                match (!self.benchmarks.is_empty()).then(|| self.benchmarks.remove(0)) {
-                    Some(benchmark) => {
-                        let old = std::mem::replace(&mut self.benchmark, benchmark);
-                        self.benchmarks.push(old);
-
-                        // Reset pin values when switching to this new benchmark.
-                        self.pins = HashMap::new();
-
-                        Task::done(Message::DoNothing)
-                    }
-                    None => Task::none(),
+                if self.background_benchmarks.is_empty() {
+                    return Task::none();
                 }
+
+                // Get the benchmark that has been setting in the background for
+                // the longest.
+                let new_benchmark = self.background_benchmarks.remove(0);
+
+                let old_benchmark = std::mem::replace(&mut self.benchmark, new_benchmark);
+                self.background_benchmarks.push(old_benchmark);
+
+                // Reset pin values when switching to this new benchmark.
+                self.pins = HashMap::new();
+
+                // Remember when this was opened.
+                self.saved_when.insert(self.benchmark.id.clone());
+
+                Task::none()
             }
 
             Message::SetPins(pins) => {
@@ -517,7 +522,7 @@ impl App {
             },
 
             Message::SaveSettings => {
-                let err = AppSettings::save(self.settings);
+                let err = &self.settings.save();
 
                 match err {
                     Ok(_) => Task::none(),
@@ -527,7 +532,7 @@ impl App {
                 }
             }
             Message::SaveBenchmark => {
-                let all = std::iter::once(&self.benchmark).chain(self.benchmarks.iter());
+                let all = std::iter::once(&self.benchmark).chain(self.background_benchmarks.iter());
 
                 for benchmark in all {
                     if let None = benchmark.save() {
@@ -549,7 +554,10 @@ impl App {
                         // Reset pin values.
                         self.pins = HashMap::new();
                         // Reset background Benchmarks.
-                        self.benchmarks = Vec::new();
+                        self.background_benchmarks = Vec::new();
+
+                        // Remember when this was opened.
+                        self.saved_when.insert(self.benchmark.id.clone());
 
                         Task::done(Message::Switch(name))
                     } else {
@@ -592,7 +600,7 @@ impl App {
 
             Message::ReturnHome => {
                 self.benchmark = Benchmark::empty();
-                self.benchmarks = Vec::new();
+                self.background_benchmarks = Vec::new();
                 self.displayed = None;
 
                 Task::none()
