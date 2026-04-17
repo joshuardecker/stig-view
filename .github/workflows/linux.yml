@@ -1,4 +1,4 @@
-name: Rust
+name: Linux
 
 on:
   workflow_dispatch:
@@ -65,64 +65,3 @@ jobs:
         with:
           name: stig-view-appimage
           path: stig-view.AppImage
-
-  build-macos:
-    runs-on: macos-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build
-        run: cargo build --release -p stig-view-desktop
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: stig-view-macos
-          path: target/release/stig-view
-
-  build-windows:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: windows-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Install cargo-wix
-        run: cargo install --force cargo-wix
-
-      - name: Build
-        shell: bash
-        run: bash scripts/windows.sh
-
-      - name: Sign MSI
-        uses: azure/trusted-signing-action@v0
-        with:
-          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-          endpoint: ${{ secrets.AZURE_CODE_SIGNING_ENDPOINT }}
-          trusted-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_ACCOUNT }}
-          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE }}
-          files-folder: target/wix
-          files-folder-filter: msi
-          file-digest: SHA256
-          timestamp-rfc3161: http://timestamp.acs.microsoft.com
-          timestamp-digest: SHA256
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: stig-view-windows
-          path: target/wix/*.msi
