@@ -5,7 +5,7 @@ mod ui;
 
 use crate::app::App;
 
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 fn main() -> iced::Result {
     use iced::Font;
 
