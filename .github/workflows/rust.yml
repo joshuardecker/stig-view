@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stig-view-macos
-          path: target/release/stig_view_desktop
+          path: target/release/stig-view
 
   build-windows:
     runs-on: windows-latest
