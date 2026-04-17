@@ -66,19 +66,19 @@ jobs:
           name: stig-view-appimage
           path: stig-view.AppImage
 
-  # build-macos:
-  #   runs-on: macos-latest
-  #
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Build
-  #       run: cargo build --release -p stig-view-desktop
-  #
-  #     - name: Upload
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: stig-view-macos
-  #         path: target/release/stig_view_desktop
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --release -p stig-view-desktop
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: stig-view-macos
+          path: target/release/stig_view_desktop
 
   build-windows:
     runs-on: windows-latest
