@@ -1,5 +1,8 @@
-pub mod assets;
+mod assets;
 mod styles;
+
+// Re-exports.
+pub use assets::*;
 
 use iced::{
     Alignment::End,
@@ -12,7 +15,7 @@ use iced::{
 use stig_view_core::{CKLStatus, Rule};
 
 use crate::app::*;
-use crate::ui::{assets::*, styles::*};
+use crate::ui::styles::*;
 
 /// The default seperation between elements.
 /// I use magic values around because they look better.
@@ -22,7 +25,12 @@ impl App {
     /// Get the view of the application.
     pub fn view(&self) -> Element<'_, Message> {
         let window_decorations = self.window_decorations();
-        let content = row![self.stig_list(), space().width(15), self.displayed_stig()].into();
+        let content = row![
+            self.stig_list(),
+            space().width(SEPERATION * 2.0),
+            self.displayed_stig()
+        ]
+        .into();
 
         let padded_content = self.padding(window_decorations, content);
 
@@ -65,16 +73,28 @@ impl App {
             // Top section above window decorations.
             row![
                 container(
-                    mouse_area(container(space::horizontal()).width(10).height(10))
-                        .on_press(Message::WindowDragResize(NorthWest))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION)
+                            .height(SEPERATION)
+                    )
+                    .on_press(Message::WindowDragResize(NorthWest))
                 ),
                 container(
-                    mouse_area(container(space::horizontal()).width(Fill).height(10))
-                        .on_press(Message::WindowDragResize(North))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(Fill)
+                            .height(SEPERATION)
+                    )
+                    .on_press(Message::WindowDragResize(North))
                 ),
                 container(
-                    mouse_area(container(space::horizontal()).width(10).height(10))
-                        .on_press(Message::WindowDragResize(NorthEast))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION)
+                            .height(SEPERATION)
+                    )
+                    .on_press(Message::WindowDragResize(NorthEast))
                 ),
             ],
             window_decorations,
@@ -83,28 +103,48 @@ impl App {
             // Surrounded on left and right by drag click resize areas.
             row![
                 container(
-                    mouse_area(container(space::horizontal()).width(15).height(Fill))
-                        .on_press(Message::WindowDragResize(West))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION * 2.0)
+                            .height(Fill)
+                    )
+                    .on_press(Message::WindowDragResize(West))
                 ),
                 content,
                 container(
-                    mouse_area(container(space::horizontal()).width(15).height(Fill))
-                        .on_press(Message::WindowDragResize(East))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION * 2.0)
+                            .height(Fill)
+                    )
+                    .on_press(Message::WindowDragResize(East))
                 ),
             ],
             // Bottom section below the main content.
             row![
                 container(
-                    mouse_area(container(space::horizontal()).width(15).height(15))
-                        .on_press(Message::WindowDragResize(SouthWest))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION * 2.0)
+                            .height(SEPERATION * 2.0)
+                    )
+                    .on_press(Message::WindowDragResize(SouthWest))
                 ),
                 container(
-                    mouse_area(container(space::horizontal()).width(Fill).height(15))
-                        .on_press(Message::WindowDragResize(South))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(Fill)
+                            .height(SEPERATION * 2.0)
+                    )
+                    .on_press(Message::WindowDragResize(South))
                 ),
                 container(
-                    mouse_area(container(space::horizontal()).width(15).height(15))
-                        .on_press(Message::WindowDragResize(SouthEast))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION * 2.0)
+                            .height(SEPERATION * 2.0)
+                    )
+                    .on_press(Message::WindowDragResize(SouthEast))
                 ),
             ],
         ])
@@ -183,7 +223,7 @@ impl App {
                     // Puts a nice strip of color on the left side of the button.
                     let button_with_accent: Element<'_, Message> = row![
                         container(space::horizontal())
-                            .width(4)
+                            .width(SEPERATION * 0.5)
                             .height(Fill)
                             .style(filter_accent),
                         button
@@ -200,7 +240,7 @@ impl App {
                     // Puts a nice strip of color on the left side of the button.
                     let button_with_accent: Element<'_, Message> = row![
                         container(space::horizontal())
-                            .width(4)
+                            .width(SEPERATION * 0.5)
                             .height(Fill)
                             .style(filter_accent),
                         button
@@ -409,7 +449,7 @@ impl App {
             .align_x(Center)
             .width(Fill),
         )
-        .height(64)
+        .height(SEPERATION * 8.0)
         .padding(8)
         .width(Fill)
         .style(theme)
@@ -595,8 +635,8 @@ impl App {
         if cache.is_empty() {
             main_col = main_col.push(
                 button(text("Open").center())
-                    .width(80)
-                    .height(40)
+                    .width(SEPERATION * 10.0)
+                    .height(SEPERATION * 5.0)
                     .style(rounded_boring_button)
                     .on_press(Message::OpenFile),
             )

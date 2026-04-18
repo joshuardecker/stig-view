@@ -1,4 +1,7 @@
-use crate::*;
+use serde::Deserialize;
+use std::collections::BTreeMap;
+
+use crate::{Benchmark, CACHE_VERSION, Rule, Severity};
 
 /// Xylok toml's can be deserialized into this struct.
 #[derive(Debug, Clone, Deserialize)]

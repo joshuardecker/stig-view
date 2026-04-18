@@ -2,7 +2,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use stig_view_core::Benchmark;
 
-use crate::app::*;
+use crate::app::{Command, Pinned};
 
 /// Parse the given str into a command that can be run on a benchmark.
 pub fn parse_command(input: &str) -> Option<Command> {

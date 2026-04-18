@@ -1,10 +1,9 @@
-use iced::Shadow;
-use iced::border;
-use iced::border::Border;
-use iced::border::Radius;
-use iced::color;
-use iced::theme::Theme;
-use iced::widget::{button, container, svg, text_editor, toggler};
+use iced::{
+    Border, Shadow, Theme, border,
+    border::Radius,
+    color,
+    widget::{button, container, svg, text_editor, toggler},
+};
 
 const BORDER_RAD: f32 = 8.0;
 

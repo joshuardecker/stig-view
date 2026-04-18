@@ -1,4 +1,4 @@
-pub mod app;
+mod app;
 mod command;
 
 use iced::{
@@ -11,10 +11,9 @@ use iced::{
     window::Direction,
 };
 use serde::{Deserialize, Serialize};
-use std::time::Instant;
 use std::{
     collections::HashMap,
-    time::{SystemTime, UNIX_EPOCH},
+    time::{Instant, SystemTime, UNIX_EPOCH},
 };
 use stig_view_core::{Benchmark, Rule};
 

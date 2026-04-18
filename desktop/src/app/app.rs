@@ -12,7 +12,7 @@ use stig_view_core::{Benchmark, Format, detect_stig_format, load_ckl, load_v1_1}
 
 use crate::app::command::*;
 use crate::app::*;
-use crate::ui::assets::APP_ICON;
+use crate::ui::APP_ICON;
 
 const MAIN_FADE_START: f32 = 0.0;
 const MAIN_FADE_DURATION_SECS: f32 = 0.15;
