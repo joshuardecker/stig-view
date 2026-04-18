@@ -45,7 +45,7 @@ pub fn rounded_success_button(theme: &Theme, status: button::Status) -> button::
     match status {
         button::Status::Hovered => button::Style {
             background: Some(palette.success.weak.color.into()),
-            text_color: palette.success.weak.text,
+            text_color: palette.danger.weak.text, // Makes this match the danger button.
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
@@ -56,7 +56,7 @@ pub fn rounded_success_button(theme: &Theme, status: button::Status) -> button::
         },
         _ => button::Style {
             background: Some(palette.success.base.color.into()),
-            text_color: palette.success.base.text,
+            text_color: palette.danger.base.text, // Makes this match the danger button.
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
