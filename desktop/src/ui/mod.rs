@@ -591,7 +591,7 @@ impl App {
         ];
 
         // Wrap it in a scrollable.
-        let content = scrollable(content);
+        let content = scrollable(content).spacing(SEPERATION);
 
         let content = container(content)
             .center(Fill)
