@@ -846,19 +846,20 @@ impl App {
                             .on_press(Message::ClearErrNotif),
                     ]
                     .align_y(Center),
-                    space().height(SEPERATION * 2.0),
+                    space::vertical(),
                     row![
                         text(err_str)
                             .size(12)
                             .height(Fill)
-                            .wrapping(text::Wrapping::None)
+                            .wrapping(text::Wrapping::WordOrGlyph)
                     ]
-                    .align_y(Center)
+                    .align_y(Center),
+                    space::vertical(),
                 ]
                 .align_x(Center),
             )
             .width(250)
-            .height(80)
+            .height(125)
             .padding(8)
             .style(err_container),
         ))
