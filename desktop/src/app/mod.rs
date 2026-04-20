@@ -28,26 +28,41 @@ use crate::app::{
 /// The overarching state of the application.
 #[derive(Debug, Clone)]
 pub struct App {
+    /// Currently displayed benchmark.
     pub benchmark: Benchmark,
-    // Benchmarks that live in the background, but are not currently displayed.
+    /// Benchmarks that live in the background, but are not currently displayed.
     pub background_benchmarks: Vec<Benchmark>,
+    /// What rules are pinned, and why the are pinned.
     pub pins: HashMap<String, Pinned>,
+    /// The currently displayed rule.
     pub displayed: Option<Rule>,
     pub contents: [Content; 7],
+    /// The text input for the user to type filters into.
     pub filter_input: String,
+    /// The current popup being displayed.
     pub popup: Popup,
+    /// Error notification text to be displayed.
     pub err_notif: Option<String>,
+    /// The internal id of the window.
     pub window_id: Option<window::Id>,
+    /// Settings applied to the app.
     pub settings: AppSettings,
-    pub saved_when: TimeLastOpened,
+    /// When benchmarks were last opened by the user.
+    pub last_opened: TimeLastOpened,
+    /// A counter that changes whenever the home menu ui should be refreshed.
     pub home_menu_hash: u64,
+    /// A counter that changes whenever the rules list ui should be refreshed.
     pub stig_list_hash: u64,
+    /// What data should be displayed in the rules list.
     pub display_type: DisplayType,
 
-    // Fields that have to due with animation.
+    /// The opacity of the main element, the data of the current rule.
     pub main_col_opacity: f32,
+    /// How long its been since the last time the opacity of the main element has changed.
     pub main_col_last_tick: Option<Instant>,
+    /// The opacity of any popup.
     pub popup_opacity: f32,
+    /// How long its been since the last time the opacity of the popup element has changed.
     pub popup_last_tick: Option<Instant>,
 }
 

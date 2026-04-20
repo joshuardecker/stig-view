@@ -648,7 +648,7 @@ impl App {
                         let str = str.trim_end_matches(".msgpack.zstd");
 
                         // Get the last time this benchmark was accessed.
-                        let time_last = self.saved_when.get_time_used(str);
+                        let time_last = self.last_opened.get_time_used(str);
 
                         // Trim the file extension off, and make the name a little prettier.
                         let name: String = str

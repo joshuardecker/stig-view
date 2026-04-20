@@ -23,7 +23,7 @@ const POPUP_FADE_DURATION_SECS: f32 = 0.15;
 impl App {
     pub fn new() -> (Self, Task<Message>) {
         let settings = AppSettings::load().unwrap_or(AppSettings::default());
-        let saved_when = TimeLastOpened::load().unwrap_or(TimeLastOpened::new());
+        let last_opened = TimeLastOpened::load().unwrap_or(TimeLastOpened::new());
 
         (
             Self {
@@ -45,7 +45,7 @@ impl App {
                 err_notif: None,
                 window_id: None,
                 settings: settings,
-                saved_when,
+                last_opened,
                 home_menu_hash: 0,
                 stig_list_hash: 0,
 
@@ -287,7 +287,7 @@ impl App {
                     self.background_benchmarks = Vec::new();
 
                     // Remember when this was opened.
-                    self.saved_when.insert(self.benchmark.id.clone());
+                    self.last_opened.insert(self.benchmark.id.clone());
 
                     // Benchmark has been switched to, so change tell the home menu to update,
                     // reflecting that this benchmark has been opened recently.
@@ -341,7 +341,7 @@ impl App {
                 self.pins = HashMap::new();
 
                 // Remember when this was opened.
-                self.saved_when.insert(self.benchmark.id.clone());
+                self.last_opened.insert(self.benchmark.id.clone());
 
                 // Benchmark has been switched to, so change tell the home menu to update,
                 // reflecting that this benchmark has been opened recently.
@@ -575,7 +575,7 @@ impl App {
                         self.background_benchmarks = Vec::new();
 
                         // Remember when this was opened.
-                        self.saved_when.insert(self.benchmark.id.clone());
+                        self.last_opened.insert(self.benchmark.id.clone());
 
                         // Benchmark has been switched to, so change tell the home menu to update,
                         // reflecting that this benchmark has been opened recently.
