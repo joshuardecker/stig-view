@@ -12,7 +12,7 @@ use iced::{
         sensor, space, stack, svg, text, text_editor, text_input, toggler, tooltip,
     },
 };
-use stig_view_core::{CKLStatus, Rule};
+use stig_view_core::CKLStatus;
 
 use crate::app::*;
 use crate::ui::styles::*;
@@ -161,184 +161,193 @@ impl App {
                 .into();
         }
 
-        // A few buttons that allow the user to switch what value is displayed on the buttons.
-        // Separate to the scrollable, should always be present.
-        let header = column![
-            row![
-                button(text("Group ID").size(12).center())
-                    .on_press(Message::SwitchDisplayType(DisplayType::GroupId))
-                    .style(rounded_primary_button)
-                    .width(FillPortion(1)),
-                space().width(SEPERATION),
-                button(text("Rule ID").size(12).center())
-                    .on_press(Message::SwitchDisplayType(DisplayType::RuleId))
-                    .style(rounded_primary_button)
-                    .width(FillPortion(1)),
-                space().width(SEPERATION),
-                button(text("STIG ID").size(12).center())
-                    .on_press(Message::SwitchDisplayType(DisplayType::STIGId))
-                    .style(rounded_primary_button)
-                    .width(FillPortion(1)),
-            ],
-            space().height(SEPERATION)
-        ]
-        .align_x(Center);
+        lazy(self.stig_list_hash, |_| {
+            // A few buttons that allow the user to switch what value is displayed on the buttons.
+            // Separate to the scrollable, should always be present.
+            let header = column![
+                row![
+                    button(text("Group ID").size(12).center())
+                        .on_press(Message::SwitchDisplayType(DisplayType::GroupId))
+                        .style(rounded_primary_button)
+                        .width(FillPortion(1)),
+                    space().width(SEPERATION),
+                    button(text("Rule ID").size(12).center())
+                        .on_press(Message::SwitchDisplayType(DisplayType::RuleId))
+                        .style(rounded_primary_button)
+                        .width(FillPortion(1)),
+                    space().width(SEPERATION),
+                    button(text("STIG ID").size(12).center())
+                        .on_press(Message::SwitchDisplayType(DisplayType::STIGId))
+                        .style(rounded_primary_button)
+                        .width(FillPortion(1)),
+                ],
+                space().height(SEPERATION)
+            ]
+            .align_x(Center);
 
-        let mut not_pin_col = column![];
-        let mut user_pin_col = column![];
-        let mut filter_pin_col = column![];
-        let mut filter_user_pin_col = column![];
+            let mut not_pin_col = column![];
+            let mut user_pin_col = column![];
+            let mut filter_pin_col = column![];
+            let mut filter_user_pin_col = column![];
 
-        // Counters used to keep track of the total number of compliant,
-        // noncompliant, and manual review recommendations.
-        let mut compliant_counter = 0;
-        let mut manual_counter = 0;
-        let mut noncompliant_counter = 0;
+            // Counters used to keep track of the total number of compliant,
+            // noncompliant, and manual review recommendations.
+            let mut compliant_counter = 0;
+            let mut manual_counter = 0;
+            let mut noncompliant_counter = 0;
 
-        // The amount of filtered STIGs.
-        // Columns do not have a len() function, so I keep track here.
-        // If this is greater than 0, a seperating rule will be placed between
-        // filtered and non filtered STIGs.
-        let mut total_filtered = 0;
+            // The amount of filtered STIGs.
+            // Columns do not have a len() function, so I keep track here.
+            // If this is greater than 0, a seperating rule will be placed between
+            // filtered and non filtered STIGs.
+            let mut total_filtered = 0;
 
-        for (name, rule) in self.benchmark.rules.iter() {
-            match &rule.ckl_status {
-                Some(CKLStatus::NotAFinding) => compliant_counter += 1,
-                Some(CKLStatus::Open) => noncompliant_counter += 1,
-                Some(CKLStatus::NotApplicable) => manual_counter += 1,
-                Some(CKLStatus::NotReviewed) => manual_counter += 1,
-                None => (),
+            for (name, rule) in self.benchmark.rules.iter() {
+                match &rule.ckl_status {
+                    Some(CKLStatus::NotAFinding) => compliant_counter += 1,
+                    Some(CKLStatus::Open) => noncompliant_counter += 1,
+                    Some(CKLStatus::NotApplicable) => manual_counter += 1,
+                    Some(CKLStatus::NotReviewed) => manual_counter += 1,
+                    None => (),
+                }
+
+                let pin_type = self.pins.get(name).unwrap_or(&Pinned::Not);
+
+                let button = self.stig_button(
+                    pin_type.to_owned(),
+                    name.to_owned(),
+                    rule.ckl_status.clone(),
+                    rule.rule_id.clone(),
+                    rule.stig_id.clone(),
+                );
+
+                match pin_type {
+                    Pinned::Not => not_pin_col = not_pin_col.push(button).push(space().height(8)),
+                    Pinned::ByUser => {
+                        user_pin_col = user_pin_col.push(button).push(space().height(8))
+                    }
+                    Pinned::ByFilter => {
+                        // Puts a nice strip of color on the left side of the button.
+                        let button_with_accent: Element<'_, Message> = row![
+                            container(space::horizontal())
+                                .width(SEPERATION * 0.5)
+                                .height(Fill)
+                                .style(filter_accent),
+                            button
+                        ]
+                        .into();
+
+                        filter_pin_col = filter_pin_col
+                            .push(button_with_accent)
+                            .push(space().height(SEPERATION));
+
+                        total_filtered += 1;
+                    }
+                    Pinned::ByFilterAndUser => {
+                        // Puts a nice strip of color on the left side of the button.
+                        let button_with_accent: Element<'_, Message> = row![
+                            container(space::horizontal())
+                                .width(SEPERATION * 0.5)
+                                .height(Fill)
+                                .style(filter_accent),
+                            button
+                        ]
+                        .into();
+
+                        filter_user_pin_col = filter_user_pin_col
+                            .push(button_with_accent)
+                            .push(space().height(SEPERATION));
+
+                        total_filtered += 1
+                    }
+                }
             }
 
-            let pin_type = self.pins.get(name).unwrap_or(&Pinned::Not);
-
-            let button = self.stig_button(pin_type.to_owned(), name, rule);
-
-            match pin_type {
-                Pinned::Not => not_pin_col = not_pin_col.push(button).push(space().height(8)),
-                Pinned::ByUser => user_pin_col = user_pin_col.push(button).push(space().height(8)),
-                Pinned::ByFilter => {
-                    // Puts a nice strip of color on the left side of the button.
-                    let button_with_accent: Element<'_, Message> = row![
-                        container(space::horizontal())
-                            .width(SEPERATION * 0.5)
-                            .height(Fill)
-                            .style(filter_accent),
-                        button
+            // Counters visually displays how many of each ckl status is present.
+            // If a non ckl was loaded, this will not be displayed.
+            let counters: Element<'_, Message> =
+                if (compliant_counter + manual_counter + noncompliant_counter) != 0 {
+                    column![
+                        rule::horizontal(2),
+                        space().height(SEPERATION),
+                        row![
+                            tooltip(
+                                svg(SQUARE.clone()).width(12).height(12).style(good_svg),
+                                container("Total Compliant.")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Bottom
+                            ),
+                            space().width(SEPERATION * 0.5),
+                            text(compliant_counter.to_string()),
+                            space().width(SEPERATION * 2.0),
+                            tooltip(
+                                svg(SQUARE.clone()).width(12).height(12).style(bad_svg),
+                                container("Total Non-Compliant.")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Bottom
+                            ),
+                            space().width(SEPERATION * 0.5),
+                            text(noncompliant_counter.to_string()),
+                            space().width(SEPERATION * 2.0),
+                            tooltip(
+                                svg(SQUARE.clone()).width(12).height(12).style(warning_svg),
+                                container("Total Manual Review.")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Bottom
+                            ),
+                            space().width(SEPERATION * 0.5),
+                            text(manual_counter.to_string()),
+                        ]
+                        .align_y(Center),
+                        space().height(SEPERATION),
                     ]
-                    .into();
+                    .align_x(Center)
+                    .into()
+                } else {
+                    space().into()
+                };
 
-                    filter_pin_col = filter_pin_col
-                        .push(button_with_accent)
-                        .push(space().height(SEPERATION));
-
-                    total_filtered += 1;
-                }
-                Pinned::ByFilterAndUser => {
-                    // Puts a nice strip of color on the left side of the button.
-                    let button_with_accent: Element<'_, Message> = row![
-                        container(space::horizontal())
-                            .width(SEPERATION * 0.5)
-                            .height(Fill)
-                            .style(filter_accent),
-                        button
-                    ]
-                    .into();
-
-                    filter_user_pin_col = filter_user_pin_col
-                        .push(button_with_accent)
-                        .push(space().height(SEPERATION));
-
-                    total_filtered += 1
-                }
-            }
-        }
-
-        // Counters visually displays how many of each ckl status is present.
-        // If a non ckl was loaded, this will not be displayed.
-        let counters: Element<'_, Message> =
-            if (compliant_counter + manual_counter + noncompliant_counter) != 0 {
-                column![
-                    rule::horizontal(2),
-                    space().height(SEPERATION),
-                    row![
-                        tooltip(
-                            svg(SQUARE.clone()).width(12).height(12).style(good_svg),
-                            container("Total Compliant.")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Bottom
-                        ),
-                        space().width(SEPERATION * 0.5),
-                        text(compliant_counter.to_string()),
-                        space().width(SEPERATION * 2.0),
-                        tooltip(
-                            svg(SQUARE.clone()).width(12).height(12).style(bad_svg),
-                            container("Total Non-Compliant.")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Bottom
-                        ),
-                        space().width(SEPERATION * 0.5),
-                        text(noncompliant_counter.to_string()),
-                        space().width(SEPERATION * 2.0),
-                        tooltip(
-                            svg(SQUARE.clone()).width(12).height(12).style(warning_svg),
-                            container("Total Manual Review.")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Bottom
-                        ),
-                        space().width(SEPERATION * 0.5),
-                        text(manual_counter.to_string()),
-                    ]
-                    .align_y(Center),
-                    space().height(SEPERATION),
-                ]
-                .align_x(Center)
-                .into()
+            // Place a horizontal rule if there are any STIGs that have been filtered.
+            let horizontal_rule: Element<'_, Message> = if total_filtered != 0 {
+                column![rule::horizontal(2), space().height(SEPERATION)].into()
             } else {
                 space().into()
             };
 
-        // Place a horizontal rule if there are any STIGs that have been filtered.
-        let horizontal_rule: Element<'_, Message> = if total_filtered != 0 {
-            column![rule::horizontal(2), space().height(SEPERATION)].into()
-        } else {
-            space().into()
-        };
-
-        container(column![
-            header,
-            counters,
-            scrollable(column![
-                filter_user_pin_col,
-                filter_pin_col,
-                horizontal_rule,
-                user_pin_col,
-                not_pin_col,
-                space::vertical(), // Ensures this container is proper size.
+            container(column![
+                header,
+                counters,
+                scrollable(column![
+                    filter_user_pin_col,
+                    filter_pin_col,
+                    horizontal_rule,
+                    user_pin_col,
+                    not_pin_col,
+                    space::vertical(), // Ensures this container is proper size.
+                ])
+                .spacing(SEPERATION),
             ])
-            .spacing(SEPERATION),
-        ])
-        .width(300)
-        .style(background_container)
-        .padding(8)
+            .width(300)
+            .style(background_container)
+            .padding(8)
+        })
         .into()
     }
 
     /// Get a button the user can click to swich displayed STIGs.
-    fn stig_button<'a>(
+    fn stig_button(
         &self,
         pin_type: Pinned,
-        name: &'a str,
-        rule: &'a Rule,
-    ) -> Element<'a, Message>
-    where
-        Message: 'a,
-    {
+        name: String,
+        ckl_status: Option<CKLStatus>,
+        rule_id: String,
+        stig_id: Option<String>,
+    ) -> Element<'static, Message> {
         // A visual indicator of the cki status of a STIG.
-        let cki_status: Element<'_, Message> = match &rule.ckl_status {
+        let cki_status: Element<'_, Message> = match &ckl_status {
             Some(CKLStatus::NotAFinding) => row![
                 tooltip(
                     svg(CHECKED_CIRCLE.clone())
@@ -412,10 +421,10 @@ impl App {
         // Get the button text depending on what information the user has chosen to display
         // for button text.
         let button_text = match self.display_type {
-            DisplayType::GroupId => name,
-            DisplayType::RuleId => rule.rule_id.as_ref(),
+            DisplayType::GroupId => name.clone(),
+            DisplayType::RuleId => rule_id,
             // If there is no STIG Id, fall back to Group Id since its always known.
-            DisplayType::STIGId => rule.stig_id.as_deref().unwrap_or(name),
+            DisplayType::STIGId => stig_id.unwrap_or(name.clone()),
         };
 
         let bookmark_symbol = match pin_type {
@@ -434,7 +443,7 @@ impl App {
                     button(svg(bookmark_symbol).width(32).height(32).style(colored_svg))
                         .padding(1)
                         .style(no_button)
-                        .on_press(Message::Pin(name.to_owned()))
+                        .on_press(Message::Pin(name.clone()))
                 ]
                 .align_y(Center)
                 .height(Fill),
@@ -446,7 +455,7 @@ impl App {
         .padding(8)
         .width(Fill)
         .style(theme)
-        .on_press(Message::Switch(name.to_owned()))
+        .on_press(Message::Switch(name))
         .into()
     }
 
