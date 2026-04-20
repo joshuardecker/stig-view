@@ -23,7 +23,7 @@ const POPUP_FADE_DURATION_SECS: f32 = 0.15;
 impl App {
     pub fn new() -> (Self, Task<Message>) {
         let settings = AppSettings::load().unwrap_or(AppSettings::default());
-        let saved_when = SavedWhen::load().unwrap_or(SavedWhen::new());
+        let saved_when = TimeLastOpened::load().unwrap_or(TimeLastOpened::new());
 
         (
             Self {

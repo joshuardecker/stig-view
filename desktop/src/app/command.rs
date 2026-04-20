@@ -2,7 +2,16 @@ use regex::Regex;
 use std::collections::HashMap;
 use stig_view_core::Benchmark;
 
-use crate::app::{Command, Pinned};
+use crate::app::Pinned;
+
+/// A command sent by the user can be two things:
+/// - Look for a key phrase using regex.
+/// - Reset the filter back to nothing.
+#[derive(Debug, Clone)]
+pub enum Command {
+    Phrase(String),
+    Reset,
+}
 
 /// Parse the given str into a command that can be run on a benchmark.
 pub fn parse_command(input: &str) -> Option<Command> {

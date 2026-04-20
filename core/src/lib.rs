@@ -1,6 +1,10 @@
+/// Load ckl and cklb files into a benchmark.
 mod ckl;
+/// Detect the format of a benchmark file, such as xccdf, ckl, cklb, or xylok.
 mod detection;
+/// Load xccdf files into a benchmark.
 mod xccdf;
+/// Load xylok toml files into a benchmark.
 mod xylok;
 
 // Re exports.
