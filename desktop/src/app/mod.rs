@@ -42,7 +42,7 @@ pub struct App {
     /// The current popup being displayed.
     pub popup: Popup,
     /// Error notification text to be displayed.
-    pub err_notif: Option<String>,
+    pub err_notif: Option<&'static str>,
     /// The internal id of the window.
     pub window_id: Option<window::Id>,
     /// Settings applied to the app.

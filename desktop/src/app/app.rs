@@ -1,18 +1,12 @@
-use iced::{
-    Subscription, Theme, color, keyboard,
-    keyboard::key,
-    theme::{Custom, Palette},
-    window::icon::from_file_data,
-};
+use iced::{Subscription, Theme, keyboard, keyboard::key, window::icon::from_file_data};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
-use std::sync::Arc;
 use std::time::Instant;
 use stig_view_core::{Benchmark, Format, detect_stig_format, load_ckl, load_v1_1};
 
 use crate::app::command::*;
 use crate::app::*;
-use crate::ui::APP_ICON;
+use crate::ui::{APP_ICON, THEME_COFFEE, THEME_DARK, THEME_HIGH_CONTRAST, THEME_LIGHT};
 
 const MAIN_FADE_START: f32 = 0.0;
 const MAIN_FADE_DURATION_SECS: f32 = 0.15;
@@ -71,54 +65,12 @@ impl App {
     }
 
     pub fn theme(&self) -> Theme {
-        let (palette, name) = match self.settings.theme {
-            AppTheme::Dark => (
-                Palette {
-                    background: color!(0x1B1C1C),
-                    text: color!(0xE6E6E6),
-                    primary: color!(0xA2A2D0),
-                    success: color!(0x22A67A),
-                    warning: color!(0xffc14e),
-                    danger: color!(0xc3423f),
-                },
-                String::from("Custom Dark"),
-            ),
-            AppTheme::Light => (
-                Palette {
-                    background: color!(0xF4F4F6),
-                    text: color!(0x1E1A2E),
-                    primary: color!(0x5A5A8E),
-                    success: color!(0x0E9E6A),
-                    warning: color!(0xE07B00),
-                    danger: color!(0xC0393A),
-                },
-                String::from("Custom Light"),
-            ),
-            AppTheme::HighContrast => (
-                Palette {
-                    background: color!(0x181818),
-                    text: color!(0xFFFFFF),
-                    primary: color!(0xFFD700),
-                    success: color!(0x00FF7F),
-                    warning: color!(0xFF8C00),
-                    danger: color!(0xFF3333),
-                },
-                String::from("High Contrast"),
-            ),
-            AppTheme::Coffee => (
-                Palette {
-                    background: color!(0x1A1714),
-                    text: color!(0xC8BAA8),
-                    primary: color!(0x9E7840),
-                    success: color!(0x5A7A4E),
-                    warning: color!(0xC49A18),
-                    danger: color!(0xAC4444),
-                },
-                String::from("Coffee"),
-            ),
-        };
-
-        Theme::Custom(Arc::new(Custom::new(name, palette)))
+        match self.settings.theme {
+            AppTheme::Dark => THEME_DARK.clone(),
+            AppTheme::Light => THEME_LIGHT.clone(),
+            AppTheme::HighContrast => THEME_HIGH_CONTRAST.clone(),
+            AppTheme::Coffee => THEME_COFFEE.clone(),
+        }
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -384,21 +336,18 @@ impl App {
                 Task::none()
             }
             Message::SwitchNext => {
-                if let Some(displayed_name) = &self.displayed {
-                    let mut iter = self.benchmark.rules.iter();
+                if let Some(displayed) = &self.displayed {
+                    use std::ops::Bound::{Excluded, Unbounded};
 
-                    let _ = iter.find(|entry| *entry.0 == displayed_name.group_id);
+                    let next = self
+                        .benchmark
+                        .rules
+                        .range::<String, _>((Excluded(displayed.group_id.clone()), Unbounded))
+                        .next()
+                        .or_else(|| self.benchmark.rules.first_key_value());
 
-                    let entry: Option<(&String, &Rule)> = iter.next();
-
-                    if let Some(entry) = entry {
-                        return Task::done(Message::Switch(entry.0.to_owned()));
-                    }
-
-                    let first = self.benchmark.rules.first_key_value();
-
-                    if let Some(first) = first {
-                        return Task::done(Message::Switch(first.0.clone()));
+                    if let Some((key, _)) = next {
+                        return Task::done(Message::Switch(key.clone()));
                     }
 
                     Task::done(Message::DoNothing)
@@ -412,17 +361,12 @@ impl App {
                     Content::with_text(&rule.vuln_discussion);
                 self.contents[ContentIndex::Check as usize] = Content::with_text(&rule.check_text);
                 self.contents[ContentIndex::Fix as usize] = Content::with_text(&rule.fix_text);
-                self.contents[ContentIndex::CCIRefs as usize] = Content::with_text(
-                    &rule
-                        .cci_refs
-                        .clone()
-                        .unwrap_or(vec!["".to_string()])
-                        .join("\n"),
-                );
+                self.contents[ContentIndex::CCIRefs as usize] =
+                    Content::with_text(&rule.cci_refs.as_deref().unwrap_or(&[]).join("\n"));
                 self.contents[ContentIndex::FalsePositives as usize] =
-                    Content::with_text(&rule.false_positives.clone().unwrap_or("".to_string()));
+                    Content::with_text(&rule.false_positives.as_deref().unwrap_or(""));
                 self.contents[ContentIndex::FalseNegatives as usize] =
-                    Content::with_text(&rule.false_negatives.clone().unwrap_or("".to_string()));
+                    Content::with_text(&rule.false_negatives.as_deref().unwrap_or(""));
 
                 self.displayed = Some(rule);
 
@@ -436,7 +380,7 @@ impl App {
             }
 
             Message::SwitchPopup(popup) => {
-                match (&self.popup, &popup) {
+                match (&popup, &popup) {
                     (Popup::Filter, Popup::Filter) => self.popup = Popup::None,
                     (Popup::Settings, Popup::Settings) => self.popup = Popup::None,
                     _ => {
@@ -453,7 +397,7 @@ impl App {
 
             Message::SendErrNotif(err_str) => {
                 if let None = self.err_notif {
-                    self.err_notif = Some(err_str.to_string());
+                    self.err_notif = Some(err_str);
                 }
 
                 Task::none()
@@ -500,7 +444,11 @@ impl App {
 
                 match command {
                     Some(command) => {
-                        let new_pins = run_search_cmd(command, &self.benchmark, self.pins.clone());
+                        let new_pins = run_search_cmd(
+                            command,
+                            &self.benchmark,
+                            std::mem::take(&mut self.pins),
+                        );
 
                         match new_pins {
                             Some(new_pins) => Task::done(Message::SetPins(new_pins)),

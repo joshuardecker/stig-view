@@ -153,7 +153,7 @@ impl Benchmark {
         create_dir_all(&cache_dir).ok()?;
 
         // Add proper file extensions.
-        cache_dir.push(self.id.clone() + ".msgpack.zstd");
+        cache_dir.push(format!("{}.msgpack.zstd", self.id.clone()));
 
         let mut file = File::create(cache_dir).ok()?;
 

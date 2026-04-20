@@ -1,8 +1,10 @@
 mod assets;
 mod styles;
+mod themes;
 
 // Re-exports.
 pub use assets::*;
+pub use themes::*;
 
 use iced::{
     Alignment::End,
@@ -480,7 +482,7 @@ impl App {
                     space().height(SEPERATION),
                     text("Severity").size(18),
                     space().height(SEPERATION),
-                    text(stig_rule.severity.clone().to_string()),
+                    text(stig_rule.severity.to_string()),
                 ]
                 .align_x(Center)
                 .width(FillPortion(1)),
@@ -944,154 +946,156 @@ impl App {
 
     /// Return the window decorations container.
     fn window_decorations(&self) -> Element<'_, Message> {
-        // A complicated way of getting mouse_area to work.
-        // Captures mouse input in the window decorations so the window can be dragged.
-        container(
-            mouse_area(
-                container(
-                    row![
-                        space().width(15),
-                        tooltip(
+        lazy(&self.benchmark.id, |_| {
+            // A complicated way of getting mouse_area to work.
+            // Captures mouse input in the window decorations so the window can be dragged.
+            container(
+                mouse_area(
+                    container(
+                        row![
+                            space().width(15),
+                            tooltip(
+                                button(
+                                    svg(SETTINGS.clone())
+                                        .style(colored_svg)
+                                        .width(18)
+                                        .height(18)
+                                )
+                                .padding(1)
+                                .width(Shrink)
+                                .height(Shrink)
+                                .style(no_button)
+                                .on_press(Message::SwitchPopup(Popup::Settings)),
+                                container("Customize Settings.")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Right
+                            )
+                            .delay(iced::time::Duration::from_millis(600)),
+                            space().width(11),
+                            tooltip(
+                                button(svg(HOME.clone()).style(colored_svg).width(18).height(18))
+                                    .padding(1)
+                                    .width(Shrink)
+                                    .height(Shrink)
+                                    .style(no_button)
+                                    .on_press(Message::ReturnHome),
+                                container("Return to the Start Screen.")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Right
+                            )
+                            .delay(iced::time::Duration::from_millis(600)),
+                            space().width(8),
+                            tooltip(
+                                button(text("File").center().size(15))
+                                    .padding(4)
+                                    .width(Shrink)
+                                    .height(Shrink)
+                                    .style(rounded_dark_button)
+                                    .on_press(Message::OpenFile),
+                                container("Open a New File (Ctrl + I)")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Right
+                            )
+                            .delay(iced::time::Duration::from_millis(600)),
+                            space().width(4),
+                            tooltip(
+                                button(text("Filter").center().size(15))
+                                    .padding(4)
+                                    .width(Shrink)
+                                    .height(Shrink)
+                                    .style(rounded_dark_button)
+                                    .on_press(Message::SwitchPopup(Popup::Filter)),
+                                container("Sort Content Based on Keywords (Ctrl + F)")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Right
+                            )
+                            .delay(iced::time::Duration::from_millis(600)),
+                            space::horizontal(),
+                            // Make the window title look nice.
+                            text(
+                                self.benchmark
+                                    .id
+                                    .chars()
+                                    .flat_map(|c| match c {
+                                        '_' | '-' => ' '.to_lowercase(),
+                                        c => c.to_lowercase(),
+                                    })
+                                    .collect::<String>()
+                            )
+                            .size(16),
+                            {
+                                let switch_element: Element<Message> =
+                                    if !self.background_benchmarks.is_empty() {
+                                        row![
+                                            space().width(15),
+                                            tooltip(
+                                                button(
+                                                    svg(SWITCH.clone())
+                                                        .style(colored_svg)
+                                                        .width(18)
+                                                        .height(18)
+                                                )
+                                                .padding(1)
+                                                .width(Shrink)
+                                                .height(Shrink)
+                                                .style(no_button)
+                                                .on_press(Message::SwitchToBackground),
+                                                container("Switch Benchmark")
+                                                    .style(background_container)
+                                                    .padding(4),
+                                                tooltip::Position::Right
+                                            )
+                                            .delay(iced::time::Duration::from_millis(600)),
+                                        ]
+                                        .into()
+                                    } else {
+                                        space().width(0).into()
+                                    };
+                                switch_element
+                            },
+                            space::horizontal(),
                             button(
-                                svg(SETTINGS.clone())
+                                svg(DOWN_TICK.clone())
                                     .style(colored_svg)
-                                    .width(18)
-                                    .height(18)
+                                    .width(24)
+                                    .height(24)
                             )
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
-                            .on_press(Message::SwitchPopup(Popup::Settings)),
-                            container("Customize Settings.")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Right
-                        )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space().width(11),
-                        tooltip(
-                            button(svg(HOME.clone()).style(colored_svg).width(18).height(18))
+                            .on_press(Message::WindowMin),
+                            space().width(15),
+                            button(svg(SQUARE.clone()).style(colored_svg).width(16).height(16))
                                 .padding(1)
                                 .width(Shrink)
                                 .height(Shrink)
                                 .style(no_button)
-                                .on_press(Message::ReturnHome),
-                            container("Return to the Start Screen.")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Right
-                        )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space().width(8),
-                        tooltip(
-                            button(text("File").center().size(15))
-                                .padding(4)
+                                .on_press(Message::WindowFullscreenToggle),
+                            space().width(18),
+                            button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                                .padding(1)
                                 .width(Shrink)
                                 .height(Shrink)
-                                .style(rounded_dark_button)
-                                .on_press(Message::OpenFile),
-                            container("Open a New File (Ctrl + I)")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Right
-                        )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space().width(4),
-                        tooltip(
-                            button(text("Filter").center().size(15))
-                                .padding(4)
-                                .width(Shrink)
-                                .height(Shrink)
-                                .style(rounded_dark_button)
-                                .on_press(Message::SwitchPopup(Popup::Filter)),
-                            container("Sort Content Based on Keywords (Ctrl + F)")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Right
-                        )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space::horizontal(),
-                        // Make the window title look nice.
-                        text(
-                            self.benchmark
-                                .id
-                                .chars()
-                                .flat_map(|c| match c {
-                                    '_' | '-' => ' '.to_lowercase(),
-                                    c => c.to_lowercase(),
-                                })
-                                .collect::<String>()
-                        )
-                        .size(16),
-                        {
-                            let switch_element: Element<Message> =
-                                if !self.background_benchmarks.is_empty() {
-                                    row![
-                                        space().width(15),
-                                        tooltip(
-                                            button(
-                                                svg(SWITCH.clone())
-                                                    .style(colored_svg)
-                                                    .width(18)
-                                                    .height(18)
-                                            )
-                                            .padding(1)
-                                            .width(Shrink)
-                                            .height(Shrink)
-                                            .style(no_button)
-                                            .on_press(Message::SwitchToBackground),
-                                            container("Switch Benchmark")
-                                                .style(background_container)
-                                                .padding(4),
-                                            tooltip::Position::Right
-                                        )
-                                        .delay(iced::time::Duration::from_millis(600)),
-                                    ]
-                                    .into()
-                                } else {
-                                    space().width(0).into()
-                                };
-                            switch_element
-                        },
-                        space::horizontal(),
-                        button(
-                            svg(DOWN_TICK.clone())
-                                .style(colored_svg)
-                                .width(24)
-                                .height(24)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::WindowMin),
-                        space().width(15),
-                        button(svg(SQUARE.clone()).style(colored_svg).width(16).height(16))
-                            .padding(1)
-                            .width(Shrink)
-                            .height(Shrink)
-                            .style(no_button)
-                            .on_press(Message::WindowFullscreenToggle),
-                        space().width(18),
-                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
-                            .padding(1)
-                            .width(Shrink)
-                            .height(Shrink)
-                            .style(no_button)
-                            .on_press(Message::WindowClose),
-                        space().width(15)
-                    ]
-                    .align_y(Center),
+                                .style(no_button)
+                                .on_press(Message::WindowClose),
+                            space().width(15)
+                        ]
+                        .align_y(Center),
+                    )
+                    .height(26)
+                    .padding(1)
+                    .align_x(End)
+                    .align_y(Center)
+                    .width(Fill),
                 )
-                .height(26)
-                .padding(1)
-                .align_x(End)
-                .align_y(Center)
-                .width(Fill),
+                .on_press(Message::WindowMove),
             )
-            .on_press(Message::WindowMove),
-        )
+        })
         .into()
     }
 }
