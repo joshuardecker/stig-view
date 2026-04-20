@@ -46,6 +46,8 @@ impl App {
                 window_id: None,
                 settings: settings,
                 saved_when,
+                home_menu_hash: 0,
+                stig_list_hash: 0,
 
                 display_type: settings.default_display_type,
                 main_col_opacity: 1.0,
@@ -287,6 +289,12 @@ impl App {
                     // Remember when this was opened.
                     self.saved_when.insert(self.benchmark.id.clone());
 
+                    // Benchmark has been switched to, so change tell the home menu to update,
+                    // reflecting that this benchmark has been opened recently.
+                    self.home_menu_hash += 1;
+
+                    self.stig_list_hash += 1;
+
                     let tasks = vec![
                         Task::done(Message::Switch(name)),
                         Task::done(Message::SwitchPopup(Popup::Save)),
@@ -335,11 +343,19 @@ impl App {
                 // Remember when this was opened.
                 self.saved_when.insert(self.benchmark.id.clone());
 
+                // Benchmark has been switched to, so change tell the home menu to update,
+                // reflecting that this benchmark has been opened recently.
+                self.home_menu_hash += 1;
+
+                self.stig_list_hash += 1;
+
                 Task::none()
             }
 
             Message::SetPins(pins) => {
                 self.pins = pins;
+
+                self.stig_list_hash += 1;
 
                 // When the pins are set, check if the displayed rule has a filter applied.
                 // If not, switch to the first one that does.
@@ -467,6 +483,8 @@ impl App {
                     }
                 }
 
+                self.stig_list_hash += 1;
+
                 Task::none()
             }
 
@@ -559,6 +577,12 @@ impl App {
                         // Remember when this was opened.
                         self.saved_when.insert(self.benchmark.id.clone());
 
+                        // Benchmark has been switched to, so change tell the home menu to update,
+                        // reflecting that this benchmark has been opened recently.
+                        self.home_menu_hash += 1;
+
+                        self.stig_list_hash += 1;
+
                         Task::done(Message::Switch(name))
                     } else {
                         // Do nothing when an attempting to switch an empty benchmark.
@@ -575,6 +599,9 @@ impl App {
                 if err.is_err() {
                     Task::done(Message::SendErrNotif("Couldn't delete cached benchmark."))
                 } else {
+                    // Benchmark has been deleted, so change tell the home menu to update,
+                    // reflecting that this benchmark has been removed.
+
                     Task::none()
                 }
             }
@@ -582,12 +609,16 @@ impl App {
             Message::SwitchDisplayType(display_type) => {
                 self.display_type = display_type;
 
+                self.stig_list_hash += 1;
+
                 Task::none()
             }
             // Instead of just switching display types, save it as the default for next time.
             Message::SaveDisplayType(display_type) => {
                 self.display_type = display_type;
                 self.settings.default_display_type = display_type;
+
+                self.stig_list_hash += 1;
 
                 Task::done(Message::SaveSettings)
             }

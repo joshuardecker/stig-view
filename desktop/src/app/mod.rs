@@ -31,6 +31,8 @@ pub struct App {
     pub window_id: Option<window::Id>,
     pub settings: AppSettings,
     pub saved_when: SavedWhen,
+    pub home_menu_hash: u64,
+    pub stig_list_hash: u64,
     pub display_type: DisplayType,
 
     // Fields that have to due with animation.

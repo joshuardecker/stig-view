@@ -9,7 +9,7 @@ path = "src/main.rs"
 
 [dependencies]
 stig-view-core = { path = "../core" }
-iced = { version = "0.14.0", features = ["svg", "image", "tokio"] }
+iced = { version = "0.14.0", features = ["svg", "image", "tokio", "lazy"] }
 image = "0.25.9"
 regex = "1.12.2"
 rfd = "0.17.2"

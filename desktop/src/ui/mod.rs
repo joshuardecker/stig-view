@@ -8,7 +8,7 @@ use iced::{
     Alignment::End,
     Center, Element, Fill, FillPortion, Shrink,
     widget::{
-        Id, button, column, container, mouse_area, opaque, pick_list, row, rule, scrollable,
+        Id, button, column, container, lazy, mouse_area, opaque, pick_list, row, rule, scrollable,
         sensor, space, stack, svg, text, text_editor, text_input, toggler, tooltip,
     },
 };
@@ -201,8 +201,6 @@ impl App {
         // filtered and non filtered STIGs.
         let mut total_filtered = 0;
 
-        let dot_handle = svg::Handle::from_memory(SQUARE);
-
         for (name, rule) in self.benchmark.rules.iter() {
             match &rule.ckl_status {
                 Some(CKLStatus::NotAFinding) => compliant_counter += 1,
@@ -265,7 +263,7 @@ impl App {
                     space().height(SEPERATION),
                     row![
                         tooltip(
-                            svg(dot_handle.clone()).width(12).height(12).style(good_svg),
+                            svg(SQUARE.clone()).width(12).height(12).style(good_svg),
                             container("Total Compliant.")
                                 .style(background_container)
                                 .padding(4),
@@ -275,7 +273,7 @@ impl App {
                         text(compliant_counter.to_string()),
                         space().width(SEPERATION * 2.0),
                         tooltip(
-                            svg(dot_handle.clone()).width(12).height(12).style(bad_svg),
+                            svg(SQUARE.clone()).width(12).height(12).style(bad_svg),
                             container("Total Non-Compliant.")
                                 .style(background_container)
                                 .padding(4),
@@ -285,10 +283,7 @@ impl App {
                         text(noncompliant_counter.to_string()),
                         space().width(SEPERATION * 2.0),
                         tooltip(
-                            svg(dot_handle.clone())
-                                .width(12)
-                                .height(12)
-                                .style(warning_svg),
+                            svg(SQUARE.clone()).width(12).height(12).style(warning_svg),
                             container("Total Manual Review.")
                                 .style(background_container)
                                 .padding(4),
@@ -333,22 +328,20 @@ impl App {
     }
 
     /// Get a button the user can click to swich displayed STIGs.
-    fn stig_button<'a>(&self, pin_type: Pinned, name: &str, rule: &Rule) -> Element<'a, Message>
+    fn stig_button<'a>(
+        &self,
+        pin_type: Pinned,
+        name: &'a str,
+        rule: &'a Rule,
+    ) -> Element<'a, Message>
     where
         Message: 'a,
     {
-        let bookmark_svg_handle = svg::Handle::from_memory(BOOKMARK);
-        let filled_bookmark_svg_handle = svg::Handle::from_memory(FILLED_BOOKMARK);
-
-        let check_handle = svg::Handle::from_memory(CHECKED_CIRCLE);
-        let cross_handle = svg::Handle::from_memory(CROSS_CIRCLE);
-        let minus_handle = svg::Handle::from_memory(MINUS_CIRCLE);
-
         // A visual indicator of the cki status of a STIG.
         let cki_status: Element<'_, Message> = match &rule.ckl_status {
             Some(CKLStatus::NotAFinding) => row![
                 tooltip(
-                    svg(check_handle.clone())
+                    svg(CHECKED_CIRCLE.clone())
                         .width(16)
                         .height(16)
                         .style(good_svg),
@@ -362,7 +355,7 @@ impl App {
             .into(),
             Some(CKLStatus::Open) => row![
                 tooltip(
-                    svg(cross_handle.clone())
+                    svg(CROSS_CIRCLE.clone())
                         .width(16)
                         .height(16)
                         .style(bad_svg),
@@ -376,7 +369,7 @@ impl App {
             .into(),
             Some(CKLStatus::NotApplicable) => row![
                 tooltip(
-                    svg(minus_handle.clone())
+                    svg(MINUS_CIRCLE.clone())
                         .width(16)
                         .height(16)
                         .style(warning_svg),
@@ -390,7 +383,7 @@ impl App {
             .into(),
             Some(CKLStatus::NotReviewed) => row![
                 tooltip(
-                    svg(minus_handle.clone())
+                    svg(MINUS_CIRCLE.clone())
                         .width(16)
                         .height(16)
                         .style(warning_svg),
@@ -419,17 +412,17 @@ impl App {
         // Get the button text depending on what information the user has chosen to display
         // for button text.
         let button_text = match self.display_type {
-            DisplayType::GroupId => name.to_owned(),
-            DisplayType::RuleId => rule.rule_id.clone(),
+            DisplayType::GroupId => name,
+            DisplayType::RuleId => rule.rule_id.as_ref(),
             // If there is no STIG Id, fall back to Group Id since its always known.
-            DisplayType::STIGId => rule.stig_id.clone().unwrap_or(name.to_owned()),
+            DisplayType::STIGId => rule.stig_id.as_deref().unwrap_or(name),
         };
 
         let bookmark_symbol = match pin_type {
-            Pinned::Not => bookmark_svg_handle,
-            Pinned::ByUser => filled_bookmark_svg_handle,
-            Pinned::ByFilter => bookmark_svg_handle,
-            Pinned::ByFilterAndUser => filled_bookmark_svg_handle,
+            Pinned::Not => BOOKMARK.clone(),
+            Pinned::ByUser => FILLED_BOOKMARK.clone(),
+            Pinned::ByFilter => BOOKMARK.clone(),
+            Pinned::ByFilterAndUser => FILLED_BOOKMARK.clone(),
         };
 
         button(
@@ -501,7 +494,7 @@ impl App {
                 column![
                     text("STIG ID").size(18),
                     space().height(SEPERATION),
-                    text(stig_rule.stig_id.clone().unwrap_or("None".to_string())),
+                    text(stig_rule.stig_id.as_deref().unwrap_or("None")),
                     space().height(SEPERATION),
                     rule::horizontal(2),
                     space().height(SEPERATION),
@@ -616,114 +609,114 @@ impl App {
     fn display_empty(&self) -> Element<'_, Message> {
         use std::path::PathBuf;
 
-        let file_svg_handle = svg::Handle::from_memory(FILE_ICON);
-        let trash_svg_handle = svg::Handle::from_memory(TRASH);
+        let lazy_view = lazy(self.home_menu_hash, |_| {
+            // Load any benchmarks the user opted to save in the past.
+            let cache = App::load_cache();
 
-        // Load any benchmarks the user opted to save in the past.
-        let cache = App::load_cache();
+            // Change the displayed string based on if the cache loaded any items.
+            let displayed_string = if cache.is_empty() {
+                "Open a File to Get Started"
+            } else {
+                "Recently Saved Files"
+            };
 
-        // Change the displayed string based on if the cache loaded any items.
-        let displayed_string = if cache.is_empty() {
-            "Open a File to Get Started".to_string()
-        } else {
-            "Recently Saved Files".to_string()
-        };
+            let mut main_col = column![];
 
-        let mut main_col = column![];
+            // If the cache is empty, add an obvious button for the user to click that opens a new benchmark.
+            if cache.is_empty() {
+                main_col = main_col.push(
+                    button(text("Open").center())
+                        .width(SEPERATION * 10.0)
+                        .height(SEPERATION * 5.0)
+                        .style(rounded_boring_button)
+                        .on_press(Message::OpenFile),
+                )
+            }
 
-        // If the cache is empty, add an obvious button for the user to click that opens a new benchmark.
-        if cache.is_empty() {
-            main_col = main_col.push(
-                button(text("Open").center())
-                    .width(SEPERATION * 10.0)
-                    .height(SEPERATION * 5.0)
-                    .style(rounded_boring_button)
-                    .on_press(Message::OpenFile),
-            )
-        }
+            // A vector that contains the unix time when this cache entry was last opened,
+            // its path, and its nicely formatted name.
+            let mut times_last_loaded: Vec<(u64, PathBuf, String)> = Vec::new();
 
-        // A vector that contains the unix time when this cache entry was last opened,
-        // its path, and its nicely formatted name.
-        let mut times_last_loaded: Vec<(u64, PathBuf, String)> = Vec::new();
+            for path in cache {
+                match path.file_name().and_then(|os_str| os_str.to_str()) {
+                    Some(str) => {
+                        // If this file for whatever reason isnt the type we are looking for.
+                        if !str.ends_with(".msgpack.zstd") {
+                            continue;
+                        }
 
-        for path in cache {
-            match path.file_name().and_then(|os_str| os_str.to_str()) {
-                Some(str) => {
-                    // If this file for whatever reason isnt the type we are looking for.
-                    if !str.ends_with(".msgpack.zstd") {
-                        continue;
+                        let str = str.trim_end_matches(".msgpack.zstd");
+
+                        // Get the last time this benchmark was accessed.
+                        let time_last = self.saved_when.get_time_used(str);
+
+                        // Trim the file extension off, and make the name a little prettier.
+                        let name: String = str
+                            .chars()
+                            .flat_map(|c| match c {
+                                '_' | '-' => ' '.to_lowercase(),
+                                c => c.to_lowercase(),
+                            })
+                            .collect();
+
+                        // Save the time last accessed, path, and formatted name.
+                        times_last_loaded.push((time_last, path, name));
                     }
 
-                    let str = str.trim_end_matches(".msgpack.zstd");
+                    None => continue,
+                };
+            }
 
-                    // Get the last time this benchmark was accessed.
-                    let time_last = self.saved_when.get_time_used(str);
+            // Sort most recent to oldest.
+            times_last_loaded.sort_by(|a, b| b.0.cmp(&a.0));
 
-                    // Trim the file extension off, and make the name a little prettier.
-                    let name = str.replace("_", " ").replace("-", " ").to_lowercase();
-
-                    // Save the time last accessed, path, and formatted name.
-                    times_last_loaded.push((time_last, path, name));
-                }
-
-                None => continue,
-            };
-        }
-
-        // Sort most recent to oldest.
-        times_last_loaded.sort_by(|a, b| b.0.cmp(&a.0));
-
-        for time_loaded in times_last_loaded {
-            main_col = main_col.push(
-                button(
-                    row![
-                        svg(file_svg_handle.clone())
-                            .style(boring_svg)
-                            .width(20)
-                            .height(20),
-                        space().width(SEPERATION),
-                        text(time_loaded.2).center(),
-                        space::horizontal(),
-                        button(
-                            svg(trash_svg_handle.clone())
-                                .style(colored_svg)
+            for time_loaded in times_last_loaded {
+                main_col = main_col.push(
+                    button(
+                        row![
+                            svg(FILE_ICON.clone())
+                                .style(boring_svg)
                                 .width(20)
-                                .height(20)
-                        )
-                        .style(no_button)
-                        .on_press(Message::DeleteCachedBenchmark(time_loaded.1.clone())),
-                    ]
-                    .align_y(Center),
-                )
-                .width(Fill)
-                .style(rounded_boring_button)
-                .on_press(Message::LoadCachedBenchmark(time_loaded.1)),
-            );
+                                .height(20),
+                            space().width(SEPERATION),
+                            text(time_loaded.2).center(),
+                            space::horizontal(),
+                            button(svg(TRASH.clone()).style(colored_svg).width(20).height(20))
+                                .style(no_button)
+                                .on_press(Message::DeleteCachedBenchmark(time_loaded.1.clone())),
+                        ]
+                        .align_y(Center),
+                    )
+                    .width(Fill)
+                    .style(rounded_boring_button)
+                    .on_press(Message::LoadCachedBenchmark(time_loaded.1)),
+                );
 
-            // Space out each file entry nicely.
-            main_col = main_col.push(space().height(SEPERATION));
-        }
+                // Space out each file entry nicely.
+                main_col = main_col.push(space().height(SEPERATION));
+            }
 
-        container(
-            column![
-                text(displayed_string).size(24).center(),
-                space().height(SEPERATION * 3.0),
-                scrollable(main_col).spacing(SEPERATION)
-            ]
-            .align_x(Center)
-            .width(400),
-        )
-        .padding(30)
-        .center(Fill)
-        .style(background_container)
-        .into()
+            container(
+                column![
+                    text(displayed_string).size(24).center(),
+                    space().height(SEPERATION * 3.0),
+                    scrollable(main_col).spacing(SEPERATION)
+                ]
+                .align_x(Center)
+                .width(400),
+            )
+            .padding(30)
+            .center(Fill)
+            .style(background_container)
+        });
+
+        // Wrap lazy in a container so that it fills the whole width.
+        // For some reason it shrinks the content inside of it.
+        container(lazy_view).width(Fill).into()
     }
 
     /// Display of the filter menu, gets stacked on top of the main application view.
     fn filter_menu(&self) -> Element<'_, Message> {
-        let refresh_svg_handle = svg::Handle::from_memory(REFRESH);
-        let cross_svg_handle = svg::Handle::from_memory(CROSS);
-
         let id = Id::new("filter_text_input");
 
         // The filter popup itself.
@@ -731,17 +724,12 @@ impl App {
             sensor(opaque(stack![
                 container(
                     row![
-                        button(
-                            svg(refresh_svg_handle)
-                                .style(colored_svg)
-                                .width(25)
-                                .height(25)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::ProcessCmd("reset".to_string())),
+                        button(svg(REFRESH.clone()).style(colored_svg).width(25).height(25))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::ProcessCmd("reset".to_string())),
                         space::horizontal(),
                         text_input(
                             "Type keywords here, then press enter...",
@@ -752,17 +740,12 @@ impl App {
                         .id(id.clone())
                         .width(320),
                         space::horizontal(),
-                        button(
-                            svg(cross_svg_handle)
-                                .style(colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::SwitchPopup(Popup::None)),
+                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::SwitchPopup(Popup::None)),
                     ]
                     .align_y(Center),
                 )
@@ -790,8 +773,6 @@ impl App {
 
     /// Display of the settings menu, gets stacked on top of the main application view.
     fn settings_menu(&self) -> Element<'_, Message> {
-        let cross_svg_handle = svg::Handle::from_memory(CROSS);
-
         let themes = [
             AppTheme::Dark,
             AppTheme::Light,
@@ -811,17 +792,12 @@ impl App {
                         space::horizontal(),
                         text("Settings Menu"),
                         space::horizontal(),
-                        button(
-                            svg(cross_svg_handle)
-                                .style(colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::SwitchPopup(Popup::None)),
+                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::SwitchPopup(Popup::None)),
                     ]
                     .align_y(Center),
                     space().height(SEPERATION * 4.0),
@@ -869,8 +845,6 @@ impl App {
 
     /// Display of an error that occured, gets stacked on top of the main application view.
     fn display_error<'a>(&self, err_str: &'a str) -> Element<'a, Message> {
-        let cross_svg_handle = svg::Handle::from_memory(CROSS);
-
         container(opaque(
             container(
                 column![
@@ -878,7 +852,7 @@ impl App {
                         space::horizontal(),
                         text("Error Occurred"),
                         space::horizontal(),
-                        button(svg(cross_svg_handle).style(boring_svg).width(16).height(16))
+                        button(svg(CROSS.clone()).style(boring_svg).width(16).height(16))
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
@@ -911,8 +885,6 @@ impl App {
 
     /// A menu prompting the user to save the benchmark to the cache.
     fn save_menu(&self) -> Element<'_, Message> {
-        let cross_svg_handle = svg::Handle::from_memory(CROSS);
-
         container(opaque(stack![
             container(
                 column![
@@ -920,17 +892,12 @@ impl App {
                         space::horizontal(),
                         text("Save Benchmark for Later?"),
                         space::horizontal(),
-                        button(
-                            svg(cross_svg_handle)
-                                .style(colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::SwitchPopup(Popup::None)),
+                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::SwitchPopup(Popup::None)),
                     ]
                     .align_y(Center),
                     space::vertical(),
@@ -968,13 +935,6 @@ impl App {
 
     /// Return the window decorations container.
     fn window_decorations(&self) -> Element<'_, Message> {
-        let settings_svg_handle = svg::Handle::from_memory(SETTINGS);
-        let home_svg_handle = svg::Handle::from_memory(HOME);
-        let cross_svg_handle = svg::Handle::from_memory(CROSS);
-        let square_svg_handle = svg::Handle::from_memory(SQUARE);
-        let down_tick_svg_handle = svg::Handle::from_memory(DOWN_TICK);
-        let switch_svg_handle = svg::Handle::from_memory(SWITCH);
-
         // A complicated way of getting mouse_area to work.
         // Captures mouse input in the window decorations so the window can be dragged.
         container(
@@ -984,7 +944,7 @@ impl App {
                         space().width(15),
                         tooltip(
                             button(
-                                svg(settings_svg_handle)
+                                svg(SETTINGS.clone())
                                     .style(colored_svg)
                                     .width(18)
                                     .height(18)
@@ -1002,7 +962,7 @@ impl App {
                         .delay(iced::time::Duration::from_millis(600)),
                         space().width(11),
                         tooltip(
-                            button(svg(home_svg_handle).style(colored_svg).width(18).height(18))
+                            button(svg(HOME.clone()).style(colored_svg).width(18).height(18))
                                 .padding(1)
                                 .width(Shrink)
                                 .height(Shrink)
@@ -1047,9 +1007,12 @@ impl App {
                         text(
                             self.benchmark
                                 .id
-                                .replace("_", " ")
-                                .replace("-", " ")
-                                .to_lowercase()
+                                .chars()
+                                .flat_map(|c| match c {
+                                    '_' | '-' => ' '.to_lowercase(),
+                                    c => c.to_lowercase(),
+                                })
+                                .collect::<String>()
                         )
                         .size(16),
                         {
@@ -1059,7 +1022,7 @@ impl App {
                                         space().width(15),
                                         tooltip(
                                             button(
-                                                svg(switch_svg_handle)
+                                                svg(SWITCH.clone())
                                                     .style(colored_svg)
                                                     .width(18)
                                                     .height(18)
@@ -1084,7 +1047,7 @@ impl App {
                         },
                         space::horizontal(),
                         button(
-                            svg(down_tick_svg_handle)
+                            svg(DOWN_TICK.clone())
                                 .style(colored_svg)
                                 .width(24)
                                 .height(24)
@@ -1095,29 +1058,19 @@ impl App {
                         .style(no_button)
                         .on_press(Message::WindowMin),
                         space().width(15),
-                        button(
-                            svg(square_svg_handle)
-                                .style(colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::WindowFullscreenToggle),
+                        button(svg(SQUARE.clone()).style(colored_svg).width(16).height(16))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::WindowFullscreenToggle),
                         space().width(18),
-                        button(
-                            svg(cross_svg_handle)
-                                .style(colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::WindowClose),
+                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::WindowClose),
                         space().width(15)
                     ]
                     .align_y(Center),
