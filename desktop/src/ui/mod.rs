@@ -18,6 +18,7 @@ use stig_view_core::CKLStatus;
 
 use crate::app::*;
 use crate::ui::styles::*;
+use crate::widgets::selectable_text;
 
 /// The default seperation between elements.
 /// I use magic values around because they look better.
@@ -517,7 +518,7 @@ impl App {
                 .width(FillPortion(1)),
             ],
             space().height(SEPERATION),
-            text("Introduction").size(32),
+            text(" Introduction").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
@@ -527,7 +528,7 @@ impl App {
                     .on_action(|action| Message::SelectContent(action, ContentIndex::Title))
             ],
             space().height(SEPERATION),
-            text("Description").size(32),
+            text(" Description").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
@@ -537,7 +538,7 @@ impl App {
                     .on_action(|action| Message::SelectContent(action, ContentIndex::Discussion))
             ],
             space().height(SEPERATION),
-            text("Check").size(32),
+            text(" Check").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
@@ -547,7 +548,7 @@ impl App {
                     .on_action(|action| Message::SelectContent(action, ContentIndex::Check))
             ],
             space().height(SEPERATION),
-            text("Fix").size(32),
+            text(" Fix").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
@@ -557,7 +558,7 @@ impl App {
                     .on_action(|action| Message::SelectContent(action, ContentIndex::Fix))
             ],
             space().height(SEPERATION),
-            text("CCIs").size(32),
+            text(" CCIs").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
@@ -567,7 +568,7 @@ impl App {
                     .on_action(|action| Message::SelectContent(action, ContentIndex::CCIRefs))
             ],
             space().height(SEPERATION),
-            text("False Positives").size(32),
+            text(" False Positives").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
@@ -580,7 +581,7 @@ impl App {
                     ))
             ],
             space().height(SEPERATION),
-            text("False Negatives").size(32),
+            text(" False Negatives").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
@@ -723,7 +724,7 @@ impl App {
 
         // Wrap lazy in a container so that it fills the whole width.
         // For some reason it shrinks the content inside of it.
-        container(lazy_view).width(Fill).into()
+        container(lazy_view).width(Fill).height(Fill).into()
     }
 
     /// Display of the filter menu, gets stacked on top of the main application view.

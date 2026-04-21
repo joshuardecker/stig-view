@@ -380,7 +380,7 @@ impl App {
             }
 
             Message::SwitchPopup(popup) => {
-                match (&popup, &popup) {
+                match (&self.popup, &popup) {
                     (Popup::Filter, Popup::Filter) => self.popup = Popup::None,
                     (Popup::Settings, Popup::Settings) => self.popup = Popup::None,
                     _ => {
@@ -543,6 +543,8 @@ impl App {
             },
             Message::DeleteCachedBenchmark(path) => {
                 let err = std::fs::remove_file(path);
+
+                self.home_menu_hash += 1;
 
                 if err.is_err() {
                     Task::done(Message::SendErrNotif("Couldn't delete cached benchmark."))
