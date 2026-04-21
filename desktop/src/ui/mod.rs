@@ -41,7 +41,8 @@ impl App {
             Popup::Filter => self.filter_menu(),
             Popup::Settings => self.settings_menu(),
             Popup::Save => self.save_menu(),
-            _ => space().into(),
+            Popup::UpdateAvailable => self.display_update_available(),
+            Popup::None => space().into(),
         };
 
         let err_notification = match &self.err_notif {
@@ -871,6 +872,46 @@ impl App {
             .height(125)
             .padding(8)
             .style(err_container),
+        ))
+        .align_right(Fill)
+        .align_bottom(Fill)
+        .padding(SEPERATION * 4.0)
+        .into()
+    }
+
+    /// Display to the user that an update is available.
+    fn display_update_available<'a>(&self) -> Element<'a, Message> {
+        container(opaque(
+            container(
+                column![
+                    row![
+                        space::horizontal(),
+                        text("Update Available"),
+                        space::horizontal(),
+                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::SwitchPopup(Popup::None)),
+                    ]
+                    .align_y(Center),
+                    space::vertical(),
+                    row![
+                        text("There is an update available Stig View.")
+                            .size(12)
+                            .height(Fill)
+                            .wrapping(text::Wrapping::WordOrGlyph)
+                    ]
+                    .align_y(Center),
+                    space::vertical(),
+                ]
+                .align_x(Center),
+            )
+            .width(250)
+            .height(75)
+            .padding(8)
+            .style(cmd_container),
         ))
         .align_right(Fill)
         .align_bottom(Fill)

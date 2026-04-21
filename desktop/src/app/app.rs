@@ -40,7 +40,10 @@ impl App {
                 popup_opacity: 1.0,
                 popup_last_tick: None,
             },
-            window::oldest().map(Message::InitWindow),
+            Task::batch(vec![
+                window::oldest().map(Message::InitWindow),
+                Task::done(Message::FetchLatestVersion),
+            ]),
         )
     }
 
@@ -118,6 +121,16 @@ impl App {
 
                 Task::done(Message::SaveSettings)
             }
+
+            Message::FetchLatestVersion => Task::future(async {
+                use crate::app::latest_release::is_latest_version;
+
+                match is_latest_version() {
+                    Some(true) => Message::DoNothing,
+                    Some(false) => Message::SwitchPopup(Popup::UpdateAvailable),
+                    None => Message::DoNothing, // Silently fail.
+                }
+            }),
 
             Message::OpenFile => Task::future(async move {
                 let home_dir = dirs::home_dir();

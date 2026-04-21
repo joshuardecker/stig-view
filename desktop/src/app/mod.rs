@@ -2,6 +2,7 @@
 mod app;
 /// Contains command logic, such as turning a string into a command, and running it.
 mod command;
+mod latest_release;
 /// Contains settings logic, like saving to the disk.
 mod settings;
 /// Contains the logic for remembering when benchmarks were last opened, and saving this to the disk.
@@ -63,6 +64,7 @@ pub enum Popup {
     Filter,
     Settings,
     Save,
+    UpdateAvailable,
     None,
 }
 
@@ -77,6 +79,8 @@ pub enum Message {
     WindowDragResize(Direction),
 
     SwitchTheme(AppTheme),
+
+    FetchLatestVersion,
 
     OpenFile,
 
