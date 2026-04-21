@@ -25,15 +25,6 @@ impl App {
                 background_benchmarks: Vec::new(),
                 pins: HashMap::new(),
                 displayed: None,
-                contents: [
-                    Content::new(),
-                    Content::new(),
-                    Content::new(),
-                    Content::new(),
-                    Content::new(),
-                    Content::new(),
-                    Content::new(),
-                ],
                 filter_input: String::new(),
                 popup: Popup::None,
                 err_notif: None,
@@ -202,17 +193,6 @@ impl App {
                 }
             }),
 
-            Message::SelectContent(action, index) => {
-                // Dont let the user delete or add letters to the displayed text.
-                if let Action::Edit(_) = action {
-                    return Task::none();
-                }
-
-                self.contents[index as usize].perform(action);
-
-                Task::none()
-            }
-
             Message::Switch(id) => {
                 // If the rule already displayed is being switched to, do nothing.
                 if let Some(rule) = &self.displayed {
@@ -356,18 +336,6 @@ impl App {
                 }
             }
             Message::Display(rule) => {
-                self.contents[ContentIndex::Title as usize] = Content::with_text(&rule.title);
-                self.contents[ContentIndex::Discussion as usize] =
-                    Content::with_text(&rule.vuln_discussion);
-                self.contents[ContentIndex::Check as usize] = Content::with_text(&rule.check_text);
-                self.contents[ContentIndex::Fix as usize] = Content::with_text(&rule.fix_text);
-                self.contents[ContentIndex::CCIRefs as usize] =
-                    Content::with_text(&rule.cci_refs.as_deref().unwrap_or(&[]).join("\n"));
-                self.contents[ContentIndex::FalsePositives as usize] =
-                    Content::with_text(&rule.false_positives.as_deref().unwrap_or(""));
-                self.contents[ContentIndex::FalseNegatives as usize] =
-                    Content::with_text(&rule.false_negatives.as_deref().unwrap_or(""));
-
                 self.displayed = Some(rule);
 
                 // Only animate if configured to.

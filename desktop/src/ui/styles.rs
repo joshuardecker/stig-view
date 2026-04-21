@@ -2,7 +2,7 @@ use iced::{
     Border, Shadow, Theme, border,
     border::Radius,
     color,
-    widget::{button, container, svg, text_editor, toggler},
+    widget::{button, container, svg, toggler},
 };
 
 const BORDER_RAD: f32 = 8.0;
@@ -355,21 +355,6 @@ pub fn fade_overlay(alpha: f32) -> impl Fn(&Theme) -> container::Style {
             background: Some(bg.into()),
             ..container::Style::default()
         }
-    }
-}
-
-/// Removes visible styling from a text editor.
-pub fn no_text_editor(theme: &Theme, _status: text_editor::Status) -> text_editor::Style {
-    let palette = theme.extended_palette();
-
-    text_editor::Style {
-        background: color!(0, 0, 0, 0.0).into(),
-        border: Border {
-            ..Border::default()
-        },
-        placeholder: color!(0, 0, 0, 0.0),
-        value: palette.background.base.text,
-        selection: palette.primary.weak.color,
     }
 }
 

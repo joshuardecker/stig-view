@@ -3608,8 +3608,10 @@ dependencies = [
 name = "stig-view-desktop"
 version = "0.5.1"
 dependencies = [
+ "cosmic-text",
  "dirs",
  "iced",
+ "iced_graphics",
  "image",
  "regex",
  "rfd",
@@ -3617,6 +3619,7 @@ dependencies = [
  "stig-view-core",
  "tokio",
  "toml",
+ "unicode-segmentation",
  "winresource",
 ]
 

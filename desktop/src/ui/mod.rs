@@ -11,7 +11,7 @@ use iced::{
     Center, Element, Fill, FillPortion, Shrink,
     widget::{
         Id, button, column, container, lazy, mouse_area, opaque, pick_list, row, rule, scrollable,
-        sensor, space, stack, svg, text, text_editor, text_input, toggler, tooltip,
+        sensor, space, stack, svg, text, text_input, toggler, tooltip,
     },
 };
 use stig_view_core::CKLStatus;
@@ -477,13 +477,13 @@ impl App {
                 column![
                     text("Group ID").size(18),
                     space().height(SEPERATION),
-                    text(&stig_rule.group_id),
+                    selectable_text(&stig_rule.group_id),
                     space().height(SEPERATION),
                     rule::horizontal(2),
                     space().height(SEPERATION),
                     text("Severity").size(18),
                     space().height(SEPERATION),
-                    text(stig_rule.severity.to_string()),
+                    selectable_text(stig_rule.severity.as_str()),
                 ]
                 .align_x(Center)
                 .width(FillPortion(1)),
@@ -493,7 +493,7 @@ impl App {
                 column![
                     text("Rule ID").size(18),
                     space().height(SEPERATION),
-                    text(&stig_rule.rule_id),
+                    selectable_text(&stig_rule.rule_id),
                     space().height(SEPERATION),
                     rule::horizontal(2),
                     space().height(SEPERATION),
@@ -506,13 +506,13 @@ impl App {
                 column![
                     text("STIG ID").size(18),
                     space().height(SEPERATION),
-                    text(stig_rule.stig_id.as_deref().unwrap_or("None")),
+                    selectable_text(stig_rule.stig_id.as_deref().unwrap_or("None")),
                     space().height(SEPERATION),
                     rule::horizontal(2),
                     space().height(SEPERATION),
                     text("Documentable").size(18),
                     space().height(SEPERATION),
-                    text(stig_rule.documentable_str()),
+                    selectable_text(stig_rule.documentable_str()),
                 ]
                 .align_x(Center)
                 .width(FillPortion(1)),
@@ -521,21 +521,14 @@ impl App {
             text(" Introduction").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
-            row![
-                space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::Title as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(action, ContentIndex::Title))
-            ],
+            row![space().width(SEPERATION), selectable_text(&stig_rule.title)],
             space().height(SEPERATION),
             text(" Description").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::Discussion as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(action, ContentIndex::Discussion))
+                selectable_text(&stig_rule.vuln_discussion)
             ],
             space().height(SEPERATION),
             text(" Check").size(32),
@@ -543,9 +536,7 @@ impl App {
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::Check as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(action, ContentIndex::Check))
+                selectable_text(&stig_rule.check_text),
             ],
             space().height(SEPERATION),
             text(" Fix").size(32),
@@ -553,9 +544,7 @@ impl App {
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::Fix as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(action, ContentIndex::Fix))
+                selectable_text(&stig_rule.fix_text)
             ],
             space().height(SEPERATION),
             text(" CCIs").size(32),
@@ -563,9 +552,13 @@ impl App {
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::CCIRefs as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(action, ContentIndex::CCIRefs))
+                selectable_text(
+                    stig_rule
+                        .cci_refs
+                        .as_ref()
+                        .map(|refs| refs.join("\n"))
+                        .unwrap_or_default(),
+                )
             ],
             space().height(SEPERATION),
             text(" False Positives").size(32),
@@ -573,12 +566,7 @@ impl App {
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::FalsePositives as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(
-                        action,
-                        ContentIndex::FalsePositives
-                    ))
+                selectable_text(stig_rule.false_positives.as_deref().unwrap_or(""))
             ],
             space().height(SEPERATION),
             text(" False Negatives").size(32),
@@ -586,12 +574,7 @@ impl App {
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::FalseNegatives as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(
-                        action,
-                        ContentIndex::FalseNegatives
-                    ))
+                selectable_text(stig_rule.false_negatives.as_deref().unwrap_or(""))
             ],
         ];
 

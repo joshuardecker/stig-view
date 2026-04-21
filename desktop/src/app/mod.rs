@@ -7,15 +7,7 @@ mod settings;
 /// Contains the logic for remembering when benchmarks were last opened, and saving this to the disk.
 mod time_opened;
 
-use iced::{
-    Task, keyboard,
-    widget::{
-        Id,
-        text_editor::{Action, Content},
-    },
-    window,
-    window::Direction,
-};
+use iced::{Task, keyboard, widget::Id, window, window::Direction};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Instant};
 use stig_view_core::{Benchmark, Rule};
@@ -36,7 +28,6 @@ pub struct App {
     pub pins: HashMap<String, Pinned>,
     /// The currently displayed rule.
     pub displayed: Option<Rule>,
-    pub contents: [Content; 7],
     /// The text input for the user to type filters into.
     pub filter_input: String,
     /// The current popup being displayed.
@@ -89,8 +80,6 @@ pub enum Message {
 
     OpenFile,
 
-    SelectContent(Action, ContentIndex),
-
     Switch(String),
     SwitchBenchmark(Benchmark),
     SwitchBenchmarks(Vec<Benchmark>),
@@ -132,19 +121,6 @@ pub enum Message {
     Tick(Instant),
 
     DoNothing,
-}
-
-/// An enum that represents an index for accessing the text editors context array
-/// in the state.
-#[derive(Debug, Clone, Copy)]
-pub enum ContentIndex {
-    Title,
-    Discussion,
-    Check,
-    Fix,
-    CCIRefs,
-    FalsePositives,
-    FalseNegatives,
 }
 
 /// The color theme of the app.
