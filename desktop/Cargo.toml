@@ -1,6 +1,6 @@
 [package]
 name = "stig-view-desktop"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2024"
 
 [[bin]]
@@ -17,8 +17,7 @@ image = "0.25.9"
 regex = "1.12.2"
 rfd = "0.17.2"
 dirs = "6"
-tokio = { version = "1.49.0", features = ["sync", "fs"]}
-serde = "1.0.228"
+serde = { version = "1.0.228", features = ["derive"] }
 toml = "1.0.6"
 
 [build-dependencies]

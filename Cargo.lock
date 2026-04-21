@@ -3590,7 +3590,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "stig-view-core"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "dirs",
  "regex",
@@ -3598,7 +3598,6 @@ dependencies = [
  "roxmltree 0.21.1",
  "serde",
  "serde_json",
- "tokio",
  "toml",
  "zip",
  "zstd",
@@ -3606,7 +3605,7 @@ dependencies = [
 
 [[package]]
 name = "stig-view-desktop"
-version = "0.5.1"
+version = "0.6.0"
 dependencies = [
  "cosmic-text",
  "dirs",
@@ -3617,7 +3616,6 @@ dependencies = [
  "rfd",
  "serde",
  "stig-view-core",
- "tokio",
  "toml",
  "unicode-segmentation",
  "winresource",
