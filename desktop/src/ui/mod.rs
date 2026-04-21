@@ -210,7 +210,7 @@ impl App {
                 match &rule.ckl_status {
                     Some(CKLStatus::NotAFinding) => compliant_counter += 1,
                     Some(CKLStatus::Open) => noncompliant_counter += 1,
-                    Some(CKLStatus::NotApplicable) => manual_counter += 1,
+                    Some(CKLStatus::NotApplicable) => compliant_counter += 1,
                     Some(CKLStatus::NotReviewed) => manual_counter += 1,
                     None => (),
                 }
@@ -382,10 +382,10 @@ impl App {
             .into(),
             Some(CKLStatus::NotApplicable) => row![
                 tooltip(
-                    svg(MINUS_CIRCLE.clone())
+                    svg(CHECKED_CIRCLE.clone())
                         .width(16)
                         .height(16)
-                        .style(warning_svg),
+                        .style(good_svg),
                     container("Not Applicable.")
                         .style(background_container)
                         .padding(4),
