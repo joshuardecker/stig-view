@@ -886,6 +886,7 @@ impl App {
 
         container(
             row![
+                space().width(SEPERATION * 0.5),
                 button(svg(CROSS.clone()).style(boring_svg).width(13).height(13))
                     .padding(1)
                     .width(Shrink)
@@ -893,14 +894,15 @@ impl App {
                     .style(no_button)
                     .on_press(Message::SwitchDisplayUpdateAvailable(false)),
                 space().width(SEPERATION),
-                container(text("Update Available").size(12).center())
+                container(text("Update Available").size(12).center()),
+                space().width(SEPERATION * 0.5),
             ]
             .align_y(Center),
         )
         .padding(4)
         .style(update_available_container)
         .width(Shrink)
-        .height(Fill)
+        .height(22)
         .into()
     }
 
