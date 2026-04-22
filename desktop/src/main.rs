@@ -11,7 +11,7 @@ mod widgets;
 
 use crate::app::App;
 
-#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[cfg(not(target_os = "linux"))]
 fn main() -> iced::Result {
     use iced::Font;
 
