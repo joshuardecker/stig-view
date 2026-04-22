@@ -35,6 +35,8 @@ pub struct App {
     pub popup: Popup,
     /// Error notification text to be displayed.
     pub err_notif: Option<&'static str>,
+    /// If true, display to the user there is an update available.
+    pub display_update_available: bool,
     /// The internal id of the window.
     pub window_id: Option<window::Id>,
     /// Settings applied to the app.
@@ -64,7 +66,6 @@ pub enum Popup {
     Filter,
     Settings,
     Save,
-    UpdateAvailable,
     None,
 }
 
@@ -81,6 +82,7 @@ pub enum Message {
     SwitchTheme(AppTheme),
 
     FetchLatestVersion,
+    SwitchDisplayUpdateAvailable(bool),
 
     OpenFile,
 

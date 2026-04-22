@@ -28,6 +28,7 @@ impl App {
                 filter_input: String::new(),
                 popup: Popup::None,
                 err_notif: None,
+                display_update_available: false,
                 window_id: None,
                 settings: settings,
                 last_opened,
@@ -127,10 +128,16 @@ impl App {
 
                 match is_latest_version() {
                     Some(true) => Message::DoNothing,
-                    Some(false) => Message::SwitchPopup(Popup::UpdateAvailable),
+                    Some(false) => Message::SwitchDisplayUpdateAvailable(true),
                     None => Message::DoNothing, // Silently fail.
                 }
             }),
+
+            Message::SwitchDisplayUpdateAvailable(toggle) => {
+                self.display_update_available = toggle;
+
+                Task::none()
+            }
 
             Message::OpenFile => Task::future(async move {
                 let home_dir = dirs::home_dir();

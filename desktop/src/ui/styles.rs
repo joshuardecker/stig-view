@@ -344,6 +344,26 @@ pub fn err_container(theme: &Theme) -> container::Style {
     }
 }
 
+/// The style the display update available container uses.
+/// Looks nice in the window decorations.
+pub fn update_available_container(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
+    container::Style {
+        text_color: Some(palette.background.base.text),
+        background: Some(palette.background.base.color.into()),
+        border: Border {
+            color: palette.secondary.base.color,
+            width: 2.0,
+            radius: BORDER_RAD.into(),
+        },
+        shadow: Shadow {
+            ..Shadow::default()
+        },
+        snap: false,
+    }
+}
+
 /// An overlay container that fades content in. Pass `1.0 - main_col_opacity` as the alpha.
 /// Used in a stack on top of content to simulate fade-in since iced 0.14 has no general opacity widget.
 pub fn fade_overlay(alpha: f32) -> impl Fn(&Theme) -> container::Style {
