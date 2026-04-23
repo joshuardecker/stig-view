@@ -1,4 +1,4 @@
-![](https://github.com/joshuardecker/stig-view/blob/master/showcase.gif)
+![](https://github.com/joshuardecker/stig-view/blob/master/showcase.gif?raw=true)
 
 # Stig View
 
