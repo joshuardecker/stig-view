@@ -9,11 +9,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: macos-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Build
-        run: cargo build --release -p stig-view-desktop
+        run: bash scripts/macos.sh
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: stig-view-macos
-          path: target/release/stig-view
+          path: stig-view.dmg

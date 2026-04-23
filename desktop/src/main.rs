@@ -1,11 +1,17 @@
+// Makes a terminal not appear when the windows app is launched.
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
+/// Contains all of the app logic, which is the apps state and functionality.
 mod app;
+/// Contains all of the ui code, such as styles and ui elements.
+/// Contains some logic, but only ui logic.
 mod ui;
+/// Custom iced widgets.
+mod widgets;
 
 use crate::app::App;
 
-#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[cfg(not(target_os = "linux"))]
 fn main() -> iced::Result {
     use iced::Font;
 

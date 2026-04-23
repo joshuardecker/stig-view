@@ -1,4 +1,7 @@
-use crate::*;
+use serde::Deserialize;
+use std::collections::{BTreeMap, HashSet};
+
+use crate::{Benchmark, CACHE_VERSION, Rule, Severity};
 
 /// Xylok toml's can be deserialized into this struct.
 #[derive(Debug, Clone, Deserialize)]
@@ -14,7 +17,7 @@ pub struct XylokToml {
 #[cfg_attr(test, derive(PartialEq, Eq))]
 pub struct XylokVersion {
     date: String,
-    check_pks: Vec<String>,
+    check_pks: HashSet<String>,
 }
 
 /// The information I care about from [benchmark].
@@ -63,30 +66,29 @@ pub struct XylokRule {
 }
 
 impl XylokToml {
+    /// Converts the Xylok TOML into a Benchmark that can be displayed and saved.
+    /// Silently drops rules that fail to be parsed, returns None if no list of versions are
+    /// found in the Xylok TOML.
     pub fn convert(mut self) -> Option<Benchmark> {
         self.versions.sort_by(|a, b| a.date.cmp(&b.date));
 
+        // Get the newest version in the Xylok TOML.
         let version = self.versions.last()?;
 
         let mut rules = BTreeMap::new();
 
         self.checks.into_iter().for_each(|xylok_rule| {
-            // If there is no uuid, skip.
-            if let None = xylok_rule.pk {
-                return;
-            }
+            let rule_pk = match xylok_rule.pk.as_ref() {
+                Some(pk) => pk,
+                None => return,
+            };
 
-            // Safe .expect call.
             // If the uuid is not contained in the most recent version, skip.
-            if !version
-                .check_pks
-                .contains(&xylok_rule.pk.clone().expect("This should have a pk value."))
-            {
+            if !version.check_pks.contains(rule_pk) {
                 return;
             }
 
             // Convert the rule and insert it.
-            // Known to be from the most recent version, so it is relevant.
             if let Some(rule) = xylok_rule.convert() {
                 rules.insert(rule.group_id.clone(), rule);
             }
@@ -103,6 +105,8 @@ impl XylokToml {
 }
 
 impl XylokRule {
+    /// Converts a single rule from the Xylok TOML into the Rule type.
+    /// If a required field is missing, this returns None.
     pub fn convert(self) -> Option<Rule> {
         let ccis: Vec<String> = self
             .ccis
@@ -115,12 +119,10 @@ impl XylokRule {
             group_id: self.vulnerability_id?,
             // Trim _rule from the end of the string when converting.
             // Verbose as always.
-            rule_id: self
-                .rule_id
-                .clone()?
-                .strip_suffix("_rule")
-                .unwrap_or(&self.rule_id?)
-                .to_owned(),
+            rule_id: {
+                let id = self.rule_id?;
+                id.strip_suffix("_rule").unwrap_or(&id).to_owned()
+            },
             stig_id: self.human_id,
             severity: self.nist_impact?,
             title: self.title?,

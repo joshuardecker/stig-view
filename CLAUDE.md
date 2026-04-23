@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Stig View is a Rust desktop application for viewing DISA Security Technical Implementation Guides (STIGs). It supports Xylok TOML, XCCDF XML/ZIP (v1.1 and v1.2), CKL, and CKLB formats.
+Stig View is a Rust desktop application for viewing DISA Security Technical Implementation Guides (STIGs). It supports Xylok packed TOML, XCCDF v1.1, CKL, and CKLB formats.
+
+The goal when using AI to develop this application is not for AI to do it alone. Instead AI is used as a tool to improve existing code, and discuss future ideas and how to best implement them.
 
 ## Commands
 
@@ -27,14 +29,4 @@ cargo build
 Cargo workspace with two crates:
 
 - **`core/`** (`stig-view-core`) — GUI-agnostic business logic, kept separate for potential future reuse (e.g. a web frontend).
-- **`desktop/`** (`stig-view-desktop`) — Iced 0.14 application.
-
-`core/stig_dep.rs` and `core/db_dep.rs` are deprecated legacy files kept temporarily. Do not extend them — new work goes in `lib.rs` and `db.rs`.
-
-## TODO
-
-Planned work is tracked in `TODO.md` at the repo root, organized by release version.
-
-## Platform Notes
-
-Currently only builds for Linux. macOS and Windows support is planned — see `TODO.md` for details.
+- **`desktop/`** (`stig-view-desktop`) — Iced desktop application.

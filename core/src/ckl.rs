@@ -1,6 +1,5 @@
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 use crate::{Benchmark, CACHE_VERSION, Rule, Severity};
 

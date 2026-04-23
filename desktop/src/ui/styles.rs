@@ -1,10 +1,9 @@
-use iced::Shadow;
-use iced::border;
-use iced::border::Border;
-use iced::border::Radius;
-use iced::color;
-use iced::theme::Theme;
-use iced::widget::{button, container, svg, text_editor, toggler};
+use iced::{
+    Border, Shadow, Theme, border,
+    border::Radius,
+    color,
+    widget::{button, container, svg, toggler},
+};
 
 const BORDER_RAD: f32 = 8.0;
 
@@ -45,7 +44,7 @@ pub fn rounded_success_button(theme: &Theme, status: button::Status) -> button::
     match status {
         button::Status::Hovered => button::Style {
             background: Some(palette.success.weak.color.into()),
-            text_color: palette.success.weak.text,
+            text_color: palette.danger.weak.text, // Makes this match the danger button.
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
@@ -56,7 +55,7 @@ pub fn rounded_success_button(theme: &Theme, status: button::Status) -> button::
         },
         _ => button::Style {
             background: Some(palette.success.base.color.into()),
-            text_color: palette.success.base.text,
+            text_color: palette.danger.base.text, // Makes this match the danger button.
             border: Border {
                 ..border::rounded(BORDER_RAD)
             },
@@ -345,6 +344,26 @@ pub fn err_container(theme: &Theme) -> container::Style {
     }
 }
 
+/// The style the display update available container uses.
+/// Looks nice in the window decorations.
+pub fn update_available_container(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
+    container::Style {
+        text_color: Some(palette.background.base.text),
+        background: Some(palette.background.base.color.into()),
+        border: Border {
+            color: palette.secondary.base.color,
+            width: 2.0,
+            radius: BORDER_RAD.into(),
+        },
+        shadow: Shadow {
+            ..Shadow::default()
+        },
+        snap: false,
+    }
+}
+
 /// An overlay container that fades content in. Pass `1.0 - main_col_opacity` as the alpha.
 /// Used in a stack on top of content to simulate fade-in since iced 0.14 has no general opacity widget.
 pub fn fade_overlay(alpha: f32) -> impl Fn(&Theme) -> container::Style {
@@ -356,21 +375,6 @@ pub fn fade_overlay(alpha: f32) -> impl Fn(&Theme) -> container::Style {
             background: Some(bg.into()),
             ..container::Style::default()
         }
-    }
-}
-
-/// Removes visible styling from a text editor.
-pub fn no_text_editor(theme: &Theme, _status: text_editor::Status) -> text_editor::Style {
-    let palette = theme.extended_palette();
-
-    text_editor::Style {
-        background: color!(0, 0, 0, 0.0).into(),
-        border: Border {
-            ..Border::default()
-        },
-        placeholder: color!(0, 0, 0, 0.0),
-        value: palette.background.base.text,
-        selection: palette.primary.weak.color,
     }
 }
 

@@ -10,7 +10,6 @@
     Version='$(var.Version)'>
 
     <Package Id='*'
-      Keywords='Installer'
       Description='DISA STIG viewer'
       Manufacturer='Joshua Decker'
       InstallerVersion='450'

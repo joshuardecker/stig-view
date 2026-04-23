@@ -1,6 +1,10 @@
+/// Load ckl and cklb files into a benchmark.
 mod ckl;
+/// Detect the format of a benchmark file, such as xccdf, ckl, cklb, or xylok.
 mod detection;
+/// Load xccdf files into a benchmark.
 mod xccdf;
+/// Load xylok toml files into a benchmark.
 mod xylok;
 
 // Re exports.
@@ -58,6 +62,19 @@ pub enum Severity {
     Medium,
     High,
     VeryHigh,
+}
+
+impl Severity {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Severity::Unknown => "Unknown",
+            Severity::VeryLow => "Very Low",
+            Severity::Low => "Low",
+            Severity::Medium => "Medium",
+            Severity::High => "High",
+            Severity::VeryHigh => "Very High",
+        }
+    }
 }
 
 impl std::fmt::Display for Severity {
@@ -149,7 +166,7 @@ impl Benchmark {
         create_dir_all(&cache_dir).ok()?;
 
         // Add proper file extensions.
-        cache_dir.push(self.id.clone() + ".msgpack.zstd");
+        cache_dir.push(format!("{}.msgpack.zstd", self.id.clone()));
 
         let mut file = File::create(cache_dir).ok()?;
 

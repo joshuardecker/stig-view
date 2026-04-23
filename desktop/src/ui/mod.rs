@@ -1,18 +1,24 @@
-pub mod assets;
+mod assets;
 mod styles;
+mod themes;
+
+// Re-exports.
+pub use assets::*;
+pub use themes::*;
 
 use iced::{
     Alignment::End,
     Center, Element, Fill, FillPortion, Shrink,
     widget::{
-        Id, button, column, container, mouse_area, opaque, pick_list, row, rule, scrollable,
-        sensor, space, stack, svg, text, text_editor, text_input, toggler, tooltip,
+        Id, button, column, container, lazy, mouse_area, opaque, pick_list, row, rule, scrollable,
+        sensor, space, stack, svg, text, text_input, toggler, tooltip,
     },
 };
-use stig_view_core::{CKLStatus, Rule};
+use stig_view_core::CKLStatus;
 
 use crate::app::*;
-use crate::ui::{assets::*, styles::*};
+use crate::ui::styles::*;
+use crate::widgets::selectable_text;
 
 /// The default seperation between elements.
 /// I use magic values around because they look better.
@@ -22,7 +28,12 @@ impl App {
     /// Get the view of the application.
     pub fn view(&self) -> Element<'_, Message> {
         let window_decorations = self.window_decorations();
-        let content = row![self.stig_list(), space().width(15), self.displayed_stig()].into();
+        let content = row![
+            self.stig_list(),
+            space().width(SEPERATION * 2.0),
+            self.displayed_stig()
+        ]
+        .into();
 
         let padded_content = self.padding(window_decorations, content);
 
@@ -30,7 +41,7 @@ impl App {
             Popup::Filter => self.filter_menu(),
             Popup::Settings => self.settings_menu(),
             Popup::Save => self.save_menu(),
-            _ => space().into(),
+            Popup::None => space().into(),
         };
 
         let err_notification = match &self.err_notif {
@@ -65,16 +76,28 @@ impl App {
             // Top section above window decorations.
             row![
                 container(
-                    mouse_area(container(space::horizontal()).width(10).height(10))
-                        .on_press(Message::WindowDragResize(NorthWest))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION)
+                            .height(SEPERATION)
+                    )
+                    .on_press(Message::WindowDragResize(NorthWest))
                 ),
                 container(
-                    mouse_area(container(space::horizontal()).width(Fill).height(10))
-                        .on_press(Message::WindowDragResize(North))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(Fill)
+                            .height(SEPERATION)
+                    )
+                    .on_press(Message::WindowDragResize(North))
                 ),
                 container(
-                    mouse_area(container(space::horizontal()).width(10).height(10))
-                        .on_press(Message::WindowDragResize(NorthEast))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION)
+                            .height(SEPERATION)
+                    )
+                    .on_press(Message::WindowDragResize(NorthEast))
                 ),
             ],
             window_decorations,
@@ -83,28 +106,48 @@ impl App {
             // Surrounded on left and right by drag click resize areas.
             row![
                 container(
-                    mouse_area(container(space::horizontal()).width(15).height(Fill))
-                        .on_press(Message::WindowDragResize(West))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION * 2.0)
+                            .height(Fill)
+                    )
+                    .on_press(Message::WindowDragResize(West))
                 ),
                 content,
                 container(
-                    mouse_area(container(space::horizontal()).width(15).height(Fill))
-                        .on_press(Message::WindowDragResize(East))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION * 2.0)
+                            .height(Fill)
+                    )
+                    .on_press(Message::WindowDragResize(East))
                 ),
             ],
             // Bottom section below the main content.
             row![
                 container(
-                    mouse_area(container(space::horizontal()).width(15).height(15))
-                        .on_press(Message::WindowDragResize(SouthWest))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION * 2.0)
+                            .height(SEPERATION * 2.0)
+                    )
+                    .on_press(Message::WindowDragResize(SouthWest))
                 ),
                 container(
-                    mouse_area(container(space::horizontal()).width(Fill).height(15))
-                        .on_press(Message::WindowDragResize(South))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(Fill)
+                            .height(SEPERATION * 2.0)
+                    )
+                    .on_press(Message::WindowDragResize(South))
                 ),
                 container(
-                    mouse_area(container(space::horizontal()).width(15).height(15))
-                        .on_press(Message::WindowDragResize(SouthEast))
+                    mouse_area(
+                        container(space::horizontal())
+                            .width(SEPERATION * 2.0)
+                            .height(SEPERATION * 2.0)
+                    )
+                    .on_press(Message::WindowDragResize(SouthEast))
                 ),
             ],
         ])
@@ -121,194 +164,196 @@ impl App {
                 .into();
         }
 
-        // A few buttons that allow the user to switch what value is displayed on the buttons.
-        // Separate to the scrollable, should always be present.
-        let header = column![
-            row![
-                button(text("Group ID").size(12).center())
-                    .on_press(Message::SwitchDisplayType(DisplayType::GroupId))
-                    .style(rounded_primary_button)
-                    .width(FillPortion(1)),
-                space().width(SEPERATION),
-                button(text("Rule ID").size(12).center())
-                    .on_press(Message::SwitchDisplayType(DisplayType::RuleId))
-                    .style(rounded_primary_button)
-                    .width(FillPortion(1)),
-                space().width(SEPERATION),
-                button(text("STIG ID").size(12).center())
-                    .on_press(Message::SwitchDisplayType(DisplayType::STIGId))
-                    .style(rounded_primary_button)
-                    .width(FillPortion(1)),
-            ],
-            space().height(SEPERATION)
-        ]
-        .align_x(Center);
+        lazy(self.stig_list_hash, |_| {
+            // A few buttons that allow the user to switch what value is displayed on the buttons.
+            // Separate to the scrollable, should always be present.
+            let header = column![
+                row![
+                    button(text("Group ID").size(12).center())
+                        .on_press(Message::SwitchDisplayType(DisplayType::GroupId))
+                        .style(rounded_primary_button)
+                        .width(FillPortion(1)),
+                    space().width(SEPERATION),
+                    button(text("Rule ID").size(12).center())
+                        .on_press(Message::SwitchDisplayType(DisplayType::RuleId))
+                        .style(rounded_primary_button)
+                        .width(FillPortion(1)),
+                    space().width(SEPERATION),
+                    button(text("STIG ID").size(12).center())
+                        .on_press(Message::SwitchDisplayType(DisplayType::STIGId))
+                        .style(rounded_primary_button)
+                        .width(FillPortion(1)),
+                ],
+                space().height(SEPERATION)
+            ]
+            .align_x(Center);
 
-        let mut not_pin_col = column![];
-        let mut user_pin_col = column![];
-        let mut filter_pin_col = column![];
-        let mut filter_user_pin_col = column![];
+            let mut not_pin_col = column![];
+            let mut user_pin_col = column![];
+            let mut filter_pin_col = column![];
+            let mut filter_user_pin_col = column![];
 
-        // Counters used to keep track of the total number of compliant,
-        // noncompliant, and manual review recommendations.
-        let mut compliant_counter = 0;
-        let mut manual_counter = 0;
-        let mut noncompliant_counter = 0;
+            // Counters used to keep track of the total number of compliant,
+            // noncompliant, and manual review recommendations.
+            let mut compliant_counter = 0;
+            let mut manual_counter = 0;
+            let mut noncompliant_counter = 0;
 
-        // The amount of filtered STIGs.
-        // Columns do not have a len() function, so I keep track here.
-        // If this is greater than 0, a seperating rule will be placed between
-        // filtered and non filtered STIGs.
-        let mut total_filtered = 0;
+            // The amount of filtered STIGs.
+            // Columns do not have a len() function, so I keep track here.
+            // If this is greater than 0, a seperating rule will be placed between
+            // filtered and non filtered STIGs.
+            let mut total_filtered = 0;
 
-        let dot_handle = svg::Handle::from_memory(SQUARE);
+            for (name, rule) in self.benchmark.rules.iter() {
+                match &rule.ckl_status {
+                    Some(CKLStatus::NotAFinding) => compliant_counter += 1,
+                    Some(CKLStatus::Open) => noncompliant_counter += 1,
+                    Some(CKLStatus::NotApplicable) => compliant_counter += 1,
+                    Some(CKLStatus::NotReviewed) => manual_counter += 1,
+                    None => (),
+                }
 
-        for (name, rule) in self.benchmark.rules.iter() {
-            match &rule.ckl_status {
-                Some(CKLStatus::NotAFinding) => compliant_counter += 1,
-                Some(CKLStatus::Open) => noncompliant_counter += 1,
-                Some(CKLStatus::NotApplicable) => manual_counter += 1,
-                Some(CKLStatus::NotReviewed) => manual_counter += 1,
-                None => (),
+                let pin_type = self.pins.get(name).unwrap_or(&Pinned::Not);
+
+                let button = self.stig_button(
+                    pin_type.to_owned(),
+                    name.to_owned(),
+                    rule.ckl_status.clone(),
+                    rule.rule_id.clone(),
+                    rule.stig_id.clone(),
+                );
+
+                match pin_type {
+                    Pinned::Not => not_pin_col = not_pin_col.push(button).push(space().height(8)),
+                    Pinned::ByUser => {
+                        user_pin_col = user_pin_col.push(button).push(space().height(8))
+                    }
+                    Pinned::ByFilter => {
+                        // Puts a nice strip of color on the left side of the button.
+                        let button_with_accent: Element<'_, Message> = row![
+                            container(space::horizontal())
+                                .width(SEPERATION * 0.5)
+                                .height(Fill)
+                                .style(filter_accent),
+                            button
+                        ]
+                        .into();
+
+                        filter_pin_col = filter_pin_col
+                            .push(button_with_accent)
+                            .push(space().height(SEPERATION));
+
+                        total_filtered += 1;
+                    }
+                    Pinned::ByFilterAndUser => {
+                        // Puts a nice strip of color on the left side of the button.
+                        let button_with_accent: Element<'_, Message> = row![
+                            container(space::horizontal())
+                                .width(SEPERATION * 0.5)
+                                .height(Fill)
+                                .style(filter_accent),
+                            button
+                        ]
+                        .into();
+
+                        filter_user_pin_col = filter_user_pin_col
+                            .push(button_with_accent)
+                            .push(space().height(SEPERATION));
+
+                        total_filtered += 1
+                    }
+                }
             }
 
-            let pin_type = self.pins.get(name).unwrap_or(&Pinned::Not);
-
-            let button = self.stig_button(pin_type.to_owned(), name, rule);
-
-            match pin_type {
-                Pinned::Not => not_pin_col = not_pin_col.push(button).push(space().height(8)),
-                Pinned::ByUser => user_pin_col = user_pin_col.push(button).push(space().height(8)),
-                Pinned::ByFilter => {
-                    // Puts a nice strip of color on the left side of the button.
-                    let button_with_accent: Element<'_, Message> = row![
-                        container(space::horizontal())
-                            .width(4)
-                            .height(Fill)
-                            .style(filter_accent),
-                        button
+            // Counters visually displays how many of each ckl status is present.
+            // If a non ckl was loaded, this will not be displayed.
+            let counters: Element<'_, Message> =
+                if (compliant_counter + manual_counter + noncompliant_counter) != 0 {
+                    column![
+                        rule::horizontal(2),
+                        space().height(SEPERATION),
+                        row![
+                            tooltip(
+                                svg(SQUARE.clone()).width(12).height(12).style(good_svg),
+                                container("Total Compliant.")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Bottom
+                            ),
+                            space().width(SEPERATION * 0.5),
+                            text(compliant_counter.to_string()),
+                            space().width(SEPERATION * 2.0),
+                            tooltip(
+                                svg(SQUARE.clone()).width(12).height(12).style(bad_svg),
+                                container("Total Non-Compliant.")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Bottom
+                            ),
+                            space().width(SEPERATION * 0.5),
+                            text(noncompliant_counter.to_string()),
+                            space().width(SEPERATION * 2.0),
+                            tooltip(
+                                svg(SQUARE.clone()).width(12).height(12).style(warning_svg),
+                                container("Total Manual Review.")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Bottom
+                            ),
+                            space().width(SEPERATION * 0.5),
+                            text(manual_counter.to_string()),
+                        ]
+                        .align_y(Center),
+                        space().height(SEPERATION),
                     ]
-                    .into();
+                    .align_x(Center)
+                    .into()
+                } else {
+                    space().into()
+                };
 
-                    filter_pin_col = filter_pin_col
-                        .push(button_with_accent)
-                        .push(space().height(SEPERATION));
-
-                    total_filtered += 1;
-                }
-                Pinned::ByFilterAndUser => {
-                    // Puts a nice strip of color on the left side of the button.
-                    let button_with_accent: Element<'_, Message> = row![
-                        container(space::horizontal())
-                            .width(4)
-                            .height(Fill)
-                            .style(filter_accent),
-                        button
-                    ]
-                    .into();
-
-                    filter_user_pin_col = filter_user_pin_col
-                        .push(button_with_accent)
-                        .push(space().height(SEPERATION));
-
-                    total_filtered += 1
-                }
-            }
-        }
-
-        // Counters visually displays how many of each ckl status is present.
-        // If a non ckl was loaded, this will not be displayed.
-        let counters: Element<'_, Message> =
-            if (compliant_counter + manual_counter + noncompliant_counter) != 0 {
-                column![
-                    rule::horizontal(2),
-                    space().height(SEPERATION),
-                    row![
-                        tooltip(
-                            svg(dot_handle.clone()).width(12).height(12).style(good_svg),
-                            container("Total Compliant.")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Bottom
-                        ),
-                        space().width(SEPERATION * 0.5),
-                        text(compliant_counter.to_string()),
-                        space().width(SEPERATION * 2.0),
-                        tooltip(
-                            svg(dot_handle.clone()).width(12).height(12).style(bad_svg),
-                            container("Total Non-Compliant.")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Bottom
-                        ),
-                        space().width(SEPERATION * 0.5),
-                        text(noncompliant_counter.to_string()),
-                        space().width(SEPERATION * 2.0),
-                        tooltip(
-                            svg(dot_handle.clone())
-                                .width(12)
-                                .height(12)
-                                .style(warning_svg),
-                            container("Total Manual Review.")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Bottom
-                        ),
-                        space().width(SEPERATION * 0.5),
-                        text(manual_counter.to_string()),
-                    ]
-                    .align_y(Center),
-                    space().height(SEPERATION),
-                ]
-                .align_x(Center)
-                .into()
+            // Place a horizontal rule if there are any STIGs that have been filtered.
+            let horizontal_rule: Element<'_, Message> = if total_filtered != 0 {
+                column![rule::horizontal(2), space().height(SEPERATION)].into()
             } else {
                 space().into()
             };
 
-        // Place a horizontal rule if there are any STIGs that have been filtered.
-        let horizontal_rule: Element<'_, Message> = if total_filtered != 0 {
-            column![rule::horizontal(2), space().height(SEPERATION)].into()
-        } else {
-            space().into()
-        };
-
-        container(column![
-            header,
-            counters,
-            scrollable(column![
-                filter_user_pin_col,
-                filter_pin_col,
-                horizontal_rule,
-                user_pin_col,
-                not_pin_col,
-                space::vertical(), // Ensures this container is proper size.
+            container(column![
+                header,
+                counters,
+                scrollable(column![
+                    filter_user_pin_col,
+                    filter_pin_col,
+                    horizontal_rule,
+                    user_pin_col,
+                    not_pin_col,
+                    space::vertical(), // Ensures this container is proper size.
+                ])
+                .spacing(SEPERATION),
             ])
-            .spacing(SEPERATION),
-        ])
-        .width(300)
-        .style(background_container)
-        .padding(8)
+            .width(300)
+            .style(background_container)
+            .padding(8)
+        })
         .into()
     }
 
     /// Get a button the user can click to swich displayed STIGs.
-    fn stig_button<'a>(&self, pin_type: Pinned, name: &str, rule: &Rule) -> Element<'a, Message>
-    where
-        Message: 'a,
-    {
-        let bookmark_svg_handle = svg::Handle::from_memory(BOOKMARK);
-        let filled_bookmark_svg_handle = svg::Handle::from_memory(FILLED_BOOKMARK);
-
-        let check_handle = svg::Handle::from_memory(CHECKED_CIRCLE);
-        let cross_handle = svg::Handle::from_memory(CROSS_CIRCLE);
-        let minus_handle = svg::Handle::from_memory(MINUS_CIRCLE);
-
+    fn stig_button(
+        &self,
+        pin_type: Pinned,
+        name: String,
+        ckl_status: Option<CKLStatus>,
+        rule_id: String,
+        stig_id: Option<String>,
+    ) -> Element<'static, Message> {
         // A visual indicator of the cki status of a STIG.
-        let cki_status: Element<'_, Message> = match &rule.ckl_status {
+        let cki_status: Element<'_, Message> = match &ckl_status {
             Some(CKLStatus::NotAFinding) => row![
                 tooltip(
-                    svg(check_handle.clone())
+                    svg(CHECKED_CIRCLE.clone())
                         .width(16)
                         .height(16)
                         .style(good_svg),
@@ -322,7 +367,7 @@ impl App {
             .into(),
             Some(CKLStatus::Open) => row![
                 tooltip(
-                    svg(cross_handle.clone())
+                    svg(CROSS_CIRCLE.clone())
                         .width(16)
                         .height(16)
                         .style(bad_svg),
@@ -336,10 +381,10 @@ impl App {
             .into(),
             Some(CKLStatus::NotApplicable) => row![
                 tooltip(
-                    svg(minus_handle.clone())
+                    svg(CHECKED_CIRCLE.clone())
                         .width(16)
                         .height(16)
-                        .style(warning_svg),
+                        .style(good_svg),
                     container("Not Applicable.")
                         .style(background_container)
                         .padding(4),
@@ -350,7 +395,7 @@ impl App {
             .into(),
             Some(CKLStatus::NotReviewed) => row![
                 tooltip(
-                    svg(minus_handle.clone())
+                    svg(MINUS_CIRCLE.clone())
                         .width(16)
                         .height(16)
                         .style(warning_svg),
@@ -379,17 +424,17 @@ impl App {
         // Get the button text depending on what information the user has chosen to display
         // for button text.
         let button_text = match self.display_type {
-            DisplayType::GroupId => name.to_owned(),
-            DisplayType::RuleId => rule.rule_id.clone(),
+            DisplayType::GroupId => name.clone(),
+            DisplayType::RuleId => rule_id,
             // If there is no STIG Id, fall back to Group Id since its always known.
-            DisplayType::STIGId => rule.stig_id.clone().unwrap_or(name.to_owned()),
+            DisplayType::STIGId => stig_id.unwrap_or(name.clone()),
         };
 
         let bookmark_symbol = match pin_type {
-            Pinned::Not => bookmark_svg_handle,
-            Pinned::ByUser => filled_bookmark_svg_handle,
-            Pinned::ByFilter => bookmark_svg_handle,
-            Pinned::ByFilterAndUser => filled_bookmark_svg_handle,
+            Pinned::Not => BOOKMARK.clone(),
+            Pinned::ByUser => FILLED_BOOKMARK.clone(),
+            Pinned::ByFilter => BOOKMARK.clone(),
+            Pinned::ByFilterAndUser => FILLED_BOOKMARK.clone(),
         };
 
         button(
@@ -401,7 +446,7 @@ impl App {
                     button(svg(bookmark_symbol).width(32).height(32).style(colored_svg))
                         .padding(1)
                         .style(no_button)
-                        .on_press(Message::Pin(name.to_owned()))
+                        .on_press(Message::Pin(name.clone()))
                 ]
                 .align_y(Center)
                 .height(Fill),
@@ -409,11 +454,11 @@ impl App {
             .align_x(Center)
             .width(Fill),
         )
-        .height(64)
+        .height(SEPERATION * 8.0)
         .padding(8)
         .width(Fill)
         .style(theme)
-        .on_press(Message::Switch(name.to_owned()))
+        .on_press(Message::Switch(name))
         .into()
     }
 
@@ -432,13 +477,13 @@ impl App {
                 column![
                     text("Group ID").size(18),
                     space().height(SEPERATION),
-                    text(&stig_rule.group_id),
+                    selectable_text(&stig_rule.group_id),
                     space().height(SEPERATION),
                     rule::horizontal(2),
                     space().height(SEPERATION),
                     text("Severity").size(18),
                     space().height(SEPERATION),
-                    text(stig_rule.severity.clone().to_string()),
+                    selectable_text(stig_rule.severity.as_str()),
                 ]
                 .align_x(Center)
                 .width(FillPortion(1)),
@@ -448,7 +493,7 @@ impl App {
                 column![
                     text("Rule ID").size(18),
                     space().height(SEPERATION),
-                    text(&stig_rule.rule_id),
+                    selectable_text(&stig_rule.rule_id),
                     space().height(SEPERATION),
                     rule::horizontal(2),
                     space().height(SEPERATION),
@@ -461,97 +506,80 @@ impl App {
                 column![
                     text("STIG ID").size(18),
                     space().height(SEPERATION),
-                    text(stig_rule.stig_id.clone().unwrap_or("None".to_string())),
+                    selectable_text(stig_rule.stig_id.as_deref().unwrap_or("None")),
                     space().height(SEPERATION),
                     rule::horizontal(2),
                     space().height(SEPERATION),
                     text("Documentable").size(18),
                     space().height(SEPERATION),
-                    text(stig_rule.documentable_str()),
+                    selectable_text(stig_rule.documentable_str()),
                 ]
                 .align_x(Center)
                 .width(FillPortion(1)),
             ],
             space().height(SEPERATION),
-            text("Introduction").size(32),
+            text(" Introduction").size(32),
+            rule::horizontal(2),
+            space().height(SEPERATION),
+            row![space().width(SEPERATION), selectable_text(&stig_rule.title)],
+            space().height(SEPERATION),
+            text(" Description").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::Title as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(action, ContentIndex::Title))
+                selectable_text(&stig_rule.vuln_discussion)
             ],
             space().height(SEPERATION),
-            text("Description").size(32),
+            text(" Check").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::Discussion as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(action, ContentIndex::Discussion))
+                selectable_text(&stig_rule.check_text),
             ],
             space().height(SEPERATION),
-            text("Check").size(32),
+            text(" Fix").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::Check as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(action, ContentIndex::Check))
+                selectable_text(&stig_rule.fix_text)
             ],
             space().height(SEPERATION),
-            text("Fix").size(32),
+            text(" CCIs").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::Fix as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(action, ContentIndex::Fix))
+                selectable_text(
+                    stig_rule
+                        .cci_refs
+                        .as_ref()
+                        .map(|refs| refs.join("\n"))
+                        .unwrap_or_default(),
+                )
             ],
             space().height(SEPERATION),
-            text("CCIs").size(32),
+            text(" False Positives").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::CCIRefs as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(action, ContentIndex::CCIRefs))
+                selectable_text(stig_rule.false_positives.as_deref().unwrap_or(""))
             ],
             space().height(SEPERATION),
-            text("False Positives").size(32),
+            text(" False Negatives").size(32),
             rule::horizontal(2),
             space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::FalsePositives as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(
-                        action,
-                        ContentIndex::FalsePositives
-                    ))
-            ],
-            space().height(SEPERATION),
-            text("False Negatives").size(32),
-            rule::horizontal(2),
-            space().height(SEPERATION),
-            row![
-                space().width(SEPERATION),
-                text_editor(&self.contents[ContentIndex::FalseNegatives as usize])
-                    .style(no_text_editor)
-                    .on_action(|action| Message::SelectContent(
-                        action,
-                        ContentIndex::FalseNegatives
-                    ))
+                selectable_text(stig_rule.false_negatives.as_deref().unwrap_or(""))
             ],
         ];
 
         // Wrap it in a scrollable.
-        let content = scrollable(content);
+        let content = scrollable(content).spacing(SEPERATION);
 
         let content = container(content)
             .center(Fill)
@@ -576,114 +604,114 @@ impl App {
     fn display_empty(&self) -> Element<'_, Message> {
         use std::path::PathBuf;
 
-        let file_svg_handle = svg::Handle::from_memory(FILE_ICON);
-        let trash_svg_handle = svg::Handle::from_memory(TRASH);
+        let lazy_view = lazy(self.home_menu_hash, |_| {
+            // Load any benchmarks the user opted to save in the past.
+            let cache = App::load_cache();
 
-        // Load any benchmarks the user opted to save in the past.
-        let cache = App::load_cache();
+            // Change the displayed string based on if the cache loaded any items.
+            let displayed_string = if cache.is_empty() {
+                "Open a File to Get Started"
+            } else {
+                "Recently Saved Files"
+            };
 
-        // Change the displayed string based on if the cache loaded any items.
-        let displayed_string = if cache.is_empty() {
-            "Open a File to Get Started".to_string()
-        } else {
-            "Recently Saved Files".to_string()
-        };
+            let mut main_col = column![];
 
-        let mut main_col = column![];
+            // If the cache is empty, add an obvious button for the user to click that opens a new benchmark.
+            if cache.is_empty() {
+                main_col = main_col.push(
+                    button(text("Open").center())
+                        .width(SEPERATION * 10.0)
+                        .height(SEPERATION * 5.0)
+                        .style(rounded_boring_button)
+                        .on_press(Message::OpenFile),
+                )
+            }
 
-        // If the cache is empty, add an obvious button for the user to click that opens a new benchmark.
-        if cache.is_empty() {
-            main_col = main_col.push(
-                button(text("Open").center())
-                    .width(80)
-                    .height(40)
-                    .style(rounded_boring_button)
-                    .on_press(Message::OpenFile),
-            )
-        }
+            // A vector that contains the unix time when this cache entry was last opened,
+            // its path, and its nicely formatted name.
+            let mut times_last_loaded: Vec<(u64, PathBuf, String)> = Vec::new();
 
-        // A vector that contains the unix time when this cache entry was last opened,
-        // its path, and its nicely formatted name.
-        let mut times_last_loaded: Vec<(u64, PathBuf, String)> = Vec::new();
+            for path in cache {
+                match path.file_name().and_then(|os_str| os_str.to_str()) {
+                    Some(str) => {
+                        // If this file for whatever reason isnt the type we are looking for.
+                        if !str.ends_with(".msgpack.zstd") {
+                            continue;
+                        }
 
-        for path in cache {
-            match path.file_name().and_then(|os_str| os_str.to_str()) {
-                Some(str) => {
-                    // If this file for whatever reason isnt the type we are looking for.
-                    if !str.ends_with(".msgpack.zstd") {
-                        continue;
+                        let str = str.trim_end_matches(".msgpack.zstd");
+
+                        // Get the last time this benchmark was accessed.
+                        let time_last = self.last_opened.get_time_used(str);
+
+                        // Trim the file extension off, and make the name a little prettier.
+                        let name: String = str
+                            .chars()
+                            .flat_map(|c| match c {
+                                '_' | '-' => ' '.to_lowercase(),
+                                c => c.to_lowercase(),
+                            })
+                            .collect();
+
+                        // Save the time last accessed, path, and formatted name.
+                        times_last_loaded.push((time_last, path, name));
                     }
 
-                    let str = str.trim_end_matches(".msgpack.zstd");
+                    None => continue,
+                };
+            }
 
-                    // Get the last time this benchmark was accessed.
-                    let time_last = self.saved_when.get_time_used(str);
+            // Sort most recent to oldest.
+            times_last_loaded.sort_by(|a, b| b.0.cmp(&a.0));
 
-                    // Trim the file extension off, and make the name a little prettier.
-                    let name = str.replace("_", " ").replace("-", " ").to_lowercase();
-
-                    // Save the time last accessed, path, and formatted name.
-                    times_last_loaded.push((time_last, path, name));
-                }
-
-                None => continue,
-            };
-        }
-
-        // Sort most recent to oldest.
-        times_last_loaded.sort_by(|a, b| b.0.cmp(&a.0));
-
-        for time_loaded in times_last_loaded {
-            main_col = main_col.push(
-                button(
-                    row![
-                        svg(file_svg_handle.clone())
-                            .style(boring_svg)
-                            .width(20)
-                            .height(20),
-                        space().width(SEPERATION),
-                        text(time_loaded.2).center(),
-                        space::horizontal(),
-                        button(
-                            svg(trash_svg_handle.clone())
-                                .style(colored_svg)
+            for time_loaded in times_last_loaded {
+                main_col = main_col.push(
+                    button(
+                        row![
+                            svg(FILE_ICON.clone())
+                                .style(boring_svg)
                                 .width(20)
-                                .height(20)
-                        )
-                        .style(no_button)
-                        .on_press(Message::DeleteCachedBenchmark(time_loaded.1.clone())),
-                    ]
-                    .align_y(Center),
-                )
-                .width(Fill)
-                .style(rounded_boring_button)
-                .on_press(Message::LoadCachedBenchmark(time_loaded.1)),
-            );
+                                .height(20),
+                            space().width(SEPERATION),
+                            text(time_loaded.2).center(),
+                            space::horizontal(),
+                            button(svg(TRASH.clone()).style(colored_svg).width(20).height(20))
+                                .style(no_button)
+                                .on_press(Message::DeleteCachedBenchmark(time_loaded.1.clone())),
+                        ]
+                        .align_y(Center),
+                    )
+                    .width(Fill)
+                    .style(rounded_boring_button)
+                    .on_press(Message::LoadCachedBenchmark(time_loaded.1)),
+                );
 
-            // Space out each file entry nicely.
-            main_col = main_col.push(space().height(SEPERATION));
-        }
+                // Space out each file entry nicely.
+                main_col = main_col.push(space().height(SEPERATION));
+            }
 
-        container(
-            column![
-                text(displayed_string).size(24).center(),
-                space().height(SEPERATION * 3.0),
-                scrollable(main_col).spacing(SEPERATION)
-            ]
-            .align_x(Center)
-            .width(400),
-        )
-        .padding(30)
-        .center(Fill)
-        .style(background_container)
-        .into()
+            container(
+                column![
+                    text(displayed_string).size(24).center(),
+                    space().height(SEPERATION * 3.0),
+                    scrollable(main_col).spacing(SEPERATION)
+                ]
+                .align_x(Center)
+                .width(400),
+            )
+            .padding(30)
+            .center(Fill)
+            .style(background_container)
+        });
+
+        // Wrap lazy in a container so that it fills the whole width.
+        // For some reason it shrinks the content inside of it.
+        container(lazy_view).width(Fill).height(Fill).into()
     }
 
     /// Display of the filter menu, gets stacked on top of the main application view.
     fn filter_menu(&self) -> Element<'_, Message> {
-        let refresh_svg_handle = svg::Handle::from_memory(REFRESH);
-        let cross_svg_handle = svg::Handle::from_memory(CROSS);
-
         let id = Id::new("filter_text_input");
 
         // The filter popup itself.
@@ -691,17 +719,12 @@ impl App {
             sensor(opaque(stack![
                 container(
                     row![
-                        button(
-                            svg(refresh_svg_handle)
-                                .style(colored_svg)
-                                .width(25)
-                                .height(25)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::ProcessCmd("reset".to_string())),
+                        button(svg(REFRESH.clone()).style(colored_svg).width(25).height(25))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::ProcessCmd("reset".to_string())),
                         space::horizontal(),
                         text_input(
                             "Type keywords here, then press enter...",
@@ -712,17 +735,12 @@ impl App {
                         .id(id.clone())
                         .width(320),
                         space::horizontal(),
-                        button(
-                            svg(cross_svg_handle)
-                                .style(colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::SwitchPopup(Popup::None)),
+                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::SwitchPopup(Popup::None)),
                     ]
                     .align_y(Center),
                 )
@@ -750,8 +768,6 @@ impl App {
 
     /// Display of the settings menu, gets stacked on top of the main application view.
     fn settings_menu(&self) -> Element<'_, Message> {
-        let cross_svg_handle = svg::Handle::from_memory(CROSS);
-
         let themes = [
             AppTheme::Dark,
             AppTheme::Light,
@@ -771,17 +787,12 @@ impl App {
                         space::horizontal(),
                         text("Settings Menu"),
                         space::horizontal(),
-                        button(
-                            svg(cross_svg_handle)
-                                .style(colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::SwitchPopup(Popup::None)),
+                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::SwitchPopup(Popup::None)),
                     ]
                     .align_y(Center),
                     space().height(SEPERATION * 4.0),
@@ -829,8 +840,6 @@ impl App {
 
     /// Display of an error that occured, gets stacked on top of the main application view.
     fn display_error<'a>(&self, err_str: &'a str) -> Element<'a, Message> {
-        let cross_svg_handle = svg::Handle::from_memory(CROSS);
-
         container(opaque(
             container(
                 column![
@@ -838,7 +847,7 @@ impl App {
                         space::horizontal(),
                         text("Error Occurred"),
                         space::horizontal(),
-                        button(svg(cross_svg_handle).style(boring_svg).width(16).height(16))
+                        button(svg(CROSS.clone()).style(boring_svg).width(16).height(16))
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
@@ -846,19 +855,20 @@ impl App {
                             .on_press(Message::ClearErrNotif),
                     ]
                     .align_y(Center),
-                    space().height(SEPERATION * 2.0),
+                    space::vertical(),
                     row![
                         text(err_str)
                             .size(12)
                             .height(Fill)
-                            .wrapping(text::Wrapping::None)
+                            .wrapping(text::Wrapping::WordOrGlyph)
                     ]
-                    .align_y(Center)
+                    .align_y(Center),
+                    space::vertical(),
                 ]
                 .align_x(Center),
             )
             .width(250)
-            .height(80)
+            .height(125)
             .padding(8)
             .style(err_container),
         ))
@@ -868,10 +878,36 @@ impl App {
         .into()
     }
 
+    /// Display to the user that an update is available.
+    fn display_update_available<'a>(&self) -> Element<'a, Message> {
+        if !self.display_update_available {
+            return space().into();
+        }
+
+        container(
+            row![
+                space().width(SEPERATION * 0.5),
+                button(svg(CROSS.clone()).style(boring_svg).width(13).height(13))
+                    .padding(1)
+                    .width(Shrink)
+                    .height(Shrink)
+                    .style(no_button)
+                    .on_press(Message::SwitchDisplayUpdateAvailable(false)),
+                space().width(SEPERATION),
+                container(text("Update Available").size(12).center()),
+                space().width(SEPERATION * 0.5),
+            ]
+            .align_y(Center),
+        )
+        .padding(4)
+        .style(update_available_container)
+        .width(Shrink)
+        .height(22)
+        .into()
+    }
+
     /// A menu prompting the user to save the benchmark to the cache.
     fn save_menu(&self) -> Element<'_, Message> {
-        let cross_svg_handle = svg::Handle::from_memory(CROSS);
-
         container(opaque(stack![
             container(
                 column![
@@ -879,17 +915,12 @@ impl App {
                         space::horizontal(),
                         text("Save Benchmark for Later?"),
                         space::horizontal(),
-                        button(
-                            svg(cross_svg_handle)
-                                .style(colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::SwitchPopup(Popup::None)),
+                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                            .padding(1)
+                            .width(Shrink)
+                            .height(Shrink)
+                            .style(no_button)
+                            .on_press(Message::SwitchPopup(Popup::None)),
                     ]
                     .align_y(Center),
                     space::vertical(),
@@ -927,168 +958,158 @@ impl App {
 
     /// Return the window decorations container.
     fn window_decorations(&self) -> Element<'_, Message> {
-        let settings_svg_handle = svg::Handle::from_memory(SETTINGS);
-        let home_svg_handle = svg::Handle::from_memory(HOME);
-        let cross_svg_handle = svg::Handle::from_memory(CROSS);
-        let square_svg_handle = svg::Handle::from_memory(SQUARE);
-        let down_tick_svg_handle = svg::Handle::from_memory(DOWN_TICK);
-        let switch_svg_handle = svg::Handle::from_memory(SWITCH);
-
-        // A complicated way of getting mouse_area to work.
-        // Captures mouse input in the window decorations so the window can be dragged.
-        container(
-            mouse_area(
-                container(
-                    row![
-                        space().width(15),
-                        tooltip(
+        lazy((&self.benchmark.id, self.display_update_available), |_| {
+            // A complicated way of getting mouse_area to work.
+            // Captures mouse input in the window decorations so the window can be dragged.
+            container(
+                mouse_area(
+                    container(
+                        row![
+                            space().width(15),
+                            tooltip(
+                                button(
+                                    svg(SETTINGS.clone())
+                                        .style(colored_svg)
+                                        .width(18)
+                                        .height(18)
+                                )
+                                .padding(1)
+                                .width(Shrink)
+                                .height(Shrink)
+                                .style(no_button)
+                                .on_press(Message::SwitchPopup(Popup::Settings)),
+                                container("Customize Settings.")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Right
+                            )
+                            .delay(iced::time::Duration::from_millis(600)),
+                            space().width(11),
+                            tooltip(
+                                button(svg(HOME.clone()).style(colored_svg).width(18).height(18))
+                                    .padding(1)
+                                    .width(Shrink)
+                                    .height(Shrink)
+                                    .style(no_button)
+                                    .on_press(Message::ReturnHome),
+                                container("Return to the Start Screen.")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Right
+                            )
+                            .delay(iced::time::Duration::from_millis(600)),
+                            space().width(8),
+                            tooltip(
+                                button(text("File").center().size(15))
+                                    .padding(4)
+                                    .width(Shrink)
+                                    .height(Shrink)
+                                    .style(rounded_dark_button)
+                                    .on_press(Message::OpenFile),
+                                container("Open a New File (Ctrl + I)")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Right
+                            )
+                            .delay(iced::time::Duration::from_millis(600)),
+                            space().width(4),
+                            tooltip(
+                                button(text("Filter").center().size(15))
+                                    .padding(4)
+                                    .width(Shrink)
+                                    .height(Shrink)
+                                    .style(rounded_dark_button)
+                                    .on_press(Message::SwitchPopup(Popup::Filter)),
+                                container("Sort Content Based on Keywords (Ctrl + F)")
+                                    .style(background_container)
+                                    .padding(4),
+                                tooltip::Position::Right
+                            )
+                            .delay(iced::time::Duration::from_millis(600)),
+                            space::horizontal(),
+                            // Make the window title look nice.
+                            text(
+                                self.benchmark
+                                    .id
+                                    .chars()
+                                    .flat_map(|c| match c {
+                                        '_' | '-' => ' '.to_lowercase(),
+                                        c => c.to_lowercase(),
+                                    })
+                                    .collect::<String>()
+                            )
+                            .size(16),
+                            {
+                                let switch_element: Element<Message> =
+                                    if !self.background_benchmarks.is_empty() {
+                                        row![
+                                            space().width(15),
+                                            tooltip(
+                                                button(
+                                                    svg(SWITCH.clone())
+                                                        .style(colored_svg)
+                                                        .width(18)
+                                                        .height(18)
+                                                )
+                                                .padding(1)
+                                                .width(Shrink)
+                                                .height(Shrink)
+                                                .style(no_button)
+                                                .on_press(Message::SwitchToBackground),
+                                                container("Switch Benchmark")
+                                                    .style(background_container)
+                                                    .padding(4),
+                                                tooltip::Position::Right
+                                            )
+                                            .delay(iced::time::Duration::from_millis(600)),
+                                        ]
+                                        .into()
+                                    } else {
+                                        space().width(0).into()
+                                    };
+                                switch_element
+                            },
+                            space::horizontal(),
+                            self.display_update_available(),
+                            space().width(SEPERATION * 4.0),
                             button(
-                                svg(settings_svg_handle)
+                                svg(DOWN_TICK.clone())
                                     .style(colored_svg)
-                                    .width(18)
-                                    .height(18)
+                                    .width(24)
+                                    .height(24)
                             )
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
-                            .on_press(Message::SwitchPopup(Popup::Settings)),
-                            container("Customize Settings.")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Right
-                        )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space().width(11),
-                        tooltip(
-                            button(svg(home_svg_handle).style(colored_svg).width(18).height(18))
+                            .on_press(Message::WindowMin),
+                            space().width(15),
+                            button(svg(SQUARE.clone()).style(colored_svg).width(16).height(16))
                                 .padding(1)
                                 .width(Shrink)
                                 .height(Shrink)
                                 .style(no_button)
-                                .on_press(Message::ReturnHome),
-                            container("Return to the Start Screen.")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Right
-                        )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space().width(8),
-                        tooltip(
-                            button(text("File").center().size(15))
-                                .padding(4)
+                                .on_press(Message::WindowFullscreenToggle),
+                            space().width(18),
+                            button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                                .padding(1)
                                 .width(Shrink)
                                 .height(Shrink)
-                                .style(rounded_dark_button)
-                                .on_press(Message::OpenFile),
-                            container("Open a New File (Ctrl + I)")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Right
-                        )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space().width(4),
-                        tooltip(
-                            button(text("Filter").center().size(15))
-                                .padding(4)
-                                .width(Shrink)
-                                .height(Shrink)
-                                .style(rounded_dark_button)
-                                .on_press(Message::SwitchPopup(Popup::Filter)),
-                            container("Sort Content Based on Keywords (Ctrl + F)")
-                                .style(background_container)
-                                .padding(4),
-                            tooltip::Position::Right
-                        )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space::horizontal(),
-                        // Make the window title look nice.
-                        text(
-                            self.benchmark
-                                .id
-                                .replace("_", " ")
-                                .replace("-", " ")
-                                .to_lowercase()
-                        )
-                        .size(16),
-                        {
-                            let switch_element: Element<Message> =
-                                if !self.background_benchmarks.is_empty() {
-                                    row![
-                                        space().width(15),
-                                        tooltip(
-                                            button(
-                                                svg(switch_svg_handle)
-                                                    .style(colored_svg)
-                                                    .width(18)
-                                                    .height(18)
-                                            )
-                                            .padding(1)
-                                            .width(Shrink)
-                                            .height(Shrink)
-                                            .style(no_button)
-                                            .on_press(Message::SwitchToBackground),
-                                            container("Switch Benchmark")
-                                                .style(background_container)
-                                                .padding(4),
-                                            tooltip::Position::Right
-                                        )
-                                        .delay(iced::time::Duration::from_millis(600)),
-                                    ]
-                                    .into()
-                                } else {
-                                    space().width(0).into()
-                                };
-                            switch_element
-                        },
-                        space::horizontal(),
-                        button(
-                            svg(down_tick_svg_handle)
-                                .style(colored_svg)
-                                .width(24)
-                                .height(24)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::WindowMin),
-                        space().width(15),
-                        button(
-                            svg(square_svg_handle)
-                                .style(colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::WindowFullscreenToggle),
-                        space().width(18),
-                        button(
-                            svg(cross_svg_handle)
-                                .style(colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(no_button)
-                        .on_press(Message::WindowClose),
-                        space().width(15)
-                    ]
-                    .align_y(Center),
+                                .style(no_button)
+                                .on_press(Message::WindowClose),
+                            space().width(15)
+                        ]
+                        .align_y(Center),
+                    )
+                    .height(26)
+                    .padding(1)
+                    .align_x(End)
+                    .align_y(Center)
+                    .width(Fill),
                 )
-                .height(26)
-                .padding(1)
-                .align_x(End)
-                .align_y(Center)
-                .width(Fill),
+                .on_press(Message::WindowMove),
             )
-            .on_press(Message::WindowMove),
-        )
+        })
         .into()
     }
 }

@@ -1,5 +1,4 @@
-use std::fs::File;
-use std::fs::read_to_string;
+use std::fs::{File, read_to_string};
 use std::io::Read;
 use std::path::Path;
 use zip::ZipArchive;

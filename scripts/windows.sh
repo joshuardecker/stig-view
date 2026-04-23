@@ -36,27 +36,4 @@ echo "==> Building MSI installer..."
 cargo wix --no-build --nocapture -p stig-view-desktop
 
 MSI=$(find target/wix -name "*.msi" | head -1)
-echo "==> MSI: $MSI"
-
-# ---------------------------------------------------------------------------
-# Sign (optional — skipped if credentials are not set)
-# ---------------------------------------------------------------------------
-if [[ -n "${SIGN_CERT_PATH:-}" && -n "${SIGN_CERT_PASSWORD:-}" ]]; then
-    echo "==> Signing binary..."
-    signtool sign \
-        /f "$SIGN_CERT_PATH" \
-        /p "$SIGN_CERT_PASSWORD" \
-        /tr http://timestamp.digicert.com /td sha256 /fd sha256 \
-        target/release/stig-view.exe
-
-    echo "==> Signing MSI..."
-    signtool sign \
-        /f "$SIGN_CERT_PATH" \
-        /p "$SIGN_CERT_PASSWORD" \
-        /tr http://timestamp.digicert.com /td sha256 /fd sha256 \
-        "$MSI"
-else
-    echo "==> Skipping signing (SIGN_CERT_PATH / SIGN_CERT_PASSWORD not set)"
-fi
-
 echo "==> Done: $MSI"
