@@ -13,8 +13,3 @@ To run the application:
 
 # Experimental Software
 This software is not fully complete. Some features are not implemented yet, and bugs may be found. If you have suggestions, or find a bug, feel free to either make an issue, or just message me about it.
-
-# Useful Keybinds
-All of these features are accessible by clicking buttons, but here are some keybinds:
-1. Ctrl + q to quit
-2. Ctrl + tab to scroll list
