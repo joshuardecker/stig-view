@@ -471,14 +471,14 @@ impl App {
             None => return self.display_empty(),
         };
 
-        // Content of the STIG.
-        let content = column![
+        let lazy_widget = lazy((&stig_rule.group_id, &self.filter_string), |_| {
+            let content = column![
             row![
                 column![
                     text("Group ID").size(18),
                     space().height(SEPERATION),
-                    selectable_text(&stig_rule.group_id).highlight_str(
-                        &self.filter_string,
+                    selectable_text(stig_rule.group_id.clone()).highlight_str(
+                        self.filter_string.clone(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
                     space().height(SEPERATION),
@@ -487,7 +487,7 @@ impl App {
                     text("Severity").size(18),
                     space().height(SEPERATION),
                     selectable_text(stig_rule.severity.as_str()).highlight_str(
-                        &self.filter_string,
+                        self.filter_string.clone(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
                 ]
@@ -499,8 +499,8 @@ impl App {
                 column![
                     text("Rule ID").size(18),
                     space().height(SEPERATION),
-                    selectable_text(&stig_rule.rule_id).highlight_str(
-                        &self.filter_string,
+                    selectable_text(stig_rule.rule_id.clone()).highlight_str(
+                        self.filter_string.clone(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
                     space().height(SEPERATION),
@@ -515,8 +515,8 @@ impl App {
                 column![
                     text("STIG ID").size(18),
                     space().height(SEPERATION),
-                    selectable_text(stig_rule.stig_id.as_deref().unwrap_or("None")).highlight_str(
-                        &self.filter_string,
+                    selectable_text(stig_rule.stig_id.clone().unwrap_or("None".into())).highlight_str(
+                        self.filter_string.clone(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
                     space().height(SEPERATION),
@@ -525,7 +525,7 @@ impl App {
                     text("Documentable").size(18),
                     space().height(SEPERATION),
                     selectable_text(stig_rule.documentable_str()).highlight_str(
-                        &self.filter_string,
+                        self.filter_string.clone(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
                 ]
@@ -539,17 +539,17 @@ impl App {
                     markdown::view_selectable(
                         markdown::parse(&format!(
                             "# Introduction\n{}\n# Description\n{}\n# Check\n{}\n# Fix\n{}\n# CCIs\n{}\n# False Positives\n{}\n# False Negatives\n{}",
-                            &stig_rule.title,
-                            &stig_rule.vuln_discussion,
-                            &stig_rule.check_text,
-                            &stig_rule.fix_text,
+                            stig_rule.title.clone(),
+                            stig_rule.vuln_discussion.clone(),
+                            stig_rule.check_text.clone(),
+                            stig_rule.fix_text.clone(),
                             stig_rule
                                 .cci_refs
-                                .as_ref()
-                                .map(|refs| refs.join("\n"))
+                                .clone()
+                                .map(|strings| strings.join("\n"))
                                 .unwrap_or_default(),
-                            stig_rule.false_positives.as_deref().unwrap_or(""),
-                            stig_rule.false_negatives.as_deref().unwrap_or(""),
+                            stig_rule.false_positives.clone().unwrap_or("".into()),
+                            stig_rule.false_negatives.clone().unwrap_or("".into()),
                         )),
                         markdown::Settings::from(self.theme()),
                     )
@@ -561,19 +561,22 @@ impl App {
             ],
         ];
 
-        // Wrap it in a scrollable.
-        let content = scrollable(content).spacing(SEPERATION);
+            // Wrap it in a scrollable.
+            let content = scrollable(content).spacing(SEPERATION);
 
-        let content = container(content)
-            .center(Fill)
-            .padding(8)
-            .style(background_container);
+            let content = container(content)
+                .center(Fill)
+                .padding(8)
+                .style(background_container);
+
+            content
+        });
 
         // Stack the content with a container that fades in and out.
         // This acts as animation, showing the user the STIG has changed when
         // a new STIG is selected.
         stack![
-            content,
+            lazy_widget,
             container(space())
                 .width(Fill)
                 .height(Fill)
