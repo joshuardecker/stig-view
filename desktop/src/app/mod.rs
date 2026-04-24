@@ -49,6 +49,8 @@ pub struct App {
     pub stig_list_hash: u64,
     /// What data should be displayed in the rules list.
     pub display_type: DisplayType,
+    /// The keyword / phrase the user is searching for.
+    pub filter_string: String,
 
     /// The opacity of the main element, the data of the current rule.
     pub main_col_opacity: f32,

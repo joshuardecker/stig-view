@@ -34,8 +34,9 @@ impl App {
                 last_opened,
                 home_menu_hash: 0,
                 stig_list_hash: 0,
-
                 display_type: settings.default_display_type,
+                filter_string: String::new(),
+
                 main_col_opacity: 1.0,
                 main_col_last_tick: None,
                 popup_opacity: 1.0,
@@ -432,6 +433,15 @@ impl App {
 
                 match command {
                     Some(command) => {
+                        // If the command is a phrase, highlight that phrase.
+                        // Otherwise, highlight nothing.
+                        match command {
+                            Command::Phrase(ref phrase) => {
+                                self.filter_string = phrase.clone();
+                            }
+                            Command::Reset => self.filter_string = "".into(),
+                        }
+
                         let new_pins = run_search_cmd(
                             command,
                             &self.benchmark,

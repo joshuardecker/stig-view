@@ -18,7 +18,7 @@ use stig_view_core::CKLStatus;
 
 use crate::app::*;
 use crate::ui::styles::*;
-use crate::widgets::selectable_text;
+use crate::widgets::{markdown, selectable_text};
 
 /// The default seperation between elements.
 /// I use magic values around because they look better.
@@ -477,13 +477,19 @@ impl App {
                 column![
                     text("Group ID").size(18),
                     space().height(SEPERATION),
-                    selectable_text(&stig_rule.group_id),
+                    selectable_text(&stig_rule.group_id).highlight_str(
+                        &self.filter_string,
+                        |theme| theme.extended_palette().primary.weak.color
+                    ),
                     space().height(SEPERATION),
                     rule::horizontal(2),
                     space().height(SEPERATION),
                     text("Severity").size(18),
                     space().height(SEPERATION),
-                    selectable_text(stig_rule.severity.as_str()),
+                    selectable_text(stig_rule.severity.as_str()).highlight_str(
+                        &self.filter_string,
+                        |theme| theme.extended_palette().primary.weak.color
+                    ),
                 ]
                 .align_x(Center)
                 .width(FillPortion(1)),
@@ -493,7 +499,10 @@ impl App {
                 column![
                     text("Rule ID").size(18),
                     space().height(SEPERATION),
-                    selectable_text(&stig_rule.rule_id),
+                    selectable_text(&stig_rule.rule_id).highlight_str(
+                        &self.filter_string,
+                        |theme| theme.extended_palette().primary.weak.color
+                    ),
                     space().height(SEPERATION),
                     rule::horizontal(2),
                     space().height(SEPERATION),
@@ -506,75 +515,49 @@ impl App {
                 column![
                     text("STIG ID").size(18),
                     space().height(SEPERATION),
-                    selectable_text(stig_rule.stig_id.as_deref().unwrap_or("None")),
+                    selectable_text(stig_rule.stig_id.as_deref().unwrap_or("None")).highlight_str(
+                        &self.filter_string,
+                        |theme| theme.extended_palette().primary.weak.color
+                    ),
                     space().height(SEPERATION),
                     rule::horizontal(2),
                     space().height(SEPERATION),
                     text("Documentable").size(18),
                     space().height(SEPERATION),
-                    selectable_text(stig_rule.documentable_str()),
+                    selectable_text(stig_rule.documentable_str()).highlight_str(
+                        &self.filter_string,
+                        |theme| theme.extended_palette().primary.weak.color
+                    ),
                 ]
                 .align_x(Center)
                 .width(FillPortion(1)),
             ],
             space().height(SEPERATION),
-            text(" Introduction").size(32),
-            rule::horizontal(2),
-            space().height(SEPERATION),
-            row![space().width(SEPERATION), selectable_text(&stig_rule.title)],
-            space().height(SEPERATION),
-            text(" Description").size(32),
-            rule::horizontal(2),
-            space().height(SEPERATION),
             row![
                 space().width(SEPERATION),
-                selectable_text(&stig_rule.vuln_discussion)
-            ],
-            space().height(SEPERATION),
-            text(" Check").size(32),
-            rule::horizontal(2),
-            space().height(SEPERATION),
-            row![
-                space().width(SEPERATION),
-                selectable_text(&stig_rule.check_text),
-            ],
-            space().height(SEPERATION),
-            text(" Fix").size(32),
-            rule::horizontal(2),
-            space().height(SEPERATION),
-            row![
-                space().width(SEPERATION),
-                selectable_text(&stig_rule.fix_text)
-            ],
-            space().height(SEPERATION),
-            text(" CCIs").size(32),
-            rule::horizontal(2),
-            space().height(SEPERATION),
-            row![
-                space().width(SEPERATION),
-                selectable_text(
-                    stig_rule
-                        .cci_refs
-                        .as_ref()
-                        .map(|refs| refs.join("\n"))
-                        .unwrap_or_default(),
+                Element::from(
+                    markdown::view_selectable(
+                        markdown::parse(&format!(
+                            "# Introduction\n{}\n# Description\n{}\n# Check\n{}\n# Fix\n{}\n# CCIs\n{}\n# False Positives\n{}\n# False Negatives\n{}",
+                            &stig_rule.title,
+                            &stig_rule.vuln_discussion,
+                            &stig_rule.check_text,
+                            &stig_rule.fix_text,
+                            stig_rule
+                                .cci_refs
+                                .as_ref()
+                                .map(|refs| refs.join("\n"))
+                                .unwrap_or_default(),
+                            stig_rule.false_positives.as_deref().unwrap_or(""),
+                            stig_rule.false_negatives.as_deref().unwrap_or(""),
+                        )),
+                        markdown::Settings::from(self.theme()),
+                    )
+                    .highlight_str(&self.filter_string, |theme| {
+                        theme.extended_palette().primary.weak.color
+                    })
                 )
-            ],
-            space().height(SEPERATION),
-            text(" False Positives").size(32),
-            rule::horizontal(2),
-            space().height(SEPERATION),
-            row![
-                space().width(SEPERATION),
-                selectable_text(stig_rule.false_positives.as_deref().unwrap_or(""))
-            ],
-            space().height(SEPERATION),
-            text(" False Negatives").size(32),
-            rule::horizontal(2),
-            space().height(SEPERATION),
-            row![
-                space().width(SEPERATION),
-                selectable_text(stig_rule.false_negatives.as_deref().unwrap_or(""))
+                .map(|_| Message::DoNothing)
             ],
         ];
 
