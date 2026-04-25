@@ -70,7 +70,7 @@
 
     <Property Id='WIXUI_INSTALLDIR' Value='APPLICATIONROOTDIRECTORY' />
     <UIRef Id='WixUI_InstallDir' />
-    <WixVariable Id='WixUILicenseRtf' Value='wix\License.rtf' />
+    <WixVariable Id='WixUILicenseRtf' Value='$(sys.SOURCEFILEDIR)License.rtf' />
 
   </Product>
 </Wix>
