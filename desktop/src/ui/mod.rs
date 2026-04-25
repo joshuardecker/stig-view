@@ -808,6 +808,15 @@ impl App {
                             .style(toggler_theme),
                     ]
                     .align_y(Center),
+                    space().height(SEPERATION),
+                    row![
+                        text("Notify About Updates"),
+                        space::horizontal(),
+                        toggler(self.settings.notify_if_update)
+                            .on_toggle(Message::SaveUpdateNotify)
+                            .style(toggler_theme),
+                    ]
+                    .align_y(Center),
                 ]
                 .align_x(Center),
             )
@@ -873,14 +882,19 @@ impl App {
         container(
             row![
                 space().width(SEPERATION * 0.5),
-                button(svg(CROSS.clone()).style(boring_svg).width(13).height(13))
-                    .padding(1)
+                button(svg(CROSS.clone()).style(boring_svg).width(10).height(10))
+                    .padding(0)
                     .width(Shrink)
                     .height(Shrink)
                     .style(no_button)
                     .on_press(Message::SwitchDisplayUpdateAvailable(false)),
                 space().width(SEPERATION),
-                container(text("Update Available").size(12).center()),
+                button(text("Update Available").size(11).center())
+                    .style(no_button)
+                    .padding(0)
+                    .on_press(Message::OpenURL(
+                        "https://github.com/joshuardecker/stig-view/releases"
+                    )),
                 space().width(SEPERATION * 0.5),
             ]
             .align_y(Center),

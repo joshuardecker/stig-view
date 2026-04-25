@@ -123,12 +123,15 @@ pub enum Message {
     SaveDisplayType(DisplayType),
 
     SaveAnimate(bool),
+    SaveUpdateNotify(bool),
 
     ReturnHome,
 
     Tick(Instant),
 
     DoNothing,
+
+    OpenURL(&'static str),
 }
 
 /// The color theme of the app.

@@ -19,6 +19,12 @@ impl App {
         let settings = AppSettings::load().unwrap_or(AppSettings::default());
         let last_opened = TimeLastOpened::load().unwrap_or(TimeLastOpened::new());
 
+        let mut tasks = vec![window::oldest().map(Message::InitWindow)];
+
+        if settings.notify_if_update {
+            tasks.push(Task::done(Message::FetchLatestVersion));
+        }
+
         (
             Self {
                 benchmark: Benchmark::empty(),
@@ -42,10 +48,7 @@ impl App {
                 popup_opacity: 1.0,
                 popup_last_tick: None,
             },
-            Task::batch(vec![
-                window::oldest().map(Message::InitWindow),
-                Task::done(Message::FetchLatestVersion),
-            ]),
+            Task::batch(tasks),
         )
     }
 
@@ -577,6 +580,12 @@ impl App {
                 Task::done(Message::SaveSettings)
             }
 
+            Message::SaveUpdateNotify(notify) => {
+                self.settings.notify_if_update = notify;
+
+                Task::done(Message::SaveSettings)
+            }
+
             Message::ReturnHome => {
                 self.benchmark = Benchmark::empty();
                 self.background_benchmarks = Vec::new();
@@ -616,6 +625,12 @@ impl App {
             }
 
             Message::DoNothing => Task::none(),
+
+            Message::OpenURL(url) => {
+                let _ = open::that(url);
+
+                Task::none()
+            }
         }
     }
 
