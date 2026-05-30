@@ -168,56 +168,51 @@ impl App {
                     None => return Message::DoNothing,
                 };
 
-                let format = detect_stig_format(file_handle.path());
+                let formats = detect_stig_format(file_handle.path());
 
-                match format {
-                    Some(Format::Xylok(xylok_toml)) => {
-                        let benchmark = xylok_toml.convert();
+                if formats.is_empty() {
+                    return Message::SendErrNotif("Selected file is an unsupported type.");
+                }
 
-                        if let Some(benchmark) = benchmark {
-                            Message::SwitchBenchmark(benchmark)
-                        } else {
-                            Message::SendErrNotif(
-                                "Xylok toml could not be converted into a Benchmark.",
-                            )
+                let mut benchmarks = Vec::new();
+                let mut found_scap = false;
+
+                for format in formats {
+                    match format {
+                        Format::Xylok(xylok_toml) => {
+                            if let Some(benchmark) = xylok_toml.convert() {
+                                benchmarks.push(benchmark);
+                            }
+                        }
+
+                        Format::XccdfV1_1(file_str) => {
+                            if let Some(benchmark) = load_v1_1(&file_str) {
+                                benchmarks.push(benchmark);
+                            }
+                        }
+
+                        Format::XccdfV1_2 => {
+                            found_scap = true;
+                        }
+
+                        Format::CKL(file_str) => {
+                            benchmarks.extend(load_ckl(&file_str));
+                        }
+
+                        Format::CKLB(cklb) => {
+                            benchmarks.extend(cklb.convert());
                         }
                     }
+                }
 
-                    Some(Format::XccdfV1_1(file_str)) => {
-                        let benchmark = load_v1_1(&file_str);
-
-                        if let Some(benchmark) = benchmark {
-                            Message::SwitchBenchmark(benchmark)
-                        } else {
-                            Message::SendErrNotif("Xml could not be converted into a Benchmark.")
-                        }
-                    }
-
-                    Some(Format::XccdfV1_2) => {
+                if benchmarks.is_empty() {
+                    if found_scap {
                         Message::SendErrNotif("SCAP's are not a supported file type.")
+                    } else {
+                        Message::SendErrNotif("Selected file is an unsupported type.")
                     }
-
-                    Some(Format::CKL(file_str)) => {
-                        let benchmarks = load_ckl(&file_str);
-
-                        if benchmarks.is_empty() {
-                            Message::SendErrNotif("CKL could not be converted into a Benchmark.")
-                        } else {
-                            Message::SwitchBenchmarks(benchmarks)
-                        }
-                    }
-
-                    Some(Format::CKLB(cklb)) => {
-                        let benchmarks = cklb.convert();
-
-                        if benchmarks.is_empty() {
-                            Message::SendErrNotif("CKLB could not be converted into a Benchmark.")
-                        } else {
-                            Message::SwitchBenchmarks(benchmarks)
-                        }
-                    }
-
-                    None => Message::SendErrNotif("Selected file is an unsupported type."),
+                } else {
+                    Message::SwitchBenchmarks(benchmarks)
                 }
             }),
 
