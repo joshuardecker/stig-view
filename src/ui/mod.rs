@@ -730,7 +730,6 @@ impl App {
                             &self.filter_input
                         )
                         .on_input(Message::TypeCmd)
-                        .on_submit(Message::ProcessCmd(self.filter_input.clone()))
                         .id(id.clone())
                         .width(320),
                         space::horizontal(),

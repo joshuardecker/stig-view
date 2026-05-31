@@ -428,7 +428,7 @@ impl App {
             Message::TypeCmd(filter_input) => {
                 self.filter_input = filter_input;
 
-                Task::none()
+                Task::done(Message::ProcessCmd(self.filter_input.clone()))
             }
             Message::ProcessCmd(command_str) => {
                 let command = parse_command(&command_str);
