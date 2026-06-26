@@ -1,34 +1,49 @@
-# AGENTS.md
+# AGENTS.md — Xylok View
 
-This file provides guidance to AI coding agents when working with code in this repository.
+## What This Project Is
 
-## Project Overview
+A fast, cross-platform desktop viewer for DISA Security Technical Implementation Guides (STIGs). Developed by Joshua Decker for Xylok, it is designed to integrate with the Xylok internal suite and serve as a modern alternative to the official DISA STIG Viewer.
 
-Xylok View is a Rust desktop application for viewing DISA Security Technical Implementation Guides (STIGs). It supports Xylok packed TOML, XCCDF v1.1, CKL, and CKLB formats.
+## AI Role & Boundaries
 
-The goal when using AI to develop this application is **not** for AI to do it alone. Instead AI is used as a tool to improve existing code, and discuss future ideas and how to best implement them.
+AI is used as a **coding assistant**, not an autonomous developer.
 
-## Agent Guidelines
+**AI will help with:**
+- Planning features and architecture
+- Debugging and code review
+- Finalizing implementations when explicitly asked
+- Keeping the dependencies minimal
 
-- **Make minimal changes.** Prefer small, focused diffs.
-- **Follow existing style.** Match surrounding code formatting and patterns.
-- **Do not refactor for the sake of it.** Only change code directly related to the task.
-- **Do not add dependencies without a good reason.**
-- **Do not add features unless explicitly asked.** Bug fixes and optimizations are welcome when scoped to a specific issue.
-- **If a build or test fails after your change, you must fix it before finishing.**
-- **When in doubt, ask.** Do not assume intent.
+**AI will NOT:**
+- Add, modify, or delete code unless specifically requested
+- Make architectural decisions unilaterally
 
-## What AI Should Not Do
+## Code Style Preferences
 
-- Do not treat this as an AI-only project. All architectural decisions, roadmap, and feature design belong to the human maintainer.
-- Do not rewrite entire modules or change public APIs unless specifically requested.
-- Do not commit or push code unless explicitly asked.
-- Do not add new file formats, parsers, or major UI sections without prior discussion.
+When writing or modifying Rust code in this project, follow these conventions:
 
-## Useful Context
+### Variable Names
+- **Never use one-letter variables**, even in closures passed to `.map()`, `.filter()`, `.and_then()`, etc.
+- Always use explicit, descriptive names. For example:
+  - `|verdict|` instead of `|v|`
+  - `|cci|` instead of `|c|`
+  - `|checklist|` instead of `|c|`
+  - `|error|` instead of `|e|`
+  - `|os_str|` instead of `|s|`
 
-- `src/parse/mod.rs` defines the canonical `Benchmark` and `Rule` types.
-- `src/parse/detection.rs` handles file format sniffing.
-- `src/app/app.rs` contains the Iced update loop and message handling.
-- `src/ui/mod.rs` contains the Iced view code.
-- `src/app/search.rs` implements regex-based rule filtering.
+### Spacing
+- Be **generous with blank lines**.
+- Add a blank line after every `let` binding.
+- Add a blank line after every `if` / `else` block.
+- Add a blank line before every `return` / `continue` / `break`.
+- Add a blank line after each match arm in a `match` expression.
+- Separate logical blocks within functions with blank lines.
+
+### Error Handling
+- Use **`thiserror`** with `#[from]` for error variants.
+- Avoid manual `impl From<...> for ...` blocks.
+- Example: `SerdeJsonError(#[from] serde_json::Error)` instead of wrapping errors manually.
+
+### Imports
+- Order: `std` imports first, then external crates, then `crate::` imports.
+- Group `std` imports with `use std::{...};` when possible.
