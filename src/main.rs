@@ -3,8 +3,6 @@
 
 /// Contains all of the app logic, which is the apps state and functionality.
 mod app;
-/// Contains all logic for parsing files into interpretable logic.
-mod parse;
 /// Contains all of the ui code, such as styles and ui elements.
 /// Contains some logic, but only ui logic.
 mod ui;

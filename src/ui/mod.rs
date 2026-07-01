@@ -6,6 +6,7 @@ mod themes;
 pub use assets::*;
 pub use themes::*;
 
+use disa_stig::CKLStatus;
 use iced::{
     Alignment::End,
     Center, Element, Fill, FillPortion, Shrink,
@@ -17,7 +18,6 @@ use iced::{
 
 use crate::{
     app::*,
-    parse::ckl::CKLStatus,
     ui::styles::*,
     widgets::{markdown, selectable_text},
 };
@@ -497,7 +497,7 @@ impl App {
                     space().height(SEPERATION),
                     text("Severity").size(18),
                     space().height(SEPERATION),
-                    selectable_text(stig_rule.severity.as_str()).highlight_str(
+                    selectable_text(format!("{}", stig_rule.severity)).highlight_str(
                         self.filter_string.clone(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
@@ -535,7 +535,10 @@ impl App {
                     space().height(SEPERATION),
                     text("Documentable").size(18),
                     space().height(SEPERATION),
-                    selectable_text(stig_rule.documentable_str()).highlight_str(
+                    selectable_text(match stig_rule.documentable {
+                        Some(true) => "True",
+                        _ => "False,"
+                    }).highlight_str(
                         self.filter_string.clone(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
@@ -635,11 +638,11 @@ impl App {
                 match path.file_name().and_then(|os_str| os_str.to_str()) {
                     Some(str) => {
                         // If this file for whatever reason isnt the type we are looking for.
-                        if !str.ends_with(".msgpack.zstd") {
+                        if !str.ends_with(".json.zstd") {
                             continue;
                         }
 
-                        let str = str.trim_end_matches(".msgpack.zstd");
+                        let str = str.trim_end_matches(".json.zstd");
 
                         // Get the last time this benchmark was accessed.
                         let time_last = self.last_opened.get_time_used(str);

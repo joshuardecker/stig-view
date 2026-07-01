@@ -1,13 +1,16 @@
+use std::{
+    fs::{File, create_dir_all},
+    io::Write,
+    time::Instant,
+};
+
+use disa_stig::{Benchmark, Format};
 use iced::{Subscription, Theme, keyboard, keyboard::key, window::icon::from_file_data};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
-use std::time::Instant;
 
 use crate::app::search::*;
 use crate::app::*;
-use crate::parse::{
-    Benchmark, Format, ckl::load_ckl, detection::detect_stig_format, xccdf::load_v1_1,
-};
 use crate::ui::{APP_ICON, THEME_COFFEE, THEME_DARK, THEME_HIGH_CONTRAST, THEME_LIGHT};
 
 const MAIN_FADE_START: f32 = 0.0;
@@ -31,7 +34,7 @@ impl App {
 
         (
             Self {
-                benchmark: Benchmark::empty(),
+                benchmark: Benchmark::new(),
                 background_benchmarks: Vec::new(),
                 pins: HashMap::new(),
                 displayed: None,
@@ -168,52 +171,11 @@ impl App {
                     None => return Message::DoNothing,
                 };
 
-                let formats = detect_stig_format(file_handle.path());
+                let Ok(benchmarks) = Benchmark::load_from_file(file_handle.path()) else {
+                    return Message::SendErrNotif("File type not supported or corrupted.");
+                };
 
-                if formats.is_empty() {
-                    return Message::SendErrNotif("Selected file is an unsupported type.");
-                }
-
-                let mut benchmarks = Vec::new();
-                let mut found_scap = false;
-
-                for format in formats {
-                    match format {
-                        Format::Xylok(xylok_toml) => {
-                            if let Some(benchmark) = xylok_toml.convert() {
-                                benchmarks.push(benchmark);
-                            }
-                        }
-
-                        Format::XccdfV1_1(file_str) => {
-                            if let Some(benchmark) = load_v1_1(&file_str) {
-                                benchmarks.push(benchmark);
-                            }
-                        }
-
-                        Format::XccdfV1_2 => {
-                            found_scap = true;
-                        }
-
-                        Format::CKL(file_str) => {
-                            benchmarks.extend(load_ckl(&file_str));
-                        }
-
-                        Format::CKLB(cklb) => {
-                            benchmarks.extend(cklb.convert());
-                        }
-                    }
-                }
-
-                if benchmarks.is_empty() {
-                    if found_scap {
-                        Message::SendErrNotif("SCAP's are not a supported file type.")
-                    } else {
-                        Message::SendErrNotif("Selected file is an unsupported type.")
-                    }
-                } else {
-                    Message::SwitchBenchmarks(benchmarks)
-                }
+                Message::SwitchBenchmarks(benchmarks)
             }),
 
             Message::Switch(id) => {
@@ -498,24 +460,57 @@ impl App {
                 }
             }
             Message::SaveBenchmark => {
-                let all = std::iter::once(&self.benchmark).chain(self.background_benchmarks.iter());
+                let benchmarks =
+                    std::iter::once(&self.benchmark).chain(self.background_benchmarks.iter());
 
-                for benchmark in all {
-                    if let None = benchmark.save() {
-                        return Task::done(Message::SendErrNotif("Couldn't save benchmark."));
-                    }
+                for benchmark in benchmarks {
+                    let Some(mut cache_dir) = dirs::cache_dir() else {
+                        return Task::done(Message::SendErrNotif(
+                            "Failed to cache benchmark to disk.",
+                        ));
+                    };
+
+                    // Create the save directory if it does not exist.
+                    cache_dir.push("xylok-view/");
+                    if let Err(_) = create_dir_all(&cache_dir) {
+                        return Task::done(Message::SendErrNotif(
+                            "Failed to cache benchmark to disk.",
+                        ));
+                    };
+
+                    // Add proper file extensions.
+                    cache_dir.push(format!("{}.json.zstd", benchmark.id.clone()));
+
+                    let Ok(mut file) = File::create(cache_dir) else {
+                        return Task::done(Message::SendErrNotif(
+                            "Failed to cache benchmark to disk.",
+                        ));
+                    };
+
+                    let Ok(benchmark_bytes) = benchmark.serialize(Format::InHouse) else {
+                        return Task::done(Message::SendErrNotif(
+                            "Failed to cache benchmark to disk.",
+                        ));
+                    };
+
+                    if let Err(_) = file.write_all(&benchmark_bytes) {
+                        return Task::done(Message::SendErrNotif(
+                            "Failed to cache benchmark to disk.",
+                        ));
+                    };
                 }
 
                 // After saving, turn off the save menu.
                 Task::done(Message::SwitchPopup(Popup::None))
             }
 
-            Message::LoadCachedBenchmark(path) => match Benchmark::load(&path) {
-                Some(benchmark) => {
-                    if let Some((name, _rule)) = benchmark.rules.first_key_value() {
+            Message::LoadCachedBenchmark(path) => match Benchmark::load_from_file(&path) {
+                Ok(benchmarks) => {
+                    // TODO: implement Benchmark::from_specific_type() to avoid handling a vec result.
+                    if let Some((name, _rule)) = benchmarks[0].rules.first_key_value() {
                         let name = name.to_owned();
 
-                        self.benchmark = benchmark;
+                        self.benchmark = benchmarks[0].clone();
 
                         // Reset pin values.
                         self.pins = HashMap::new();
@@ -537,7 +532,7 @@ impl App {
                         Task::none()
                     }
                 }
-                None => Task::done(Message::SendErrNotif(
+                Err(_) => Task::done(Message::SendErrNotif(
                     "Couldn't load cached benchmark. File version may be unsupported.",
                 )),
             },
@@ -586,7 +581,7 @@ impl App {
             }
 
             Message::ReturnHome => {
-                self.benchmark = Benchmark::empty();
+                self.benchmark = Benchmark::new();
                 self.background_benchmarks = Vec::new();
                 self.displayed = None;
 
@@ -649,7 +644,7 @@ impl App {
             .filter_map(|entry| {
                 let path = entry.ok()?.path();
                 let name = path.file_name()?.to_str()?;
-                if name.ends_with(".msgpack.zstd") && name != ".msgpack.zstd" {
+                if name.ends_with(".json.zstd") && name != ".json.zstd" {
                     Some(path)
                 } else {
                     None

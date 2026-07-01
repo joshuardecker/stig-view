@@ -11,15 +11,16 @@ mod settings;
 /// Contains the logic for remembering when benchmarks were last opened, and saving this to the disk.
 mod time_opened;
 
+use std::{collections::HashMap, time::Instant};
+
+use disa_stig::{Benchmark, Rule};
 use iced::{Task, keyboard, widget::Id, window, window::Direction};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, time::Instant};
 
 use crate::app::{
     settings::{AppSettings, AppSettingsErr},
     time_opened::TimeLastOpened,
 };
-use crate::parse::{Benchmark, Rule};
 
 /// The overarching state of the application.
 #[derive(Debug, Clone)]
