@@ -26,7 +26,7 @@ use crate::app::{
 #[derive(Debug, Clone)]
 pub struct App {
     /// Currently displayed benchmark.
-    pub benchmark: Benchmark,
+    pub benchmark: Option<Benchmark>,
     /// Benchmarks that live in the background, but are not currently displayed.
     pub background_benchmarks: Vec<Benchmark>,
     /// What rules are pinned, and why the are pinned.

@@ -34,7 +34,7 @@ impl App {
 
         (
             Self {
-                benchmark: Benchmark::new(),
+                benchmark: None,
                 background_benchmarks: Vec::new(),
                 pins: HashMap::new(),
                 displayed: None,
@@ -186,17 +186,21 @@ impl App {
                     }
                 }
 
-                if let Some(rule) = self.benchmark.rules.get(&id) {
+                let Some(benchmark) = &self.benchmark else {
+                    return Task::none();
+                };
+
+                if let Some(rule) = benchmark.rules.get(&id) {
                     Task::done(Message::Display(rule.to_owned()))
                 } else {
-                    Task::done(Message::DoNothing)
+                    Task::none()
                 }
             }
             Message::SwitchBenchmark(benchmark) => {
                 if let Some((name, _rule)) = benchmark.rules.first_key_value() {
                     let name = name.to_owned();
 
-                    self.benchmark = benchmark;
+                    self.benchmark = Some(benchmark);
 
                     // Reset pin values.
                     self.pins = HashMap::new();
@@ -204,7 +208,9 @@ impl App {
                     self.background_benchmarks = Vec::new();
 
                     // Remember when this was opened.
-                    self.last_opened.insert(self.benchmark.id.clone());
+                    if let Some(benchmark) = &self.benchmark {
+                        self.last_opened.insert(benchmark.id.clone());
+                    }
 
                     // Benchmark has been switched to, so change tell the home menu to update,
                     // reflecting that this benchmark has been opened recently.
@@ -251,14 +257,19 @@ impl App {
                 // the longest.
                 let new_benchmark = self.background_benchmarks.remove(0);
 
-                let old_benchmark = std::mem::replace(&mut self.benchmark, new_benchmark);
-                self.background_benchmarks.push(old_benchmark);
+                if let Some(old_benchmark) =
+                    std::mem::replace(&mut self.benchmark, Some(new_benchmark))
+                {
+                    self.background_benchmarks.push(old_benchmark);
+                }
 
                 // Reset pin values when switching to this new benchmark.
                 self.pins = HashMap::new();
 
                 // Remember when this was opened.
-                self.last_opened.insert(self.benchmark.id.clone());
+                if let Some(benchmark) = &self.benchmark {
+                    self.last_opened.insert(benchmark.id.clone());
+                }
 
                 // Benchmark has been switched to, so change tell the home menu to update,
                 // reflecting that this benchmark has been opened recently.
@@ -270,6 +281,10 @@ impl App {
             }
 
             Message::SetPins(pins) => {
+                let Some(benchmark) = &self.benchmark else {
+                    return Task::none();
+                };
+
                 self.pins = pins;
 
                 self.stig_list_hash += 1;
@@ -288,7 +303,7 @@ impl App {
                     }
                 }
 
-                for (name, _rule) in self.benchmark.rules.iter() {
+                for (name, _rule) in benchmark.rules.iter() {
                     match self.pins.get(name).unwrap_or(&Pinned::Not) {
                         Pinned::ByFilter => return Task::done(Message::Switch(name.to_owned())),
                         Pinned::ByFilterAndUser => {
@@ -301,24 +316,27 @@ impl App {
                 Task::none()
             }
             Message::SwitchNext => {
-                if let Some(displayed) = &self.displayed {
-                    use std::ops::Bound::{Excluded, Unbounded};
+                let Some(benchmark) = &self.benchmark else {
+                    return Task::none();
+                };
 
-                    let next = self
-                        .benchmark
-                        .rules
-                        .range::<String, _>((Excluded(displayed.group_id.clone()), Unbounded))
-                        .next()
-                        .or_else(|| self.benchmark.rules.first_key_value());
+                let Some(displayed) = &self.displayed else {
+                    return Task::none();
+                };
 
-                    if let Some((key, _)) = next {
-                        return Task::done(Message::Switch(key.clone()));
-                    }
+                use std::ops::Bound::{Excluded, Unbounded};
 
-                    Task::done(Message::DoNothing)
-                } else {
-                    Task::none()
+                let next = benchmark
+                    .rules
+                    .range::<String, _>((Excluded(displayed.group_id.clone()), Unbounded))
+                    .next()
+                    .or_else(|| benchmark.rules.first_key_value());
+
+                if let Some((key, _)) = next {
+                    return Task::done(Message::Switch(key.clone()));
                 }
+
+                Task::none()
             }
             Message::Display(rule) => {
                 self.displayed = Some(rule);
@@ -397,6 +415,10 @@ impl App {
 
                 match command {
                     Some(command) => {
+                        let Some(benchmark) = &self.benchmark else {
+                            return Task::none();
+                        };
+
                         // If the command is a phrase, highlight that phrase.
                         // Otherwise, highlight nothing.
                         match command {
@@ -406,11 +428,8 @@ impl App {
                             Command::Reset => self.filter_string = "".into(),
                         }
 
-                        let new_pins = run_search_cmd(
-                            command,
-                            &self.benchmark,
-                            std::mem::take(&mut self.pins),
-                        );
+                        let new_pins =
+                            run_search_cmd(command, benchmark, std::mem::take(&mut self.pins));
 
                         match new_pins {
                             Some(new_pins) => Task::done(Message::SetPins(new_pins)),
@@ -460,8 +479,12 @@ impl App {
                 }
             }
             Message::SaveBenchmark => {
+                let Some(benchmark) = &self.benchmark else {
+                    return Task::none();
+                };
+
                 let benchmarks =
-                    std::iter::once(&self.benchmark).chain(self.background_benchmarks.iter());
+                    std::iter::once(benchmark).chain(self.background_benchmarks.iter());
 
                 for benchmark in benchmarks {
                     let Some(mut cache_dir) = dirs::cache_dir() else {
@@ -510,7 +533,7 @@ impl App {
                     if let Some((name, _rule)) = benchmarks[0].rules.first_key_value() {
                         let name = name.to_owned();
 
-                        self.benchmark = benchmarks[0].clone();
+                        self.benchmark = Some(benchmarks[0].clone());
 
                         // Reset pin values.
                         self.pins = HashMap::new();
@@ -518,7 +541,9 @@ impl App {
                         self.background_benchmarks = Vec::new();
 
                         // Remember when this was opened.
-                        self.last_opened.insert(self.benchmark.id.clone());
+                        if let Some(benchmark) = &self.benchmark {
+                            self.last_opened.insert(benchmark.id.clone());
+                        }
 
                         // Benchmark has been switched to, so change tell the home menu to update,
                         // reflecting that this benchmark has been opened recently.
@@ -581,7 +606,7 @@ impl App {
             }
 
             Message::ReturnHome => {
-                self.benchmark = Benchmark::new();
+                self.benchmark = None;
                 self.background_benchmarks = Vec::new();
                 self.displayed = None;
 
