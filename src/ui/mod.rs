@@ -594,7 +594,7 @@ impl App {
             container(space())
                 .width(Fill)
                 .height(Fill)
-                .style(fade_overlay(1.0 - self.main_col_opacity))
+                .style(|theme| fade_overlay(theme, self.animations.get_opacity("main_col")))
         ])
         .width(Fill)
         .height(Fill)
@@ -752,7 +752,7 @@ impl App {
                 container(space())
                     .width(Fill)
                     .height(Fill)
-                    .style(fade_overlay(1.0 - self.popup_opacity)),
+                    .style(|theme| fade_overlay(theme, self.animations.get_opacity("popup"))),
             ]))
             .on_show(move |_| Message::FocusWidget(id.clone())),
         )
@@ -842,7 +842,7 @@ impl App {
             container(space())
                 .width(Fill)
                 .height(Fill)
-                .style(fade_overlay(1.0 - self.popup_opacity)),
+                .style(|theme| fade_overlay(theme, self.animations.get_opacity("popup"))),
         ]))
         .center(Fill)
         .into()
@@ -965,7 +965,7 @@ impl App {
             container(space())
                 .width(Fill)
                 .height(Fill)
-                .style(fade_overlay(1.0 - self.popup_opacity)),
+                .style(|theme| fade_overlay(theme, self.animations.get_opacity("popup"))),
         ]))
         .center(Fill)
         .into()

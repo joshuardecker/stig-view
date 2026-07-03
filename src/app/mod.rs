@@ -1,3 +1,5 @@
+/// Contains animation helping logic.
+mod animation;
 /// Contains the app internal code.
 mod app;
 /// Detect whether the user is running the latest release.
@@ -13,11 +15,12 @@ mod time_opened;
 
 use std::{collections::HashMap, time::Instant};
 
-use disa_stig::{Benchmark, Rule};
+use disa_stig::{Benchmark, Rule, RuleID};
 use iced::{Task, keyboard, widget::Id, window, window::Direction};
 use serde::{Deserialize, Serialize};
 
 use crate::app::{
+    animation::Animations,
     settings::{AppSettings, AppSettingsErr},
     time_opened::TimeLastOpened,
 };
@@ -30,7 +33,7 @@ pub struct App {
     /// Benchmarks that live in the background, but are not currently displayed.
     pub background_benchmarks: Vec<Benchmark>,
     /// What rules are pinned, and why the are pinned.
-    pub pins: HashMap<String, Pinned>,
+    pub pins: HashMap<RuleID, Pinned>,
     /// The currently displayed rule.
     pub displayed: Option<Rule>,
     /// The text input for the user to type filters into.
@@ -56,14 +59,7 @@ pub struct App {
     /// The keyword / phrase the user is searching for.
     pub filter_string: String,
 
-    /// The opacity of the main element, the data of the current rule.
-    pub main_col_opacity: f32,
-    /// How long its been since the last time the opacity of the main element has changed.
-    pub main_col_last_tick: Option<Instant>,
-    /// The opacity of any popup.
-    pub popup_opacity: f32,
-    /// How long its been since the last time the opacity of the popup element has changed.
-    pub popup_last_tick: Option<Instant>,
+    pub animations: Animations,
 }
 
 /// Popups that can appear.

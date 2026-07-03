@@ -1,7 +1,6 @@
 use std::{
     fs::{File, create_dir_all},
     io::Write,
-    time::Instant,
 };
 
 use disa_stig::{Benchmark, Format};
@@ -12,12 +11,6 @@ use rfd::AsyncFileDialog;
 use crate::app::search::*;
 use crate::app::*;
 use crate::ui::{APP_ICON, THEME_COFFEE, THEME_DARK, THEME_HIGH_CONTRAST, THEME_LIGHT};
-
-const MAIN_FADE_START: f32 = 0.0;
-const MAIN_FADE_DURATION_SECS: f32 = 0.15;
-
-const POPUP_FADE_START: f32 = 0.0;
-const POPUP_FADE_DURATION_SECS: f32 = 0.15;
 
 impl App {
     pub fn new() -> (Self, Task<Message>) {
@@ -49,11 +42,7 @@ impl App {
                 stig_list_hash: 0,
                 display_type: settings.default_display_type,
                 filter_string: String::new(),
-
-                main_col_opacity: 1.0,
-                main_col_last_tick: None,
-                popup_opacity: 1.0,
-                popup_last_tick: None,
+                animations: Animations::new(),
             },
             Task::batch(tasks),
         )
@@ -61,13 +50,9 @@ impl App {
 
     pub fn subscription(&self) -> Subscription<Message> {
         let keyboard = keyboard::listen().filter_map(|event| Some(Message::KeyPressed(event)));
+        let tick = window::frames().map(Message::Tick);
 
-        if self.main_col_last_tick.is_some() || self.popup_last_tick.is_some() {
-            let tick = window::frames().map(Message::Tick);
-            Subscription::batch([keyboard, tick])
-        } else {
-            keyboard
-        }
+        Subscription::batch([keyboard, tick])
     }
 
     pub fn theme(&self) -> Theme {
@@ -343,8 +328,7 @@ impl App {
 
                 // Only animate if configured to.
                 if self.settings.animate {
-                    self.main_col_opacity = MAIN_FADE_START;
-                    self.main_col_last_tick = Some(Instant::now());
+                    self.animations.start("main_col");
                 }
 
                 Task::none()
@@ -356,9 +340,9 @@ impl App {
                     (Popup::Settings, Popup::Settings) => self.popup = Popup::None,
                     _ => {
                         if self.settings.animate && popup != Popup::None {
-                            self.popup_opacity = POPUP_FADE_START;
-                            self.popup_last_tick = Some(Instant::now());
+                            self.animations.start("popup");
                         }
+
                         self.popup = popup;
                     }
                 }
@@ -614,31 +598,7 @@ impl App {
             }
 
             Message::Tick(now) => {
-                if let Some(last) = self.main_col_last_tick {
-                    let delta_t = now.duration_since(last).as_secs_f32();
-
-                    self.main_col_opacity =
-                        (self.main_col_opacity + delta_t / MAIN_FADE_DURATION_SECS).min(1.0);
-
-                    if self.main_col_opacity >= 1.0 {
-                        self.main_col_last_tick = None;
-                    } else {
-                        self.main_col_last_tick = Some(now);
-                    }
-                }
-
-                if let Some(last) = self.popup_last_tick {
-                    let delta_t = now.duration_since(last).as_secs_f32();
-
-                    self.popup_opacity =
-                        (self.popup_opacity + delta_t / POPUP_FADE_DURATION_SECS).min(1.0);
-
-                    if self.popup_opacity >= 1.0 {
-                        self.popup_last_tick = None;
-                    } else {
-                        self.popup_last_tick = Some(now);
-                    }
-                }
+                self.animations.tick_all(now);
 
                 Task::none()
             }

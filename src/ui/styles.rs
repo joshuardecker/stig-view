@@ -364,17 +364,19 @@ pub fn update_available_container(theme: &Theme) -> container::Style {
     }
 }
 
-/// An overlay container that fades content in. Pass `1.0 - main_col_opacity` as the alpha.
-/// Used in a stack on top of content to simulate fade-in since iced 0.14 has no general opacity widget.
-pub fn fade_overlay(alpha: f32) -> impl Fn(&Theme) -> container::Style {
-    move |theme: &Theme| {
-        let palette = theme.extended_palette();
-        let mut bg = palette.background.weakest.color;
-        bg.a = alpha;
-        container::Style {
-            background: Some(bg.into()),
-            ..container::Style::default()
-        }
+/// Animations are just containers that fade their opacity on top of other containers.
+/// It makes the below container fade into view and looks nice.
+/// This is the style help function that sets the opacity of the container above what the \
+/// user wants to see.
+pub fn fade_overlay(theme: &Theme, alpha: f32) -> container::Style {
+    let palette = theme.extended_palette();
+
+    let mut background = palette.background.weakest.color;
+    background.a = alpha;
+
+    container::Style {
+        background: Some(background.into()),
+        ..container::Style::default()
     }
 }
 
