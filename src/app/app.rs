@@ -14,12 +14,18 @@ use crate::ui::{APP_ICON, THEME_COFFEE, THEME_DARK, THEME_HIGH_CONTRAST, THEME_L
 
 impl App {
     pub fn new() -> (Self, Task<Message>) {
-        crate::app::migrate::run();
+        let mut tasks = vec![window::oldest().map(Message::InitWindow)];
 
         let settings = AppSettings::load().unwrap_or(AppSettings::default());
-        let last_opened = TimeLastOpened::load().unwrap_or(TimeLastOpened::new());
 
-        let mut tasks = vec![window::oldest().map(Message::InitWindow)];
+        let last_opened = match TimeOpened::load() {
+            Ok(time_opened) => time_opened,
+            Err(error) => {
+                tasks.push(Task::done(Message::Log(format!("{}", error))));
+
+                TimeOpened::new()
+            }
+        };
 
         if settings.notify_if_update {
             tasks.push(Task::done(Message::FetchLatestVersion));
@@ -184,6 +190,7 @@ impl App {
             Message::SwitchBenchmark(benchmark) => {
                 if let Some((name, _rule)) = benchmark.rules.first_key_value() {
                     let name = name.to_owned();
+                    let mut tasks = vec![];
 
                     self.benchmark = Some(benchmark);
 
@@ -194,7 +201,9 @@ impl App {
 
                     // Remember when this was opened.
                     if let Some(benchmark) = &self.benchmark {
-                        self.last_opened.insert(benchmark.id.clone());
+                        if let Err(error) = self.last_opened.insert(benchmark.id.clone()) {
+                            tasks.push(Task::done(Message::Log(format!("{}", error))));
+                        };
                     }
 
                     // Benchmark has been switched to, so change tell the home menu to update,
@@ -203,10 +212,10 @@ impl App {
 
                     self.stig_list_hash += 1;
 
-                    let tasks = vec![
+                    tasks.append(&mut vec![
                         Task::done(Message::Switch(name)),
                         Task::done(Message::SwitchPopup(Popup::Save)),
-                    ];
+                    ]);
 
                     Task::batch(tasks)
                 } else {
@@ -229,7 +238,16 @@ impl App {
                 Task::batch(tasks)
             }
             Message::PushBackgroundBenchmark(benchmark) => {
+                let id = benchmark.id.clone();
+
                 self.background_benchmarks.push(benchmark);
+
+                // When a benchmark is pushed into the background, update when it was last opened to now.
+                // This improves the experience by making benchmarks opened together appear next to each other
+                // in the recently opened list.
+                if let Err(error) = self.last_opened.insert(id) {
+                    return Task::done(Message::Log(format!("{}", error)));
+                };
 
                 Task::none()
             }
@@ -251,16 +269,18 @@ impl App {
                 // Reset pin values when switching to this new benchmark.
                 self.pins = HashMap::new();
 
-                // Remember when this was opened.
-                if let Some(benchmark) = &self.benchmark {
-                    self.last_opened.insert(benchmark.id.clone());
-                }
-
                 // Benchmark has been switched to, so change tell the home menu to update,
                 // reflecting that this benchmark has been opened recently.
                 self.home_menu_hash += 1;
 
                 self.stig_list_hash += 1;
+
+                // Remember when this was opened.
+                if let Some(benchmark) = &self.benchmark {
+                    if let Err(error) = self.last_opened.insert(benchmark.id.clone()) {
+                        return Task::done(Message::Log(format!("{}", error)));
+                    };
+                }
 
                 Task::none()
             }
@@ -516,6 +536,7 @@ impl App {
                     // TODO: implement Benchmark::from_specific_type() to avoid handling a vec result.
                     if let Some((name, _rule)) = benchmarks[0].rules.first_key_value() {
                         let name = name.to_owned();
+                        let mut tasks = vec![];
 
                         self.benchmark = Some(benchmarks[0].clone());
 
@@ -526,7 +547,9 @@ impl App {
 
                         // Remember when this was opened.
                         if let Some(benchmark) = &self.benchmark {
-                            self.last_opened.insert(benchmark.id.clone());
+                            if let Err(error) = self.last_opened.insert(benchmark.id.clone()) {
+                                tasks.push(Task::done(Message::Log(format!("{}", error))));
+                            };
                         }
 
                         // Benchmark has been switched to, so change tell the home menu to update,
@@ -535,7 +558,9 @@ impl App {
 
                         self.stig_list_hash += 1;
 
-                        Task::done(Message::Switch(name))
+                        tasks.push(Task::done(Message::Switch(name)));
+
+                        Task::batch(tasks)
                     } else {
                         // Do nothing when an attempting to switch an empty benchmark.
                         Task::none()
@@ -608,6 +633,11 @@ impl App {
             Message::OpenURL(url) => {
                 let _ = open::that(url);
 
+                Task::none()
+            }
+
+            Message::Log(message) => {
+                // TODO.
                 Task::none()
             }
         }

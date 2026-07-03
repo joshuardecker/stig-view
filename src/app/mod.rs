@@ -4,8 +4,6 @@ mod animation;
 mod app;
 /// Detect whether the user is running the latest release.
 mod latest_release;
-/// One-time migration from legacy "stig-view" paths.
-mod migrate;
 /// Contains search logic.
 mod search;
 /// Contains settings logic, like saving to the disk.
@@ -22,7 +20,7 @@ use serde::{Deserialize, Serialize};
 use crate::app::{
     animation::Animations,
     settings::{AppSettings, AppSettingsErr},
-    time_opened::TimeLastOpened,
+    time_opened::TimeOpened,
 };
 
 /// The overarching state of the application.
@@ -49,7 +47,7 @@ pub struct App {
     /// Settings applied to the app.
     pub settings: AppSettings,
     /// When benchmarks were last opened by the user.
-    pub last_opened: TimeLastOpened,
+    pub last_opened: TimeOpened,
     /// A counter that changes whenever the home menu ui should be refreshed.
     pub home_menu_hash: u64,
     /// A counter that changes whenever the rules list ui should be refreshed.
@@ -58,7 +56,7 @@ pub struct App {
     pub display_type: DisplayType,
     /// The keyword / phrase the user is searching for.
     pub filter_string: String,
-
+    /// An animation manager.
     pub animations: Animations,
 }
 
@@ -132,6 +130,8 @@ pub enum Message {
     DoNothing,
 
     OpenURL(&'static str),
+
+    Log(String),
 }
 
 /// The color theme of the app.

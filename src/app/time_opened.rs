@@ -1,27 +1,54 @@
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    collections::HashMap,
+    fs::{File, create_dir_all, read_to_string},
+    io::Write,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
-/// A struct that remembers when the user last opened a benchmark.
-/// Used for the home screen to sort by most recently opened.
-/// Will be saved to disk.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct TimeLastOpened {
-    benchmarks: HashMap<String, u64>, // (Benchmark name, unix time).
+use disa_stig::RuleID;
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
+
+/// A helper that remembers when a benchmark was last opened.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TimeOpened {
+    benchmarks: HashMap<RuleID, u64>,
 }
 
-impl TimeLastOpened {
+#[derive(Debug, Error)]
+pub enum TimeOpenedError {
+    #[error("Could not access save directory")]
+    DirError,
+    #[error("Error accessing or creating the benchmark time file")]
+    FileError(#[from] std::io::Error),
+    #[error("Error serializing the benchmark time file")]
+    SerializationError(#[from] toml::ser::Error),
+    #[error("Error deserializing the benchmark time file")]
+    DeserializationError(#[from] toml::de::Error),
+}
+
+impl TimeOpened {
     pub fn new() -> Self {
         Self {
             benchmarks: HashMap::new(),
         }
     }
 
-    /// Returns when the the given benchmark was last accessed.
-    /// Defaults to the current time if a value is not found to be saved on disk.
+    pub fn load() -> Result<Self, TimeOpenedError> {
+        let mut save_dir = dirs::data_local_dir().ok_or(TimeOpenedError::DirError)?;
+        save_dir.push("xylok-view");
+        save_dir.push("saved_when.toml");
+
+        let saved_when_str = read_to_string(save_dir)?;
+
+        let saved_when: TimeOpened = toml::from_str(&saved_when_str)?;
+
+        Ok(saved_when)
+    }
+
     pub fn get_time_used(&self, benchmark_id: &str) -> u64 {
         match self.benchmarks.get(benchmark_id) {
-            Some(time) => time.to_owned(),
+            Some(time) => *time,
             None => SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()
@@ -29,8 +56,7 @@ impl TimeLastOpened {
         }
     }
 
-    /// Insert the current time with a benchmark id.
-    pub fn insert(&mut self, benchmark_id: String) {
+    pub fn insert(&mut self, benchmark_id: String) -> Result<(), TimeOpenedError> {
         self.benchmarks.insert(
             benchmark_id,
             SystemTime::now()
@@ -39,51 +65,25 @@ impl TimeLastOpened {
                 .as_secs(),
         );
 
-        self.save();
+        self.save()
     }
 
-    /// Load the saved_when data from disk. Returns None if failed.
-    pub fn load() -> Option<Self> {
-        use std::fs::read_to_string;
-
-        let mut save_dir = dirs::data_local_dir()?;
-        save_dir.push("xylok-view");
-        save_dir.push("saved_when.toml");
-
-        let saved_when_str = read_to_string(save_dir).ok()?;
-
-        let saved_when: TimeLastOpened = toml::from_str(&saved_when_str).ok()?;
-
-        Some(saved_when)
-    }
-
-    /// Saves the SavedWhen to disk. If errors occur, they are silent.
-    /// Not ideal if this has errors, but it doesnt really matter if it does.
-    fn save(&self) {
-        use std::fs::{File, create_dir_all};
-        use std::io::Write;
-
-        let mut save_dir = match dirs::data_local_dir() {
-            Some(dir) => dir,
-            None => return,
+    fn save(&self) -> Result<(), TimeOpenedError> {
+        let Some(mut save_dir) = dirs::data_local_dir() else {
+            return Err(TimeOpenedError::DirError);
         };
 
         // Create the dir if it does not exist.
         save_dir.push("xylok-view");
-        let _ = create_dir_all(&save_dir);
+        create_dir_all(&save_dir)?;
 
         save_dir.push("saved_when.toml");
 
-        let saved_when_str = match toml::to_string(self) {
-            Ok(string) => string,
-            Err(_) => return,
-        };
+        let string_to_save = toml::to_string(self)?;
+        let mut file = File::create(save_dir)?;
 
-        let mut file = match File::create(save_dir) {
-            Ok(file) => file,
-            Err(_) => return,
-        };
+        file.write_all(string_to_save.as_bytes())?;
 
-        let _ = write!(file, "{}", saved_when_str);
+        Ok(())
     }
 }
