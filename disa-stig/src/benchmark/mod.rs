@@ -14,6 +14,7 @@ use thiserror::Error;
 
 use crate::benchmark::version_detection::{FormatWithData, detect_format_with_path};
 
+pub type BenchmarkID = String;
 pub type RuleID = String;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

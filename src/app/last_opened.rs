@@ -11,12 +11,12 @@ use thiserror::Error;
 
 /// A helper that remembers when a benchmark was last opened.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TimeOpened {
+pub struct LastOpened {
     benchmarks: HashMap<RuleID, u64>,
 }
 
 #[derive(Debug, Error)]
-pub enum TimeOpenedError {
+pub enum LastOpenedError {
     #[error("Could not access save directory")]
     DirError,
     #[error("Error accessing or creating the benchmark time file")]
@@ -27,21 +27,21 @@ pub enum TimeOpenedError {
     DeserializationError(#[from] toml::de::Error),
 }
 
-impl TimeOpened {
+impl LastOpened {
     pub fn new() -> Self {
         Self {
             benchmarks: HashMap::new(),
         }
     }
 
-    pub fn load() -> Result<Self, TimeOpenedError> {
-        let mut save_dir = dirs::data_local_dir().ok_or(TimeOpenedError::DirError)?;
+    pub fn load() -> Result<Self, LastOpenedError> {
+        let mut save_dir = dirs::data_local_dir().ok_or(LastOpenedError::DirError)?;
         save_dir.push("xylok-view");
         save_dir.push("saved_when.toml");
 
         let saved_when_str = read_to_string(save_dir)?;
 
-        let saved_when: TimeOpened = toml::from_str(&saved_when_str)?;
+        let saved_when: LastOpened = toml::from_str(&saved_when_str)?;
 
         Ok(saved_when)
     }
@@ -56,7 +56,7 @@ impl TimeOpened {
         }
     }
 
-    pub fn insert(&mut self, benchmark_id: String) -> Result<(), TimeOpenedError> {
+    pub fn insert(&mut self, benchmark_id: String) -> Result<(), LastOpenedError> {
         self.benchmarks.insert(
             benchmark_id,
             SystemTime::now()
@@ -68,9 +68,9 @@ impl TimeOpened {
         self.save()
     }
 
-    fn save(&self) -> Result<(), TimeOpenedError> {
+    fn save(&self) -> Result<(), LastOpenedError> {
         let Some(mut save_dir) = dirs::data_local_dir() else {
-            return Err(TimeOpenedError::DirError);
+            return Err(LastOpenedError::DirError);
         };
 
         // Create the dir if it does not exist.

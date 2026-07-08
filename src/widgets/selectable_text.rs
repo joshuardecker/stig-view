@@ -99,8 +99,6 @@ impl<'a> SelectableText<'a> {
     }
 }
 
-
-
 /// Returns the total number of visual lines in `buffer` before logical line `line_idx`.
 fn visual_lines_before(buffer: &cosmic_text::Buffer, line_idx: usize) -> usize {
     buffer.lines[..line_idx]
@@ -108,8 +106,6 @@ fn visual_lines_before(buffer: &cosmic_text::Buffer, line_idx: usize) -> usize {
         .map(|l| l.layout_opt().map(|v| v.len()).unwrap_or(1).max(1))
         .sum()
 }
-
-
 
 /// Draws highlight quads for a byte range within a single buffer line. Returns the number of
 /// visual sub-lines consumed, so callers tracking a running visual offset can advance it.

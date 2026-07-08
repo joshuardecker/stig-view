@@ -2,7 +2,7 @@ use disa_stig::Benchmark;
 use regex::Regex;
 use std::collections::HashMap;
 
-use crate::app::Pinned;
+use crate::app::app::Pinned;
 
 /// A command sent by the user can be two things:
 /// - Look for a key phrase using regex.

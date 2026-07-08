@@ -17,7 +17,7 @@ use iced::{
 };
 
 use crate::{
-    app::*,
+    app::{App, AppTheme, DisplayType, Message, Pinned, Popup},
     ui::styles::*,
     widgets::{markdown, selectable_text},
 };
@@ -40,15 +40,16 @@ impl App {
         let padded_content = self.padding(window_decorations, content);
 
         let popup = match self.popup {
-            Popup::Filter => self.filter_menu(),
-            Popup::Settings => self.settings_menu(),
-            Popup::Save => self.save_menu(),
-            Popup::None => space().into(),
+            Some(Popup::Filter) => self.filter_menu(),
+            Some(Popup::Settings) => self.settings_menu(),
+            Some(Popup::Save) => self.save_menu(),
+            None => space().into(),
         };
 
-        let err_notification = match &self.err_notif {
-            Some(err_str) => self.display_error(&err_str),
-            None => space().into(),
+        let err_notification = if let Some(error) = self.err_notifs.last() {
+            self.display_error(error)
+        } else {
+            space().into()
         };
 
         stack![padded_content, popup, err_notification].into()
@@ -469,7 +470,7 @@ impl App {
         .padding(8)
         .width(Fill)
         .style(theme)
-        .on_press(Message::Switch(name))
+        .on_press(Message::SwitchRule(name))
         .into()
     }
 
@@ -482,74 +483,76 @@ impl App {
             None => return self.display_empty(),
         };
 
-        let lazy_widget = lazy((&stig_rule.group_id, &self.filter_string), |_| {
+        let lazy_widget = lazy((&stig_rule.group_id, &self.filter_input), |_| {
             let content = column![
-            row![
-                column![
-                    text("Group ID").size(18),
-                    space().height(SEPERATION),
-                    selectable_text(stig_rule.group_id.clone()).highlight_str(
-                        self.filter_string.clone(),
-                        |theme| theme.extended_palette().primary.weak.color
-                    ),
-                    space().height(SEPERATION),
-                    rule::horizontal(2),
-                    space().height(SEPERATION),
-                    text("Severity").size(18),
-                    space().height(SEPERATION),
-                    selectable_text(format!("{}", stig_rule.severity)).highlight_str(
-                        self.filter_string.clone(),
-                        |theme| theme.extended_palette().primary.weak.color
-                    ),
-                ]
-                .align_x(Center)
-                .width(FillPortion(1)),
-                space().width(SEPERATION),
-                rule::vertical(2),
-                space().width(SEPERATION),
-                column![
-                    text("Rule ID").size(18),
-                    space().height(SEPERATION),
-                    selectable_text(stig_rule.rule_id.clone()).highlight_str(
-                        self.filter_string.clone(),
-                        |theme| theme.extended_palette().primary.weak.color
-                    ),
-                    space().height(SEPERATION),
-                    rule::horizontal(2),
-                    space().height(SEPERATION),
-                ]
-                .align_x(Center)
-                .width(FillPortion(1)),
-                space().width(SEPERATION),
-                rule::vertical(2),
-                space().width(SEPERATION),
-                column![
-                    text("STIG ID").size(18),
-                    space().height(SEPERATION),
-                    selectable_text(stig_rule.stig_id.clone().unwrap_or("None".into())).highlight_str(
-                        self.filter_string.clone(),
-                        |theme| theme.extended_palette().primary.weak.color
-                    ),
-                    space().height(SEPERATION),
-                    rule::horizontal(2),
-                    space().height(SEPERATION),
-                    text("Documentable").size(18),
-                    space().height(SEPERATION),
-                    selectable_text(match stig_rule.documentable {
-                        Some(true) => "True",
-                        _ => "False,"
-                    }).highlight_str(
-                        self.filter_string.clone(),
-                        |theme| theme.extended_palette().primary.weak.color
-                    ),
-                ]
-                .align_x(Center)
-                .width(FillPortion(1)),
-            ],
-            space().height(SEPERATION),
-            row![
-                space().width(SEPERATION),
-                Element::from(
+                row![
+                    column![
+                        text("Group ID").size(18),
+                        space().height(SEPERATION),
+                        selectable_text(stig_rule.group_id.clone()).highlight_str(
+                            self.filter_input.clone(),
+                            |theme| theme.extended_palette().primary.weak.color
+                        ),
+                        space().height(SEPERATION),
+                        rule::horizontal(2),
+                        space().height(SEPERATION),
+                        text("Severity").size(18),
+                        space().height(SEPERATION),
+                        selectable_text(format!("{}", stig_rule.severity)).highlight_str(
+                            self.filter_input.clone(),
+                            |theme| theme.extended_palette().primary.weak.color
+                        ),
+                    ]
+                    .align_x(Center)
+                    .width(FillPortion(1)),
+                    space().width(SEPERATION),
+                    rule::vertical(2),
+                    space().width(SEPERATION),
+                    column![
+                        text("Rule ID").size(18),
+                        space().height(SEPERATION),
+                        selectable_text(stig_rule.rule_id.clone()).highlight_str(
+                            self.filter_input.clone(),
+                            |theme| theme.extended_palette().primary.weak.color
+                        ),
+                        space().height(SEPERATION),
+                        rule::horizontal(2),
+                        space().height(SEPERATION),
+                    ]
+                    .align_x(Center)
+                    .width(FillPortion(1)),
+                    space().width(SEPERATION),
+                    rule::vertical(2),
+                    space().width(SEPERATION),
+                    column![
+                        text("STIG ID").size(18),
+                        space().height(SEPERATION),
+                        selectable_text(stig_rule.stig_id.clone().unwrap_or("None".into()))
+                            .highlight_str(self.filter_input.clone(), |theme| theme
+                                .extended_palette()
+                                .primary
+                                .weak
+                                .color),
+                        space().height(SEPERATION),
+                        rule::horizontal(2),
+                        space().height(SEPERATION),
+                        text("Documentable").size(18),
+                        space().height(SEPERATION),
+                        selectable_text(match stig_rule.documentable {
+                            Some(true) => "True",
+                            _ => "False,",
+                        })
+                        .highlight_str(
+                            self.filter_input.clone(),
+                            |theme| theme.extended_palette().primary.weak.color
+                        ),
+                    ]
+                    .align_x(Center)
+                    .width(FillPortion(1)),
+                ],
+                space().height(SEPERATION),
+                row![
+                    space().width(SEPERATION),
                     markdown::view_selectable(
                         markdown::parse(&format!(
                             "# Introduction\n{}\n# Description\n{}\n# Check\n{}\n# Fix\n{}\n# CCIs\n{}\n# False Positives\n{}\n# False Negatives\n{}",
@@ -567,13 +570,11 @@ impl App {
                         )),
                         markdown::Settings::from(self.theme()),
                     )
-                    .highlight_str(&self.filter_string, |theme| {
+                    .highlight_str(&self.filter_input, |theme| {
                         theme.extended_palette().primary.weak.color
                     })
-                )
-                .map(|_| Message::DoNothing)
-            ],
-        ];
+                ],
+            ];
 
             // Wrap it in a scrollable.
             let content = scrollable(content).spacing(SEPERATION);
@@ -726,13 +727,13 @@ impl App {
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
-                            .on_press(Message::ProcessCmd("reset".to_string())),
+                            .on_press(Message::TypeFilter("reset".to_string())),
                         space::horizontal(),
                         text_input(
                             "Type keywords here, then press enter...",
                             &self.filter_input
                         )
-                        .on_input(Message::TypeCmd)
+                        .on_input(Message::TypeFilter)
                         .id(id.clone())
                         .width(320),
                         space::horizontal(),
@@ -741,7 +742,7 @@ impl App {
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
-                            .on_press(Message::SwitchPopup(Popup::None)),
+                            .on_press(Message::SwitchPopup(None)),
                     ]
                     .align_y(Center),
                 )
@@ -793,7 +794,7 @@ impl App {
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
-                            .on_press(Message::SwitchPopup(Popup::None)),
+                            .on_press(Message::SwitchPopup(None)),
                     ]
                     .align_y(Center),
                     space().height(SEPERATION * 4.0),
@@ -810,7 +811,7 @@ impl App {
                         pick_list(
                             display_types,
                             Some(self.settings.default_display_type),
-                            Message::SaveDisplayType
+                            Message::SwitchDisplayType
                         ),
                     ]
                     .align_y(Center),
@@ -862,7 +863,7 @@ impl App {
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
-                            .on_press(Message::ClearErrNotif),
+                            .on_press(Message::ClearOneErrNotif),
                     ]
                     .align_y(Center),
                     space::vertical(),
@@ -897,13 +898,6 @@ impl App {
         container(
             row![
                 space().width(SEPERATION * 0.5),
-                button(svg(CROSS.clone()).style(boring_svg).width(10).height(10))
-                    .padding(0)
-                    .width(Shrink)
-                    .height(Shrink)
-                    .style(no_button)
-                    .on_press(Message::SwitchDisplayUpdateAvailable(false)),
-                space().width(SEPERATION),
                 button(text("Update Available").size(11).center())
                     .style(no_button)
                     .padding(0)
@@ -935,7 +929,7 @@ impl App {
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
-                            .on_press(Message::SwitchPopup(Popup::None)),
+                            .on_press(Message::SwitchPopup(None)),
                     ]
                     .align_y(Center),
                     space::vertical(),
@@ -945,13 +939,13 @@ impl App {
                             .style(rounded_danger_button)
                             .width(65)
                             .height(30)
-                            .on_press(Message::SwitchPopup(Popup::None)),
+                            .on_press(Message::SwitchPopup(None)),
                         space().width(SEPERATION * 8.0),
                         button(text("Confirm").size(14).center())
                             .style(rounded_success_button)
                             .width(70)
                             .height(30)
-                            .on_press(Message::SaveBenchmark),
+                            .on_press(Message::SaveAllBenchmarks),
                         space::horizontal()
                     ]
                     .align_y(Center),
@@ -1000,7 +994,7 @@ impl App {
                                     .width(Shrink)
                                     .height(Shrink)
                                     .style(no_button)
-                                    .on_press(Message::SwitchPopup(Popup::Settings)),
+                                    .on_press(Message::SwitchPopup(Some(Popup::Settings))),
                                     container("Customize Settings.")
                                         .style(background_container)
                                         .padding(4),
@@ -1044,7 +1038,7 @@ impl App {
                                         .width(Shrink)
                                         .height(Shrink)
                                         .style(rounded_dark_button)
-                                        .on_press(Message::SwitchPopup(Popup::Filter)),
+                                        .on_press(Message::SwitchPopup(Some(Popup::Filter))),
                                     container("Find Content Based on Keywords (Ctrl + F)")
                                         .style(background_container)
                                         .padding(4),
@@ -1079,7 +1073,7 @@ impl App {
                                                     .width(Shrink)
                                                     .height(Shrink)
                                                     .style(no_button)
-                                                    .on_press(Message::SwitchToBackground),
+                                                    .on_press(Message::SwitchToNextBackground),
                                                     container("Switch Benchmark")
                                                         .style(background_container)
                                                         .padding(4),
@@ -1106,7 +1100,7 @@ impl App {
                                 .width(Shrink)
                                 .height(Shrink)
                                 .style(no_button)
-                                .on_press(Message::WindowMin),
+                                .on_press(Message::WindowMinimize),
                                 space().width(15),
                                 button(svg(SQUARE.clone()).style(colored_svg).width(16).height(16))
                                     .padding(1)
