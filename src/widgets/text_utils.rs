@@ -1,6 +1,6 @@
 use cosmic_text::{Buffer, BufferLine, LayoutRun};
-use iced::advanced::mouse::{Click, click};
 use iced::Point;
+use iced::advanced::mouse::{Click, click};
 use unicode_segmentation::UnicodeSegmentation as _;
 
 /// Like `buffer.hit(x, y)` but falls back to a y-based line lookup when `hit()` returns

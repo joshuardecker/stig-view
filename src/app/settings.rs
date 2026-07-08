@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
-use crate::app::{AppTheme, DisplayType};
+use crate::app::app::{AppTheme, DisplayType};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct AppSettings {
@@ -10,8 +11,9 @@ pub struct AppSettings {
     pub notify_if_update: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Error)]
 pub enum AppSettingsErr {
+    #[error("{0}")]
     CantSave(&'static str),
 }
 

@@ -1,29 +1,158 @@
 use std::{
     fs::{File, create_dir_all},
     io::Write,
+    path::PathBuf,
 };
 
-use disa_stig::{Benchmark, Format};
-use iced::{Subscription, Theme, keyboard, keyboard::key, window::icon::from_file_data};
+use disa_stig::{Benchmark, Format, RuleID};
+use iced::{
+    Subscription, Theme,
+    futures::channel::mpsc::Sender,
+    keyboard::{self, key},
+    stream,
+    window::icon::from_file_data,
+};
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
 
-use crate::app::search::*;
 use crate::app::*;
+use crate::app::{app::Message::SendErrNotif, search::*};
 use crate::ui::{APP_ICON, THEME_COFFEE, THEME_DARK, THEME_HIGH_CONTRAST, THEME_LIGHT};
+
+/// The overarching state of the application.
+#[derive(Debug, Clone)]
+pub struct App {
+    /// The internal id of the window.
+    pub window_id: Option<window::Id>,
+
+    /// Currently displayed benchmark.
+    pub benchmark: Option<Benchmark>,
+    /// Benchmarks that live in the background, but are not currently displayed.
+    pub background_benchmarks: Vec<Benchmark>,
+    /// What rules are pinned, and why the are pinned.
+    pub pins: HashMap<RuleID, Pinned>,
+    /// What data should be displayed in the rules list.
+    pub display_type: DisplayType,
+    /// The currently displayed rule.
+    pub displayed: Option<Rule>,
+
+    /// The text input for the user to type filters into.
+    pub filter_input: String,
+
+    /// The current popup being displayed.
+    pub popup: Option<Popup>,
+    /// Error notification text to be displayed.
+    pub err_notifs: Vec<String>,
+    /// If true, display to the user there is an update available.
+    pub display_update_available: bool,
+
+    /// Settings applied to the app.
+    pub settings: AppSettings,
+    /// When benchmarks were last opened by the user.
+    pub last_opened: LastOpened,
+    /// An animation manager.
+    pub animations: Animations,
+
+    /// A counter that changes whenever the home menu ui should be refreshed.
+    pub home_menu_hash: u64,
+    /// A counter that changes whenever the rules list ui should be refreshed.
+    pub stig_list_hash: u64,
+}
+
+/// Every way to change the state.
+#[derive(Debug, Clone)]
+pub enum Message {
+    NewWindow(Option<window::Id>),
+    FocusWidget(Id),
+    KeyPressed(keyboard::Event),
+
+    WindowClose,
+    WindowMinimize,
+    WindowFullscreenToggle,
+    WindowMove,
+    WindowDragResize(Direction),
+
+    OpenFile,
+    SwitchBenchmark(Benchmark),
+    PushBenchmarkToBackground(Benchmark),
+    SwitchToNextBackground,
+    SaveAllBenchmarks,
+    LoadCachedBenchmark(PathBuf),
+    DeleteCachedBenchmark(PathBuf),
+    SwitchDisplayType(DisplayType),
+
+    SwitchRule(RuleID),
+    SwitchNextRule,
+    Display(Rule),
+
+    TypeFilter(String),
+    SetPins(HashMap<String, Pinned>),
+    Pin(String),
+
+    SwitchPopup(Option<Popup>),
+    SendErrNotif(String),
+    ClearOneErrNotif,
+    FetchLatestVersion,
+    ShowUpdateAvailable,
+    OpenURL(&'static str),
+
+    SwitchTheme(AppTheme),
+    SaveAnimate(bool),
+    SaveUpdateNotify(bool),
+    SaveSettings,
+    Tick(Instant),
+
+    ReturnHome,
+
+    Log(String),
+}
+
+/// Popups that can appear.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Popup {
+    Filter,
+    Settings,
+    Save,
+}
+
+/// The color theme of the app.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AppTheme {
+    Dark,
+    Light,
+    HighContrast,
+    Coffee,
+}
+
+/// Whether the stig has been pinned in the list for any reason.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Pinned {
+    Not,
+    ByUser,
+    ByFilter,
+    ByFilterAndUser,
+}
+
+/// What name should be displayed on the buttons that switch the displayed STIG.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum DisplayType {
+    GroupId,
+    RuleId,
+    STIGId,
+}
 
 impl App {
     pub fn new() -> (Self, Task<Message>) {
-        let mut tasks = vec![window::oldest().map(Message::InitWindow)];
+        let mut tasks = vec![window::oldest().map(Message::NewWindow)];
 
         let settings = AppSettings::load().unwrap_or(AppSettings::default());
 
-        let last_opened = match TimeOpened::load() {
+        let last_opened = match LastOpened::load() {
             Ok(time_opened) => time_opened,
             Err(error) => {
-                tasks.push(Task::done(Message::Log(format!("{}", error))));
+                tasks.push(Task::done(Message::Log(error.to_string())));
 
-                TimeOpened::new()
+                LastOpened::new()
             }
         };
 
@@ -33,22 +162,21 @@ impl App {
 
         (
             Self {
+                window_id: None,
                 benchmark: None,
                 background_benchmarks: Vec::new(),
                 pins: HashMap::new(),
+                display_type: settings.default_display_type,
                 displayed: None,
                 filter_input: String::new(),
-                popup: Popup::None,
-                err_notif: None,
+                popup: None,
+                err_notifs: Vec::new(),
                 display_update_available: false,
-                window_id: None,
-                settings: settings,
+                settings,
                 last_opened,
+                animations: Animations::new(),
                 home_menu_hash: 0,
                 stig_list_hash: 0,
-                display_type: settings.default_display_type,
-                filter_string: String::new(),
-                animations: Animations::new(),
             },
             Task::batch(tasks),
         )
@@ -72,7 +200,7 @@ impl App {
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::InitWindow(id) => {
+            Message::NewWindow(id) => {
                 let id = id.expect("Not able to retrieve window id.");
                 self.window_id = Some(id);
 
@@ -87,110 +215,119 @@ impl App {
                     ),
                 ])
             }
+            Message::KeyPressed(event) => {
+                if let keyboard::Event::KeyPressed { key, modifiers, .. } = event {
+                    match key {
+                        key::Key::Character(char) => match char.as_str() {
+                            "q" if modifiers.control() => Task::done(Message::WindowClose),
+                            "i" if modifiers.control() => Task::done(Message::OpenFile),
+                            "f" if modifiers.control() => {
+                                Task::done(Message::SwitchPopup(Some(Popup::Filter)))
+                            }
+                            _ => Task::none(),
+                        },
+                        key::Key::Named(name) => match name {
+                            key::Named::Tab if modifiers.control() => {
+                                Task::done(Message::SwitchNextRule)
+                            }
+                            _ => Task::none(),
+                        },
+                        _ => Task::none(),
+                    }
+                } else {
+                    Task::none()
+                }
+            }
+            Message::FocusWidget(widget_id) => iced::widget::operation::focus(widget_id),
+
             Message::WindowClose => iced::exit(),
-            Message::WindowMin => {
+            Message::WindowMinimize => {
                 if let Some(id) = self.window_id {
                     window::minimize(id, true)
                 } else {
-                    Task::done(Message::SendErrNotif("Cant get window id to minimize."))
+                    Task::none()
                 }
             }
             Message::WindowFullscreenToggle => {
                 if let Some(id) = self.window_id {
                     window::toggle_maximize(id)
                 } else {
-                    Task::done(Message::SendErrNotif(
-                        "Cant get window id to toggle fullscreen.",
-                    ))
+                    Task::none()
                 }
             }
             Message::WindowMove => {
                 if let Some(id) = self.window_id {
                     window::drag(id)
                 } else {
-                    Task::done(Message::SendErrNotif("Cant get window id to move."))
+                    Task::none()
                 }
             }
             Message::WindowDragResize(dir) => {
                 if let Some(id) = self.window_id {
                     window::drag_resize(id, dir)
                 } else {
-                    Task::done(Message::SendErrNotif("Cant get window id to resize."))
-                }
-            }
-
-            Message::SwitchTheme(theme) => {
-                self.settings.theme = theme;
-
-                Task::done(Message::SaveSettings)
-            }
-
-            Message::FetchLatestVersion => Task::future(async {
-                use crate::app::latest_release::is_latest_version;
-
-                match is_latest_version() {
-                    Some(true) => Message::DoNothing,
-                    Some(false) => Message::SwitchDisplayUpdateAvailable(true),
-                    None => Message::DoNothing, // Silently fail.
-                }
-            }),
-
-            Message::SwitchDisplayUpdateAvailable(toggle) => {
-                self.display_update_available = toggle;
-
-                Task::none()
-            }
-
-            Message::OpenFile => Task::future(async move {
-                let home_dir = dirs::home_dir();
-
-                let home_dir = match home_dir {
-                    Some(dir) => dir,
-                    None => return Message::SendErrNotif("Home directory could not be found."),
-                };
-
-                let file_handle = AsyncFileDialog::new()
-                    .add_filter("STIG", &["toml", "xml", "zip", "ckl", "cklb"])
-                    .set_directory(home_dir)
-                    .set_title("Xylok View - Select File")
-                    .pick_file()
-                    .await;
-
-                // Do nothing if the user closed their file explorer before selecting a file.
-                let file_handle = match file_handle {
-                    Some(handle) => handle,
-                    None => return Message::DoNothing,
-                };
-
-                let Ok(benchmarks) = Benchmark::load_from_file(file_handle.path()) else {
-                    return Message::SendErrNotif("File type not supported or corrupted.");
-                };
-
-                Message::SwitchBenchmarks(benchmarks)
-            }),
-
-            Message::Switch(id) => {
-                // If the rule already displayed is being switched to, do nothing.
-                if let Some(rule) = &self.displayed {
-                    if rule.group_id == id {
-                        return Task::none();
-                    }
-                }
-
-                let Some(benchmark) = &self.benchmark else {
-                    return Task::none();
-                };
-
-                if let Some(rule) = benchmark.rules.get(&id) {
-                    Task::done(Message::Display(rule.to_owned()))
-                } else {
                     Task::none()
                 }
+            }
+
+            Message::OpenFile => {
+                Task::stream(stream::channel(
+                    100,
+                    |mut output: Sender<Message>| async move {
+                        let home_dir = dirs::home_dir();
+
+                        let home_dir = match home_dir {
+                            Some(dir) => dir,
+                            None => {
+                                let _ = output.try_send(Message::SendErrNotif(
+                                    "Error requesting the home file directory.".to_string(),
+                                ));
+                                return;
+                            }
+                        };
+
+                        let file_handle = AsyncFileDialog::new()
+                            .add_filter("STIG", &["toml", "xml", "zip", "ckl", "cklb"])
+                            .set_directory(home_dir)
+                            .set_title("Xylok View - Select File")
+                            .pick_file()
+                            .await;
+
+                        // Do nothing if the user closed their file explorer before selecting a file.
+                        let file_handle = match file_handle {
+                            Some(handle) => handle,
+                            None => return,
+                        };
+
+                        let Ok(mut benchmarks) = Benchmark::load_from_file(file_handle.path())
+                        else {
+                            let _ = output.try_send(Message::SendErrNotif(
+                                "Could not load requested file.".to_string(),
+                            ));
+                            return;
+                        };
+
+                        if let Some(benchmark) = benchmarks.pop() {
+                            let _ = output.try_send(Message::SwitchBenchmark(benchmark));
+                        }
+
+                        for benchmark in benchmarks {
+                            let _ = output.try_send(Message::PushBenchmarkToBackground(benchmark));
+                        }
+                    },
+                ))
             }
             Message::SwitchBenchmark(benchmark) => {
                 if let Some((name, _rule)) = benchmark.rules.first_key_value() {
                     let name = name.to_owned();
                     let mut tasks = vec![];
+
+                    // Store the current benchmark in the background.
+                    if let Some(current_benchmark) = self.benchmark.take() {
+                        tasks.push(Task::done(Message::PushBenchmarkToBackground(
+                            current_benchmark,
+                        )));
+                    }
 
                     self.benchmark = Some(benchmark);
 
@@ -202,7 +339,7 @@ impl App {
                     // Remember when this was opened.
                     if let Some(benchmark) = &self.benchmark {
                         if let Err(error) = self.last_opened.insert(benchmark.id.clone()) {
-                            tasks.push(Task::done(Message::Log(format!("{}", error))));
+                            tasks.push(Task::done(Message::Log(error.to_string())));
                         };
                     }
 
@@ -213,8 +350,8 @@ impl App {
                     self.stig_list_hash += 1;
 
                     tasks.append(&mut vec![
-                        Task::done(Message::Switch(name)),
-                        Task::done(Message::SwitchPopup(Popup::Save)),
+                        Task::done(Message::SwitchRule(name)),
+                        Task::done(Message::SwitchPopup(Some(Popup::Save))),
                     ]);
 
                     Task::batch(tasks)
@@ -223,21 +360,7 @@ impl App {
                     Task::none()
                 }
             }
-            Message::SwitchBenchmarks(mut benchmarks) => {
-                if benchmarks.is_empty() {
-                    return Task::none();
-                }
-
-                let first = benchmarks.remove(0);
-                let mut tasks = vec![Task::done(Message::SwitchBenchmark(first))];
-
-                for benchmark in benchmarks {
-                    tasks.push(Task::done(Message::PushBackgroundBenchmark(benchmark)));
-                }
-
-                Task::batch(tasks)
-            }
-            Message::PushBackgroundBenchmark(benchmark) => {
+            Message::PushBenchmarkToBackground(benchmark) => {
                 let id = benchmark.id.clone();
 
                 self.background_benchmarks.push(benchmark);
@@ -246,12 +369,12 @@ impl App {
                 // This improves the experience by making benchmarks opened together appear next to each other
                 // in the recently opened list.
                 if let Err(error) = self.last_opened.insert(id) {
-                    return Task::done(Message::Log(format!("{}", error)));
+                    return Task::done(Message::Log(error.to_string()));
                 };
 
                 Task::none()
             }
-            Message::SwitchToBackground => {
+            Message::SwitchToNextBackground => {
                 if self.background_benchmarks.is_empty() {
                     return Task::none();
                 }
@@ -278,49 +401,163 @@ impl App {
                 // Remember when this was opened.
                 if let Some(benchmark) = &self.benchmark {
                     if let Err(error) = self.last_opened.insert(benchmark.id.clone()) {
-                        return Task::done(Message::Log(format!("{}", error)));
+                        return Task::done(Message::Log(error.to_string()));
                     };
                 }
 
                 Task::none()
             }
+            Message::SaveAllBenchmarks => {
+                let benchmarks: Vec<&Benchmark> = if let Some(benchmark) = &self.benchmark {
+                    std::iter::once(benchmark)
+                        .chain(self.background_benchmarks.iter())
+                        .collect()
+                } else {
+                    self.background_benchmarks.iter().collect()
+                };
 
-            Message::SetPins(pins) => {
+                let mut tasks = Vec::new();
+
+                for benchmark in benchmarks {
+                    let Some(mut cache_dir) = dirs::cache_dir() else {
+                        tasks.push(Task::done(Message::SendErrNotif(
+                            "Error fetching cache file directory.".to_string(),
+                        )));
+
+                        continue;
+                    };
+
+                    // Create the save directory if it does not exist.
+                    cache_dir.push("xylok-view/");
+                    if let Err(_) = create_dir_all(&cache_dir) {
+                        tasks.push(Task::done(Message::SendErrNotif(
+                            "Error creating the cache directory.".to_string(),
+                        )));
+
+                        continue;
+                    };
+
+                    // Add proper file extensions.
+                    cache_dir.push(format!("{}.json.zstd", benchmark.id.clone()));
+
+                    let Ok(mut file) = File::create(cache_dir) else {
+                        tasks.push(Task::done(Message::SendErrNotif(
+                            "Error creating benchmark file.".to_string(),
+                        )));
+
+                        continue;
+                    };
+
+                    let Ok(benchmark_bytes) = benchmark.serialize(Format::InHouse) else {
+                        tasks.push(Task::done(Message::SendErrNotif(
+                            "Failed to serialize benchmark to a file.".to_string(),
+                        )));
+
+                        continue;
+                    };
+
+                    if let Err(_) = file.write_all(&benchmark_bytes) {
+                        tasks.push(Task::done(Message::SendErrNotif(
+                            "Failed writing benchmark to a file.".to_string(),
+                        )));
+
+                        continue;
+                    };
+                }
+
+                // After saving, turn off the save menu.
+                Task::done(Message::SwitchPopup(None))
+            }
+            Message::LoadCachedBenchmark(path) => match Benchmark::load_from_file(&path) {
+                Ok(mut benchmarks) => {
+                    // Should only return one benchmark, but pop it from the vector to make it a single benchmark.
+                    let Some(benchmark) = benchmarks.pop() else {
+                        return Task::done(Message::SendErrNotif(
+                            "Error loading cached benchmark.".to_string(),
+                        ));
+                    };
+
+                    let Some((_name, rule)) = benchmark.rules.first_key_value() else {
+                        return Task::done(Message::SendErrNotif(
+                            "Error loading cached benchmark.".to_string(),
+                        ));
+                    };
+
+                    let rule = rule.clone();
+
+                    let mut tasks = Vec::new();
+
+                    // Store the current benchmark in the background.
+                    if let Some(current_benchmark) = self.benchmark.take() {
+                        tasks.push(Task::done(Message::PushBenchmarkToBackground(
+                            current_benchmark,
+                        )));
+                    }
+
+                    self.benchmark = Some(benchmark);
+
+                    // Reset pin values.
+                    self.pins = HashMap::new();
+
+                    // Remember when this was opened.
+                    if let Some(benchmark) = &self.benchmark {
+                        if let Err(error) = self.last_opened.insert(benchmark.id.clone()) {
+                            tasks.push(Task::done(Message::Log(error.to_string())));
+                        };
+                    }
+
+                    // Benchmark has been switched to, so change tell the home menu to update,
+                    // reflecting that this benchmark has been opened recently.
+                    self.home_menu_hash += 1;
+                    self.stig_list_hash += 1;
+
+                    tasks.push(Task::done(Message::Display(rule.clone())));
+
+                    Task::batch(tasks)
+                }
+                Err(error) => Task::batch(vec![
+                    Task::done(SendErrNotif("Error loading cached benchmark.".to_string())),
+                    Task::done(Message::Log(error.to_string())),
+                ]),
+            },
+            Message::DeleteCachedBenchmark(path) => {
+                self.home_menu_hash += 1;
+
+                if let Err(_error) = std::fs::remove_file(path) {
+                    Task::batch(vec![Task::done(Message::SendErrNotif(
+                        "Couldn't delete cached benchmark.".to_string(),
+                    ))])
+                } else {
+                    Task::none()
+                }
+            }
+            Message::SwitchDisplayType(display_type) => {
+                self.display_type = display_type;
+
+                self.stig_list_hash += 1;
+
+                Task::none()
+            }
+
+            Message::SwitchRule(id) => {
+                // If the rule already displayed is being switched to, do nothing.
+                if let Some(rule) = &self.displayed {
+                    if rule.group_id == id {
+                        return Task::none();
+                    }
+                }
+
                 let Some(benchmark) = &self.benchmark else {
                     return Task::none();
                 };
 
-                self.pins = pins;
-
-                self.stig_list_hash += 1;
-
-                // When the pins are set, check if the displayed rule has a filter applied.
-                // If not, switch to the first one that does.
-
-                // Get the displayed STIG, if its already pinned, dont switch which STIG is viewed.
-                if let Some(rule) = &self.displayed {
-                    let pin_status = self.pins.get(&rule.group_id);
-
-                    match pin_status.unwrap_or(&Pinned::Not) {
-                        Pinned::ByFilter => return Task::done(Message::DoNothing),
-                        Pinned::ByFilterAndUser => return Task::done(Message::DoNothing),
-                        _ => (), // Continue if not above options.
-                    }
+                if let Some(rule) = benchmark.rules.get(&id) {
+                    Task::done(Message::Display(rule.to_owned()))
+                } else {
+                    Task::none()
                 }
-
-                for (name, _rule) in benchmark.rules.iter() {
-                    match self.pins.get(name).unwrap_or(&Pinned::Not) {
-                        Pinned::ByFilter => return Task::done(Message::Switch(name.to_owned())),
-                        Pinned::ByFilterAndUser => {
-                            return Task::done(Message::Switch(name.to_owned()));
-                        }
-                        _ => (),
-                    }
-                }
-
-                Task::none()
             }
-            Message::SwitchNext => {
+            Message::SwitchNextRule => {
                 let Some(benchmark) = &self.benchmark else {
                     return Task::none();
                 };
@@ -338,7 +575,7 @@ impl App {
                     .or_else(|| benchmark.rules.first_key_value());
 
                 if let Some((key, _)) = next {
-                    return Task::done(Message::Switch(key.clone()));
+                    return Task::done(Message::SwitchRule(key.clone()));
                 }
 
                 Task::none()
@@ -354,35 +591,65 @@ impl App {
                 Task::none()
             }
 
-            Message::SwitchPopup(popup) => {
-                match (&self.popup, &popup) {
-                    (Popup::Filter, Popup::Filter) => self.popup = Popup::None,
-                    (Popup::Settings, Popup::Settings) => self.popup = Popup::None,
-                    _ => {
-                        if self.settings.animate && popup != Popup::None {
-                            self.animations.start("popup");
-                        }
+            Message::TypeFilter(filter_input) => {
+                self.filter_input = filter_input;
 
-                        self.popup = popup;
+                let command = parse_command(&self.filter_input);
+
+                match command {
+                    Some(command) => {
+                        let Some(benchmark) = &self.benchmark else {
+                            return Task::none();
+                        };
+
+                        let new_pins =
+                            run_search_cmd(command, benchmark, std::mem::take(&mut self.pins));
+
+                        match new_pins {
+                            Some(new_pins) => Task::done(Message::SetPins(new_pins)),
+                            None => Task::none(),
+                        }
+                    }
+                    None => Task::none(),
+                }
+            }
+            Message::SetPins(pins) => {
+                let Some(benchmark) = &self.benchmark else {
+                    return Task::none();
+                };
+
+                self.pins = pins;
+
+                self.stig_list_hash += 1;
+
+                // When the pins are set, check if the displayed rule has a filter applied.
+                // If not, switch to the first one that does.
+
+                // Get the displayed STIG, if its already pinned, dont switch which STIG is viewed.
+                if let Some(rule) = &self.displayed {
+                    let pin_status = self.pins.get(&rule.group_id);
+
+                    match pin_status.unwrap_or(&Pinned::Not) {
+                        Pinned::ByFilter => return Task::none(),
+                        Pinned::ByFilterAndUser => return Task::none(),
+                        _ => (), // Continue if not above options.
+                    }
+                }
+
+                for (name, rule) in benchmark.rules.iter() {
+                    match self.pins.get(name).unwrap_or(&Pinned::Not) {
+                        Pinned::ByFilter => {
+                            return Task::done(Message::Display(rule.clone()));
+                        }
+                        Pinned::ByFilterAndUser => {
+                            return Task::done(Message::Display(rule.clone()));
+                        }
+                        _ => (),
                     }
                 }
 
                 Task::none()
             }
-
-            Message::SendErrNotif(err_str) => {
-                if let None = self.err_notif {
-                    self.err_notif = Some(err_str);
-                }
-
-                Task::none()
-            }
-            Message::ClearErrNotif => {
-                self.err_notif = None;
-
-                Task::none()
-            }
-
             Message::Pin(id) => {
                 let pin_status = self.pins.get(&id);
 
@@ -407,201 +674,71 @@ impl App {
                 Task::none()
             }
 
-            Message::FocusWidget(widget_id) => iced::widget::operation::focus(widget_id),
+            Message::SwitchPopup(popup) => {
+                let Some(popup) = popup else {
+                    self.popup = None;
 
-            Message::TypeCmd(filter_input) => {
-                self.filter_input = filter_input;
-
-                Task::done(Message::ProcessCmd(self.filter_input.clone()))
-            }
-            Message::ProcessCmd(command_str) => {
-                let command = parse_command(&command_str);
-
-                match command {
-                    Some(command) => {
-                        let Some(benchmark) = &self.benchmark else {
-                            return Task::none();
-                        };
-
-                        // If the command is a phrase, highlight that phrase.
-                        // Otherwise, highlight nothing.
-                        match command {
-                            Command::Phrase(ref phrase) => {
-                                self.filter_string = phrase.clone();
-                            }
-                            Command::Reset => self.filter_string = "".into(),
-                        }
-
-                        let new_pins =
-                            run_search_cmd(command, benchmark, std::mem::take(&mut self.pins));
-
-                        match new_pins {
-                            Some(new_pins) => Task::done(Message::SetPins(new_pins)),
-                            None => {
-                                Task::done(Message::SendErrNotif("Error when running the command."))
-                            }
-                        }
-                    }
-                    None => Task::none(),
-                }
-            }
-
-            Message::KeyPressed(event) => match &event {
-                keyboard::Event::KeyPressed {
-                    key: key::Key::Character(key_smolstr),
-                    modifiers,
-                    ..
-                } => match key_smolstr.as_str() {
-                    "q" if modifiers.control() => return Task::done(Message::WindowClose),
-                    "i" if modifiers.control() => return Task::done(Message::OpenFile),
-                    "f" if modifiers.control() => {
-                        return Task::done(Message::SwitchPopup(Popup::Filter));
-                    }
-                    _ => Task::none(),
-                },
-
-                keyboard::Event::KeyPressed {
-                    key: key::Key::Named(key_name),
-                    modifiers,
-                    ..
-                } => match key_name {
-                    key::Named::Tab if modifiers.control() => Task::done(Message::SwitchNext),
-                    _ => Task::none(),
-                },
-
-                _ => Task::none(),
-            },
-
-            Message::SaveSettings => {
-                let err = &self.settings.save();
-
-                match err {
-                    Ok(_) => Task::none(),
-                    Err(AppSettingsErr::CantSave(err_str)) => {
-                        Task::done(Message::SendErrNotif(err_str))
-                    }
-                }
-            }
-            Message::SaveBenchmark => {
-                let Some(benchmark) = &self.benchmark else {
                     return Task::none();
                 };
 
-                let benchmarks =
-                    std::iter::once(benchmark).chain(self.background_benchmarks.iter());
-
-                for benchmark in benchmarks {
-                    let Some(mut cache_dir) = dirs::cache_dir() else {
-                        return Task::done(Message::SendErrNotif(
-                            "Failed to cache benchmark to disk.",
-                        ));
-                    };
-
-                    // Create the save directory if it does not exist.
-                    cache_dir.push("xylok-view/");
-                    if let Err(_) = create_dir_all(&cache_dir) {
-                        return Task::done(Message::SendErrNotif(
-                            "Failed to cache benchmark to disk.",
-                        ));
-                    };
-
-                    // Add proper file extensions.
-                    cache_dir.push(format!("{}.json.zstd", benchmark.id.clone()));
-
-                    let Ok(mut file) = File::create(cache_dir) else {
-                        return Task::done(Message::SendErrNotif(
-                            "Failed to cache benchmark to disk.",
-                        ));
-                    };
-
-                    let Ok(benchmark_bytes) = benchmark.serialize(Format::InHouse) else {
-                        return Task::done(Message::SendErrNotif(
-                            "Failed to cache benchmark to disk.",
-                        ));
-                    };
-
-                    if let Err(_) = file.write_all(&benchmark_bytes) {
-                        return Task::done(Message::SendErrNotif(
-                            "Failed to cache benchmark to disk.",
-                        ));
-                    };
-                }
-
-                // After saving, turn off the save menu.
-                Task::done(Message::SwitchPopup(Popup::None))
-            }
-
-            Message::LoadCachedBenchmark(path) => match Benchmark::load_from_file(&path) {
-                Ok(benchmarks) => {
-                    // TODO: implement Benchmark::from_specific_type() to avoid handling a vec result.
-                    if let Some((name, _rule)) = benchmarks[0].rules.first_key_value() {
-                        let name = name.to_owned();
-                        let mut tasks = vec![];
-
-                        self.benchmark = Some(benchmarks[0].clone());
-
-                        // Reset pin values.
-                        self.pins = HashMap::new();
-                        // Reset background Benchmarks.
-                        self.background_benchmarks = Vec::new();
-
-                        // Remember when this was opened.
-                        if let Some(benchmark) = &self.benchmark {
-                            if let Err(error) = self.last_opened.insert(benchmark.id.clone()) {
-                                tasks.push(Task::done(Message::Log(format!("{}", error))));
-                            };
+                match (&self.popup, &popup) {
+                    (Some(Popup::Filter), Popup::Filter) => self.popup = None,
+                    (Some(Popup::Settings), Popup::Settings) => self.popup = None,
+                    _ => {
+                        if self.settings.animate {
+                            self.animations.start("popup");
                         }
 
-                        // Benchmark has been switched to, so change tell the home menu to update,
-                        // reflecting that this benchmark has been opened recently.
-                        self.home_menu_hash += 1;
-
-                        self.stig_list_hash += 1;
-
-                        tasks.push(Task::done(Message::Switch(name)));
-
-                        Task::batch(tasks)
-                    } else {
-                        // Do nothing when an attempting to switch an empty benchmark.
-                        Task::none()
+                        self.popup = Some(popup);
                     }
                 }
-                Err(_) => Task::done(Message::SendErrNotif(
-                    "Couldn't load cached benchmark. File version may be unsupported.",
-                )),
-            },
-            Message::DeleteCachedBenchmark(path) => {
-                let err = std::fs::remove_file(path);
-
-                self.home_menu_hash += 1;
-
-                if err.is_err() {
-                    Task::done(Message::SendErrNotif("Couldn't delete cached benchmark."))
-                } else {
-                    // Benchmark has been deleted, so change tell the home menu to update,
-                    // reflecting that this benchmark has been removed.
-
-                    Task::none()
-                }
-            }
-
-            Message::SwitchDisplayType(display_type) => {
-                self.display_type = display_type;
-
-                self.stig_list_hash += 1;
 
                 Task::none()
             }
-            // Instead of just switching display types, save it as the default for next time.
-            Message::SaveDisplayType(display_type) => {
-                self.display_type = display_type;
-                self.settings.default_display_type = display_type;
+            Message::SendErrNotif(error) => {
+                self.err_notifs.push(error);
 
-                self.stig_list_hash += 1;
+                Task::none()
+            }
+            Message::ClearOneErrNotif => {
+                let _ = self.err_notifs.pop();
+
+                Task::none()
+            }
+            Message::FetchLatestVersion => {
+                Task::stream(stream::channel(
+                    1,
+                    |mut output: Sender<Message>| async move {
+                        use crate::app::latest_release::is_latest_version;
+
+                        match is_latest_version() {
+                            Some(true) => return,
+                            Some(false) => {
+                                let _ = output.try_send(Message::ShowUpdateAvailable);
+                                return;
+                            }
+                            // Silently fail.
+                            None => return,
+                        }
+                    },
+                ))
+            }
+            Message::ShowUpdateAvailable => {
+                self.display_update_available = true;
+
+                Task::none()
+            }
+            Message::OpenURL(url) => {
+                let _ = open::that(url);
+
+                Task::none()
+            }
+
+            Message::SwitchTheme(theme) => {
+                self.settings.theme = theme;
 
                 Task::done(Message::SaveSettings)
             }
-
             Message::SaveAnimate(animate) => {
                 self.settings.animate = animate;
 
@@ -613,30 +750,31 @@ impl App {
 
                 Task::done(Message::SaveSettings)
             }
-
-            Message::ReturnHome => {
-                self.benchmark = None;
-                self.background_benchmarks = Vec::new();
-                self.displayed = None;
-
-                Task::none()
+            Message::SaveSettings => {
+                if let Err(error) = self.settings.save() {
+                    Task::done(Message::Log(error.to_string()))
+                } else {
+                    Task::none()
+                }
             }
-
             Message::Tick(now) => {
                 self.animations.tick_all(now);
 
                 Task::none()
             }
 
-            Message::DoNothing => Task::none(),
+            Message::ReturnHome => {
+                self.displayed = None;
 
-            Message::OpenURL(url) => {
-                let _ = open::that(url);
-
-                Task::none()
+                // Store the current benchmark in the background.
+                if let Some(current_benchmark) = self.benchmark.take() {
+                    Task::done(Message::PushBenchmarkToBackground(current_benchmark))
+                } else {
+                    Task::none()
+                }
             }
 
-            Message::Log(message) => {
+            Message::Log(_message) => {
                 // TODO.
                 Task::none()
             }
@@ -666,5 +804,26 @@ impl App {
                 }
             })
             .collect()
+    }
+}
+
+impl std::fmt::Display for AppTheme {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            AppTheme::Dark => "Dark",
+            AppTheme::Light => "Light",
+            AppTheme::HighContrast => "High Contrast",
+            AppTheme::Coffee => "Coffee",
+        })
+    }
+}
+
+impl std::fmt::Display for DisplayType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            DisplayType::GroupId => "Group ID",
+            DisplayType::RuleId => "Rule ID",
+            DisplayType::STIGId => "STIG ID",
+        })
     }
 }

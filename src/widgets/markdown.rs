@@ -6,7 +6,6 @@ use iced::{alignment, border, color, padding};
 use iced_graphics::core;
 
 use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
 use std::mem;
 use std::sync::Arc;
 
@@ -29,18 +28,13 @@ use crate::widgets::text_utils;
 pub use iced::advanced::text::Highlight;
 pub use pulldown_cmark::HeadingLevel;
 
-/// A [`String`] representing a [URI] in a Markdown document
-///
-/// [URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
-pub type Uri = String;
-
 /// A Markdown item.
 #[derive(Debug, Clone)]
-pub enum Item {
+pub enum Item<Message> {
     /// A heading.
-    Heading(pulldown_cmark::HeadingLevel, Text),
+    Heading(pulldown_cmark::HeadingLevel, Text<Message>),
     /// A paragraph.
-    Paragraph(Text),
+    Paragraph(Text<Message>),
     /// A code block.
     CodeBlock(String),
     /// A list.
@@ -48,7 +42,7 @@ pub enum Item {
         /// The first number of the list, if it is ordered.
         start: Option<u64>,
         /// The items of the list.
-        bullets: Vec<Bullet>,
+        bullets: Vec<Bullet<Message>>,
     },
     /// A horizontal separator.
     Rule,
@@ -56,13 +50,13 @@ pub enum Item {
 
 /// A bunch of parsed Markdown text.
 #[derive(Debug, Clone)]
-pub struct Text {
+pub struct Text<Message> {
     spans: Vec<Span>,
     last_style: Cell<Option<Style>>,
-    last_styled_spans: RefCell<Arc<[text::Span<'static, Uri>]>>,
+    last_styled_spans: RefCell<Arc<[text::Span<'static, Message>]>>,
 }
 
-impl Text {
+impl<Message> Text<Message> {
     fn new(spans: Vec<Span>) -> Self {
         Self {
             spans,
@@ -75,10 +69,13 @@ impl Text {
     ///
     /// This method performs caching for you. It will only reallocate if the [`Style`]
     /// provided changes.
-    pub fn spans(&self, style: Style) -> Arc<[text::Span<'static, Uri>]> {
+    pub fn spans(&self, style: Style) -> Arc<[text::Span<'static, Message>]> {
         if Some(style) != self.last_style.get() {
-            *self.last_styled_spans.borrow_mut() =
-                self.spans.iter().map(|span| span.view(&style)).collect();
+            *self.last_styled_spans.borrow_mut() = self
+                .spans
+                .iter()
+                .map(|span| span.view::<Message>(&style))
+                .collect();
 
             self.last_style.set(Some(style));
         }
@@ -92,7 +89,6 @@ enum Span {
     Standard {
         text: String,
         strikethrough: bool,
-        link: Option<Uri>,
         strong: bool,
         emphasis: bool,
         code: bool,
@@ -100,19 +96,18 @@ enum Span {
 }
 
 impl Span {
-    fn view(&self, style: &Style) -> text::Span<'static, Uri> {
+    fn view<Message>(&self, style: &Style) -> text::Span<'static, Message> {
         match self {
             Span::Standard {
                 text,
                 strikethrough,
-                link,
                 strong,
                 emphasis,
                 code,
             } => {
                 let span = span(text.clone()).strikethrough(*strikethrough);
 
-                let span = if *code {
+                if *code {
                     span.font(style.inline_code_font)
                         .color(style.inline_code_color)
                         .background(style.inline_code_highlight.background)
@@ -134,12 +129,6 @@ impl Span {
                     })
                 } else {
                     span.font(style.font)
-                };
-
-                if let Some(link) = link.as_ref() {
-                    span.color(style.link_color).link(link.clone())
-                } else {
-                    span
                 }
             }
         }
@@ -148,40 +137,40 @@ impl Span {
 
 /// The item of a list.
 #[derive(Debug, Clone)]
-pub struct Bullet {
-    pub items: Vec<Item>,
+pub struct Bullet<Message> {
+    pub items: Vec<Item<Message>>,
 }
 
-impl Bullet {
-    fn items(&self) -> &[Item] {
+impl<Message> Bullet<Message> {
+    fn items(&self) -> &[Item<Message>] {
         &self.items
     }
 
-    fn push(&mut self, item: Item) {
+    fn push(&mut self, item: Item<Message>) {
         self.items.push(item);
     }
 }
 
-pub fn parse(markdown: &str) -> impl Iterator<Item = Item> + '_ {
+pub fn parse<Message>(markdown: &str) -> impl Iterator<Item = Item<Message>> + '_
+where
+    Message: 'static,
+{
     parse_with(markdown)
 }
 
-#[derive(Debug, Default)]
-struct State {
-    references: HashMap<String, String>,
-}
-
-fn parse_with(markdown: &str) -> impl Iterator<Item = Item> + '_ {
-    enum Scope {
-        List(List),
+fn parse_with<Message>(markdown: &str) -> impl Iterator<Item = Item<Message>> + '_
+where
+    Message: 'static,
+{
+    enum Scope<Message> {
+        List(List<Message>),
     }
 
-    struct List {
+    struct List<Message> {
         start: Option<u64>,
-        bullets: Vec<Bullet>,
+        bullets: Vec<Bullet<Message>>,
     }
 
-    let mut state = State::default();
     let mut spans = Vec::new();
     let mut code = String::new();
     let mut strong = false;
@@ -189,34 +178,16 @@ fn parse_with(markdown: &str) -> impl Iterator<Item = Item> + '_ {
     let mut strikethrough = false;
     let mut metadata = false;
     let mut code_block = false;
-    let mut link = None;
     let mut stack = Vec::new();
 
-    let parser = pulldown_cmark::Parser::new_with_broken_link_callback(
+    let parser = pulldown_cmark::Parser::new_ext(
         markdown,
         pulldown_cmark::Options::ENABLE_YAML_STYLE_METADATA_BLOCKS
             | pulldown_cmark::Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS
             | pulldown_cmark::Options::ENABLE_STRIKETHROUGH,
-        {
-            let references = state.references.clone();
-            Some(move |broken_link: pulldown_cmark::BrokenLink<'_>| {
-                references.get(broken_link.reference.as_ref()).map(|url| {
-                    (
-                        pulldown_cmark::CowStr::from(url.to_owned()),
-                        broken_link.reference.into_static(),
-                    )
-                })
-            })
-        },
     );
 
-    for reference in parser.reference_definitions().iter() {
-        let _ = state
-            .references
-            .insert(reference.0.to_owned(), reference.1.dest.to_string());
-    }
-
-    let produce = move |stack: &mut Vec<Scope>, item| {
+    let produce = move |stack: &mut Vec<Scope<Message>>, item: Item<Message>| {
         if let Some(scope) = stack.last_mut() {
             match scope {
                 Scope::List(list) => {
@@ -245,10 +216,6 @@ fn parse_with(markdown: &str) -> impl Iterator<Item = Item> + '_ {
             }
             pulldown_cmark::Tag::Strikethrough if !metadata => {
                 strikethrough = true;
-                None
-            }
-            pulldown_cmark::Tag::Link { dest_url, .. } if !metadata => {
-                link = Some(dest_url.into_string());
                 None
             }
             pulldown_cmark::Tag::List(first_item) if !metadata => {
@@ -310,10 +277,6 @@ fn parse_with(markdown: &str) -> impl Iterator<Item = Item> + '_ {
                 strikethrough = false;
                 None
             }
-            pulldown_cmark::TagEnd::Link if !metadata => {
-                link = None;
-                None
-            }
             pulldown_cmark::TagEnd::Paragraph if !metadata => {
                 if spans.is_empty() {
                     None
@@ -366,7 +329,6 @@ fn parse_with(markdown: &str) -> impl Iterator<Item = Item> + '_ {
                 strong,
                 emphasis,
                 strikethrough,
-                link: link.clone(),
                 code: false,
             };
 
@@ -380,7 +342,6 @@ fn parse_with(markdown: &str) -> impl Iterator<Item = Item> + '_ {
                 strong,
                 emphasis,
                 strikethrough,
-                link: link.clone(),
                 code: true,
             };
 
@@ -393,7 +354,6 @@ fn parse_with(markdown: &str) -> impl Iterator<Item = Item> + '_ {
                 strikethrough,
                 strong,
                 emphasis,
-                link: link.clone(),
                 code: false,
             });
             None
@@ -404,7 +364,6 @@ fn parse_with(markdown: &str) -> impl Iterator<Item = Item> + '_ {
                 strikethrough,
                 strong,
                 emphasis,
-                link: link.clone(),
                 code: false,
             });
             None
@@ -489,13 +448,11 @@ pub struct Style {
     pub inline_code_font: Font,
     /// The [`Font`] to be applied to code blocks.
     pub code_block_font: Font,
-    /// The [`Color`] to be applied to links.
-    pub link_color: Color,
 }
 
 impl Style {
     /// Creates a new [`Style`] from the given [`palette::Palette`].
-    pub fn from_palette(palette: palette::Palette) -> Self {
+    pub fn from_palette(_palette: palette::Palette) -> Self {
         Self {
             font: Font::default(),
             inline_code_padding: padding::left(1).right(1),
@@ -506,7 +463,6 @@ impl Style {
             inline_code_color: Color::WHITE,
             inline_code_font: Font::MONOSPACE,
             code_block_font: Font::MONOSPACE,
-            link_color: palette.primary,
         }
     }
 }
@@ -558,17 +514,17 @@ fn fill_run_quad<R>(
     }
 }
 
-struct SelectableRichTextState {
+struct SelectableRichTextState<Message> {
     paragraph: ConcreteP,
-    prev_spans: Vec<text::Span<'static, Uri>>,
+    prev_spans: Vec<text::Span<'static, Message>>,
     selection: Option<((usize, usize), (usize, usize))>,
     last_click: Option<Click>,
     is_dragging: bool,
 }
 
 /// A markdown text element that supports mouse selection and pattern highlighting.
-pub struct SelectableRichText {
-    spans: Arc<[text::Span<'static, Uri>]>,
+pub struct SelectableRichText<Message> {
+    spans: Arc<[text::Span<'static, Message>]>,
     size: Pixels,
     font: Font,
     highlight_patterns: Vec<(String, Arc<dyn Fn(&Theme) -> Color>)>,
@@ -576,8 +532,8 @@ pub struct SelectableRichText {
     rule_lines: Vec<usize>,
 }
 
-impl SelectableRichText {
-    fn new(spans: Arc<[text::Span<'static, Uri>]>, size: Pixels, font: Font) -> Self {
+impl<Message> SelectableRichText<Message> {
+    fn new(spans: Arc<[text::Span<'static, Message>]>, size: Pixels, font: Font) -> Self {
         Self {
             spans,
             size,
@@ -614,16 +570,17 @@ impl SelectableRichText {
     }
 }
 
-impl<Message, R> Widget<Message, Theme, R> for SelectableRichText
+impl<Message, R> Widget<Message, Theme, R> for SelectableRichText<Message>
 where
     R: iced::advanced::text::Renderer<Paragraph = ConcreteP, Font = iced::Font>,
+    Message: 'static + Clone,
 {
     fn tag(&self) -> tree::Tag {
-        tree::Tag::of::<SelectableRichTextState>()
+        tree::Tag::of::<SelectableRichTextState<Message>>()
     }
 
     fn state(&self) -> tree::State {
-        tree::State::new(SelectableRichTextState {
+        tree::State::new(SelectableRichTextState::<Message> {
             paragraph: ConcreteP::default(),
             prev_spans: Vec::new(),
             selection: None,
@@ -640,7 +597,9 @@ where
     }
 
     fn layout(&mut self, tree: &mut Tree, _renderer: &R, limits: &Limits) -> Node {
-        let state = tree.state.downcast_mut::<SelectableRichTextState>();
+        let state = tree
+            .state
+            .downcast_mut::<SelectableRichTextState<Message>>();
         let bounds = limits.max();
 
         let mk_text = || core::Text {
@@ -695,7 +654,9 @@ where
         _cursor: Cursor,
         viewport: &iced::Rectangle,
     ) {
-        let state = tree.state.downcast_ref::<SelectableRichTextState>();
+        let state = tree
+            .state
+            .downcast_ref::<SelectableRichTextState<Message>>();
         let bounds = layout.bounds();
         let buffer = state.paragraph.buffer();
 
@@ -779,18 +740,18 @@ where
         shell: &mut Shell<'_, Message>,
         _viewport: &iced::Rectangle,
     ) {
-        let state = tree.state.downcast_mut::<SelectableRichTextState>();
+        let state = tree
+            .state
+            .downcast_mut::<SelectableRichTextState<Message>>();
 
         match event {
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                 if let Some(mouse_pos) = cursor.position_in(layout.bounds()) {
                     let click = Click::new(mouse_pos, mouse::Button::Left, state.last_click);
 
-                    if let Some(sel) = text_utils::selection_from_click(
-                        state.paragraph.buffer(),
-                        click,
-                        mouse_pos,
-                    ) {
+                    if let Some(sel) =
+                        text_utils::selection_from_click(state.paragraph.buffer(), click, mouse_pos)
+                    {
                         state.selection = Some(sel);
                         if click.kind() == click::Kind::Single {
                             state.is_dragging = true;
@@ -868,12 +829,12 @@ where
     }
 }
 
-impl<'a, Message, R> From<SelectableRichText> for Element<'a, Message, Theme, R>
+impl<'a, Message, R> From<SelectableRichText<Message>> for Element<'a, Message, Theme, R>
 where
     R: iced::advanced::text::Renderer<Paragraph = ConcreteP, Font = iced::Font> + 'a,
-    Message: 'a,
+    Message: 'static + Clone,
 {
-    fn from(w: SelectableRichText) -> Self {
+    fn from(w: SelectableRichText<Message>) -> Self {
         Element::new(w)
     }
 }
@@ -882,10 +843,11 @@ where
 ///
 /// Created via [`view_selectable`]. Call [`highlight_str`](SelectableMarkdown::highlight_str)
 /// to highlight a search pattern, then convert to [`Element`] via `Into`.
-pub struct SelectableMarkdown<Renderer> {
-    items: Vec<Item>,
+pub struct SelectableMarkdown<Message, Renderer> {
+    items: Vec<Item<Message>>,
     settings: Settings,
     highlights: Vec<(String, Arc<dyn Fn(&Theme) -> Color>)>,
+    _message: std::marker::PhantomData<Message>,
     _renderer: std::marker::PhantomData<Renderer>,
 }
 
@@ -894,10 +856,10 @@ pub struct SelectableMarkdown<Renderer> {
 /// Text in paragraphs and headings can be selected with the mouse and copied
 /// with Ctrl+C / Cmd+C. Use [`SelectableMarkdown::highlight_str`] to also
 /// highlight search patterns before converting to [`Element`].
-pub fn view_selectable<Renderer>(
-    items: impl IntoIterator<Item = Item>,
+pub fn view_selectable<Message, Renderer>(
+    items: impl IntoIterator<Item = Item<Message>>,
     settings: impl Into<Settings>,
-) -> SelectableMarkdown<Renderer>
+) -> SelectableMarkdown<Message, Renderer>
 where
     Renderer: iced::advanced::text::Renderer<Paragraph = ConcreteP, Font = Font>,
 {
@@ -905,11 +867,12 @@ where
         items: items.into_iter().collect(),
         settings: settings.into(),
         highlights: Vec::new(),
+        _message: std::marker::PhantomData,
         _renderer: std::marker::PhantomData,
     }
 }
 
-impl<Renderer> SelectableMarkdown<Renderer>
+impl<Message, Renderer> SelectableMarkdown<Message, Renderer>
 where
     Renderer: iced::advanced::text::Renderer<Paragraph = ConcreteP, Font = Font>,
 {
@@ -928,8 +891,14 @@ where
     }
 }
 
-fn collect_item_spans(it: &Item, settings: Settings, out: &mut Vec<text::Span<'static, Uri>>) {
-    let nl = || -> text::Span<'static, Uri> { span("\n") };
+fn collect_item_spans<Message>(
+    it: &Item<Message>,
+    settings: Settings,
+    out: &mut Vec<text::Span<'static, Message>>,
+) where
+    Message: Clone,
+{
+    let nl = || -> text::Span<'static, Message> { span("\n") };
 
     match it {
         Item::Heading(level, t) => {
@@ -973,13 +942,15 @@ fn collect_item_spans(it: &Item, settings: Settings, out: &mut Vec<text::Span<'s
     }
 }
 
-impl<'a, Renderer> From<SelectableMarkdown<Renderer>> for Element<'a, Uri, Theme, Renderer>
+impl<'a, Message, Renderer> From<SelectableMarkdown<Message, Renderer>>
+    for Element<'a, Message, Theme, Renderer>
 where
     Renderer: iced::advanced::text::Renderer<Paragraph = ConcreteP, Font = Font> + 'a,
+    Message: 'static + Clone,
 {
-    fn from(md: SelectableMarkdown<Renderer>) -> Self {
+    fn from(md: SelectableMarkdown<Message, Renderer>) -> Self {
         let settings = md.settings;
-        let mut all_spans: Vec<text::Span<'static, Uri>> = Vec::new();
+        let mut all_spans: Vec<text::Span<'static, Message>> = Vec::new();
         let mut rule_lines: Vec<usize> = Vec::new();
 
         let mut prev_was_heading = false;
@@ -1001,7 +972,7 @@ where
             }
         }
 
-        let spans_arc: Arc<[text::Span<'static, Uri>]> = all_spans.into();
+        let spans_arc: Arc<[text::Span<'static, Message>]> = all_spans.into();
         let mut srt = SelectableRichText::new(spans_arc, settings.text_size, settings.style.font)
             .with_rule_lines(rule_lines);
         for (pattern, color_fn) in md.highlights {
