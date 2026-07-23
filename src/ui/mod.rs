@@ -898,9 +898,9 @@ impl App {
         container(
             row![
                 space().width(SEPERATION * 0.5),
-                button(text("Update Available").size(11).center())
+                button(text("Update Available").size(12).center())
                     .style(no_button)
-                    .padding(0)
+                    .padding(4)
                     .on_press(Message::OpenURL(
                         "https://github.com/joshuardecker/xylok-view/releases"
                     )),

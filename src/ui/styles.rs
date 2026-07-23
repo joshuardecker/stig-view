@@ -353,7 +353,7 @@ pub fn update_available_container(theme: &Theme) -> container::Style {
         text_color: Some(palette.background.base.text),
         background: Some(palette.background.base.color.into()),
         border: Border {
-            color: palette.secondary.base.color,
+            color: palette.primary.weak.color,
             width: 2.0,
             radius: BORDER_RAD.into(),
         },
