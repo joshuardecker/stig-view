@@ -16,7 +16,7 @@ use image::ImageFormat;
 use rfd::AsyncFileDialog;
 
 use crate::app::*;
-use crate::app::{app::Message::SendErrNotif, search::*};
+use crate::app::{app::Message::SendErrNotif, search};
 use crate::ui::{APP_ICON, THEME_COFFEE, THEME_DARK, THEME_HIGH_CONTRAST, THEME_LIGHT};
 
 /// The overarching state of the application.
@@ -37,7 +37,7 @@ pub struct App {
     pub displayed: Option<Rule>,
 
     /// The text input for the user to type filters into.
-    pub filter_input: String,
+    pub filter_text_field: String,
 
     /// The current popup being displayed.
     pub popup: Option<Popup>,
@@ -81,7 +81,7 @@ pub enum Message {
     Display(Rule),
 
     TypeFilter(String),
-    SetPins(HashMap<String, Pinned>),
+    ResetFilter,
     Pin(String),
 
     SwitchPopup(Option<Popup>),
@@ -163,7 +163,7 @@ impl App {
                 pins: HashMap::new(),
                 display_type: settings.default_display_type,
                 displayed: None,
-                filter_input: String::new(),
+                filter_text_field: String::new(),
                 popup: None,
                 err_notifs: Vec::new(),
                 display_update_available: false,
@@ -564,59 +564,26 @@ impl App {
             }
 
             Message::TypeFilter(filter_input) => {
-                self.filter_input = filter_input;
-
-                let command = parse_command(&self.filter_input);
-
-                match command {
-                    Some(command) => {
-                        let Some(benchmark) = &self.benchmark else {
-                            return Task::none();
-                        };
-
-                        let new_pins =
-                            run_search_cmd(command, benchmark, std::mem::take(&mut self.pins));
-
-                        match new_pins {
-                            Some(new_pins) => Task::done(Message::SetPins(new_pins)),
-                            None => Task::none(),
-                        }
-                    }
-                    None => Task::none(),
-                }
-            }
-            Message::SetPins(pins) => {
                 let Some(benchmark) = &self.benchmark else {
                     return Task::none();
                 };
 
-                self.pins = pins;
+                self.filter_text_field = filter_input;
 
-                // When the pins are set, check if the displayed rule has a filter applied.
-                // If not, switch to the first one that does.
+                let filter = self.filter_text_field.trim();
 
-                // Get the displayed STIG, if its already pinned, dont switch which STIG is viewed.
-                if let Some(rule) = &self.displayed {
-                    let pin_status = self.pins.get(&rule.group_id);
-
-                    match pin_status.unwrap_or(&Pinned::Not) {
-                        Pinned::ByFilter => return Task::none(),
-                        Pinned::ByFilterAndUser => return Task::none(),
-                        _ => (), // Continue if not above options.
-                    }
+                if filter.is_empty() {
+                    return Task::none();
                 }
 
-                for (name, rule) in benchmark.rules.iter() {
-                    match self.pins.get(name).unwrap_or(&Pinned::Not) {
-                        Pinned::ByFilter => {
-                            return Task::done(Message::Display(rule.clone()));
-                        }
-                        Pinned::ByFilterAndUser => {
-                            return Task::done(Message::Display(rule.clone()));
-                        }
-                        _ => (),
-                    }
-                }
+                search::run_search_cmd(filter, benchmark, &mut self.pins);
+
+                Task::none()
+            }
+            Message::ResetFilter => {
+                self.filter_text_field = "".to_string();
+
+                search::reset_search_cmd(&mut self.pins);
 
                 Task::none()
             }

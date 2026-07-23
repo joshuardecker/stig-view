@@ -506,7 +506,7 @@ impl App {
                     text("Group ID").size(18),
                     space().height(SEPERATION),
                     selectable_text(stig_rule.group_id.clone()).highlight_str(
-                        self.filter_input.clone(),
+                        self.filter_text_field.trim(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
                     space().height(SEPERATION),
@@ -515,7 +515,7 @@ impl App {
                     text("Severity").size(18),
                     space().height(SEPERATION),
                     selectable_text(format!("{}", stig_rule.severity)).highlight_str(
-                        self.filter_input.clone(),
+                        self.filter_text_field.trim(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
                 ]
@@ -528,7 +528,7 @@ impl App {
                     text("Rule ID").size(18),
                     space().height(SEPERATION),
                     selectable_text(stig_rule.rule_id.clone()).highlight_str(
-                        self.filter_input.clone(),
+                        self.filter_text_field.trim(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
                     space().height(SEPERATION),
@@ -544,7 +544,7 @@ impl App {
                     text("STIG ID").size(18),
                     space().height(SEPERATION),
                     selectable_text(stig_rule.stig_id.clone().unwrap_or("None".into()))
-                        .highlight_str(self.filter_input.clone(), |theme| theme
+                        .highlight_str(self.filter_text_field.trim(), |theme| theme
                             .extended_palette()
                             .primary
                             .weak
@@ -559,7 +559,7 @@ impl App {
                         _ => "False,",
                     })
                     .highlight_str(
-                        self.filter_input.clone(),
+                        self.filter_text_field.trim(),
                         |theme| theme.extended_palette().primary.weak.color
                     ),
                 ]
@@ -586,7 +586,7 @@ impl App {
                     )),
                     markdown::Settings::from(self.theme()),
                 )
-                .highlight_str(&self.filter_input, |theme| {
+                .highlight_str(self.filter_text_field.trim(), |theme| {
                     theme.extended_palette().primary.weak.color
                 })
             ],
@@ -735,11 +735,11 @@ impl App {
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
-                            .on_press(Message::TypeFilter("reset".to_string())),
+                            .on_press(Message::ResetFilter),
                         space::horizontal(),
                         text_input(
                             "Type keywords here, then press enter...",
-                            &self.filter_input
+                            &self.filter_text_field
                         )
                         .on_input(Message::TypeFilter)
                         .id(id.clone())
