@@ -52,11 +52,6 @@ pub struct App {
     pub last_opened: LastOpened,
     /// An animation manager.
     pub animations: Animations,
-
-    /// A counter that changes whenever the home menu ui should be refreshed.
-    pub home_menu_hash: u64,
-    /// A counter that changes whenever the rules list ui should be refreshed.
-    pub stig_list_hash: u64,
 }
 
 /// Every way to change the state.
@@ -125,7 +120,7 @@ pub enum AppTheme {
 }
 
 /// Whether the stig has been pinned in the list for any reason.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pinned {
     Not,
     ByUser,
@@ -175,8 +170,6 @@ impl App {
                 settings,
                 last_opened,
                 animations: Animations::new(),
-                home_menu_hash: 0,
-                stig_list_hash: 0,
             },
             Task::batch(tasks),
         )
@@ -343,12 +336,6 @@ impl App {
                         };
                     }
 
-                    // Benchmark has been switched to, so change tell the home menu to update,
-                    // reflecting that this benchmark has been opened recently.
-                    self.home_menu_hash += 1;
-
-                    self.stig_list_hash += 1;
-
                     tasks.append(&mut vec![
                         Task::done(Message::SwitchRule(name)),
                         Task::done(Message::SwitchPopup(Some(Popup::Save))),
@@ -391,12 +378,6 @@ impl App {
 
                 // Reset pin values when switching to this new benchmark.
                 self.pins = HashMap::new();
-
-                // Benchmark has been switched to, so change tell the home menu to update,
-                // reflecting that this benchmark has been opened recently.
-                self.home_menu_hash += 1;
-
-                self.stig_list_hash += 1;
 
                 // Remember when this was opened.
                 if let Some(benchmark) = &self.benchmark {
@@ -506,11 +487,6 @@ impl App {
                         };
                     }
 
-                    // Benchmark has been switched to, so change tell the home menu to update,
-                    // reflecting that this benchmark has been opened recently.
-                    self.home_menu_hash += 1;
-                    self.stig_list_hash += 1;
-
                     tasks.push(Task::done(Message::Display(rule.clone())));
 
                     Task::batch(tasks)
@@ -521,8 +497,6 @@ impl App {
                 ]),
             },
             Message::DeleteCachedBenchmark(path) => {
-                self.home_menu_hash += 1;
-
                 if let Err(_error) = std::fs::remove_file(path) {
                     Task::batch(vec![Task::done(Message::SendErrNotif(
                         "Couldn't delete cached benchmark.".to_string(),
@@ -533,8 +507,6 @@ impl App {
             }
             Message::SwitchDisplayType(display_type) => {
                 self.display_type = display_type;
-
-                self.stig_list_hash += 1;
 
                 Task::none()
             }
@@ -620,8 +592,6 @@ impl App {
 
                 self.pins = pins;
 
-                self.stig_list_hash += 1;
-
                 // When the pins are set, check if the displayed rule has a filter applied.
                 // If not, switch to the first one that does.
 
@@ -668,8 +638,6 @@ impl App {
                         let _ = self.pins.insert(id, Pinned::ByFilter);
                     }
                 }
-
-                self.stig_list_hash += 1;
 
                 Task::none()
             }
