@@ -7,7 +7,7 @@ mod xccdf_v1_1;
 mod xccdf_v1_2;
 mod xylok;
 
-use std::{collections::BTreeMap, path::Path};
+use std::{collections::BTreeMap, hash::Hash, path::Path};
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -210,11 +210,11 @@ impl Benchmark {
     /// In House -> .json.zstd
     pub fn serialize(&self, format: Format) -> Result<Vec<u8>, BenchmarkError> {
         match format {
-            Format::XccdfV1_1 => todo!(),
-            Format::XccdfV1_2 => todo!(),
-            Format::Xylok => todo!(),
-            Format::CKL => todo!(),
-            Format::CKLB => todo!(),
+            Format::XccdfV1_1 => unimplemented!(),
+            Format::XccdfV1_2 => unimplemented!(),
+            Format::Xylok => unimplemented!(),
+            Format::CKL => unimplemented!(),
+            Format::CKLB => unimplemented!(),
             Format::InHouse => {
                 let benchmark_bytes = serde_json::to_vec(self)?;
 
@@ -224,6 +224,12 @@ impl Benchmark {
                 Ok(compressed)
             }
         }
+    }
+}
+
+impl Hash for Rule {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.rule_id.hash(state);
     }
 }
 
