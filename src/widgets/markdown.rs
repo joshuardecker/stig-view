@@ -22,6 +22,7 @@ use iced::event::Event;
 use iced::keyboard;
 use iced::mouse::{self, Cursor, Interaction};
 use iced_graphics::text::Paragraph as ConcreteP;
+use regex::Regex;
 
 use crate::widgets::text_utils;
 
@@ -530,6 +531,7 @@ pub struct SelectableRichText<Message> {
     highlight_patterns: Vec<(String, Arc<dyn Fn(&Theme) -> Color>)>,
     computed_highlights: Vec<(usize, usize, usize, usize)>,
     rule_lines: Vec<usize>,
+    heading_lines: Vec<usize>,
 }
 
 impl<Message> SelectableRichText<Message> {
@@ -541,6 +543,7 @@ impl<Message> SelectableRichText<Message> {
             highlight_patterns: Vec::new(),
             computed_highlights: Vec::new(),
             rule_lines: Vec::new(),
+            heading_lines: Vec::new(),
         }
     }
 
@@ -549,20 +552,30 @@ impl<Message> SelectableRichText<Message> {
         self
     }
 
+    fn with_heading_lines(mut self, heading_lines: Vec<usize>) -> Self {
+        self.heading_lines = heading_lines;
+        self
+    }
+
     fn highlight_str_arc(mut self, pattern: String, color: Arc<dyn Fn(&Theme) -> Color>) -> Self {
         if pattern.is_empty() {
             return self;
         }
+
+        let Ok(re) = Regex::new(&format!("(?i){}", pattern)) else {
+            return self;
+        };
+
         let content: String = self.spans.iter().map(|s| s.text.as_ref()).collect();
         let pattern_idx = self.highlight_patterns.len();
         for (line_idx, line) in content.split('\n').enumerate() {
-            let mut search_start = 0;
-            while let Some(rel) = line[search_start..].find(&pattern[..]) {
-                let from = search_start + rel;
-                let to = from + pattern.len();
+            if self.heading_lines.contains(&line_idx) {
+                continue;
+            }
+
+            for mat in re.find_iter(line) {
                 self.computed_highlights
-                    .push((line_idx, from, to, pattern_idx));
-                search_start = to;
+                    .push((line_idx, mat.start(), mat.end(), pattern_idx));
             }
         }
         self.highlight_patterns.push((pattern, color));
@@ -952,12 +965,22 @@ where
         let settings = md.settings;
         let mut all_spans: Vec<text::Span<'static, Message>> = Vec::new();
         let mut rule_lines: Vec<usize> = Vec::new();
+        let mut heading_lines: Vec<usize> = Vec::new();
 
         let mut prev_was_heading = false;
         for (i, it) in md.items.iter().enumerate() {
             if i > 0 && !prev_was_heading {
                 all_spans.push(span("\n"));
             }
+
+            if matches!(it, Item::Heading(..)) {
+                let heading_line = all_spans
+                    .iter()
+                    .map(|s| s.text.chars().filter(|&c| c == '\n').count())
+                    .sum();
+                heading_lines.push(heading_line);
+            }
+
             collect_item_spans(it, settings, &mut all_spans);
             prev_was_heading = matches!(it, Item::Heading(..));
             if prev_was_heading {
@@ -974,7 +997,8 @@ where
 
         let spans_arc: Arc<[text::Span<'static, Message>]> = all_spans.into();
         let mut srt = SelectableRichText::new(spans_arc, settings.text_size, settings.style.font)
-            .with_rule_lines(rule_lines);
+            .with_rule_lines(rule_lines)
+            .with_heading_lines(heading_lines);
         for (pattern, color_fn) in md.highlights {
             srt = srt.highlight_str_arc(pattern, color_fn);
         }

@@ -18,6 +18,7 @@ use iced::{
     widget::text::{LineHeight, Shaping, Wrapping},
 };
 use iced_graphics::text::Paragraph as ConcreteP;
+use regex::Regex;
 
 use crate::widgets::text_utils;
 
@@ -83,15 +84,16 @@ impl<'a> SelectableText<'a> {
         if pattern.is_empty() {
             return self;
         }
+
+        let Ok(re) = Regex::new(&format!("(?i){}", pattern)) else {
+            return self;
+        };
+
         let pattern_idx = self.highlight_patterns.len();
         for (line_idx, line) in self.content.split('\n').enumerate() {
-            let mut search_start = 0;
-            while let Some(rel) = line[search_start..].find(pattern.as_ref()) {
-                let from = search_start + rel;
-                let to = from + pattern.len();
+            for mat in re.find_iter(line) {
                 self.computed_highlights
-                    .push((line_idx, from, to, pattern_idx));
-                search_start = to;
+                    .push((line_idx, mat.start(), mat.end(), pattern_idx));
             }
         }
         self.highlight_patterns.push((pattern, Box::new(color)));
