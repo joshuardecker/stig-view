@@ -191,6 +191,10 @@ impl App {
             pinned.hash(&mut hasher);
         }
 
+        // Make sure to change the hash if the user wants to display based on
+        // a different display type.
+        self.display_type.hash(&mut hasher);
+
         // The hash is determined by which rules are currently displayed,
         // and whether their order has been changed because something has been pinned.
         // Only rebuild the widget tree when this changes.
