@@ -44,7 +44,7 @@ pub struct App {
     /// Error notification text to be displayed.
     pub err_notifs: Vec<String>,
     /// If true, display to the user there is an update available.
-    pub display_update_available: bool,
+    pub update_available: bool,
 
     /// Settings applied to the app.
     pub settings: AppSettings,
@@ -166,7 +166,7 @@ impl App {
                 filter_text_field: String::new(),
                 popup: None,
                 err_notifs: Vec::new(),
-                display_update_available: false,
+                update_available: false,
                 settings,
                 last_opened,
                 animations: Animations::new(),
@@ -213,7 +213,7 @@ impl App {
                     match key {
                         key::Key::Character(char) => match char.as_str() {
                             "q" if modifiers.control() => Task::done(Message::WindowClose),
-                            "i" if modifiers.control() => Task::done(Message::OpenFile),
+                            "o" if modifiers.control() => Task::done(Message::OpenFile),
                             "f" if modifiers.control() => {
                                 Task::done(Message::SwitchPopup(Some(Popup::Filter)))
                             }
@@ -458,6 +458,10 @@ impl App {
                         ));
                     };
 
+                    // If this benchmark is already in the background, drop the old version, add the new version.
+                    self.background_benchmarks
+                        .retain(|background_benchmark| background_benchmark != &benchmark);
+
                     let Some((_name, rule)) = benchmark.rules.first_key_value() else {
                         return Task::done(Message::SendErrNotif(
                             "Error loading cached benchmark.".to_string(),
@@ -659,7 +663,7 @@ impl App {
                 ))
             }
             Message::ShowUpdateAvailable => {
-                self.display_update_available = true;
+                self.update_available = true;
 
                 Task::none()
             }

@@ -81,6 +81,7 @@ impl<'a> SelectableText<'a> {
         color: impl Fn(&Theme) -> Color + 'a,
     ) -> Self {
         let pattern = pattern.into();
+
         if pattern.is_empty() {
             return self;
         }
@@ -90,12 +91,14 @@ impl<'a> SelectableText<'a> {
         };
 
         let pattern_idx = self.highlight_patterns.len();
+
         for (line_idx, line) in self.content.split('\n').enumerate() {
             for mat in re.find_iter(line) {
                 self.computed_highlights
                     .push((line_idx, mat.start(), mat.end(), pattern_idx));
             }
         }
+
         self.highlight_patterns.push((pattern, Box::new(color)));
         self
     }
