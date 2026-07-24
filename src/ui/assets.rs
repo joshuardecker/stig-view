@@ -22,16 +22,23 @@ pub static EXCLAMATION_CIRCLE: LazyLock<Handle> = LazyLock::new(|| {
 });
 pub static FILE: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/file.svg")));
+pub static FILE_COPY: LazyLock<Handle> =
+    LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/file-copy.svg")));
 pub static HOME: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/home.svg")));
 pub static MINUS_CIRCLE: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/minus-circle.svg")));
+pub static QUESTION_CIRCLE: LazyLock<Handle> = LazyLock::new(|| {
+    Handle::from_memory(include_bytes!("../../assets/images/question-circle.svg"))
+});
 pub static REFRESH: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/refresh.svg")));
 pub static SETTINGS: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/settings.svg")));
 pub static SQUARE: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/square.svg")));
+pub static SQUARE_FILLED: LazyLock<Handle> =
+    LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/square-filled.svg")));
 pub static SWITCH: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/switch.svg")));
 pub static TRASH: LazyLock<Handle> =
