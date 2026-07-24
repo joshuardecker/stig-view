@@ -231,6 +231,8 @@ impl App {
             let mut manual_counter = 0;
             let mut noncompliant_counter = 0;
 
+            let mut pinned_only_by_user = 0;
+
             // The amount of filtered STIGs.
             // Columns do not have a len() function, so I keep track here.
             // If this is greater than 0, a seperating rule will be placed between
@@ -259,7 +261,9 @@ impl App {
                 match pin_type {
                     Pinned::Not => not_pin_col = not_pin_col.push(button).push(space().height(8)),
                     Pinned::ByUser => {
-                        user_pin_col = user_pin_col.push(button).push(space().height(8))
+                        user_pin_col = user_pin_col.push(button).push(space().height(8));
+
+                        pinned_only_by_user += 1;
                     }
                     Pinned::ByFilter => {
                         // Puts a nice strip of color on the left side of the button.
@@ -307,8 +311,11 @@ impl App {
                         space().height(SEPERATION),
                         row![
                             tooltip(
-                                svg(SQUARE.clone()).width(12).height(12).style(good_svg),
-                                container("Total Compliant.")
+                                svg(SQUARE_FILLED.clone())
+                                    .width(12)
+                                    .height(12)
+                                    .style(good_svg),
+                                container("Total Compliant")
                                     .style(background_container)
                                     .padding(4),
                                 tooltip::Position::Bottom
@@ -317,8 +324,11 @@ impl App {
                             text(compliant_counter.to_string()),
                             space().width(SEPERATION * 2.0),
                             tooltip(
-                                svg(SQUARE.clone()).width(12).height(12).style(bad_svg),
-                                container("Total Non-Compliant.")
+                                svg(SQUARE_FILLED.clone())
+                                    .width(12)
+                                    .height(12)
+                                    .style(bad_svg),
+                                container("Total Non-Compliant")
                                     .style(background_container)
                                     .padding(4),
                                 tooltip::Position::Bottom
@@ -327,8 +337,11 @@ impl App {
                             text(noncompliant_counter.to_string()),
                             space().width(SEPERATION * 2.0),
                             tooltip(
-                                svg(SQUARE.clone()).width(12).height(12).style(warning_svg),
-                                container("Total Manual Review.")
+                                svg(SQUARE_FILLED.clone())
+                                    .width(12)
+                                    .height(12)
+                                    .style(warning_svg),
+                                container("Total Manual Review")
                                     .style(background_container)
                                     .padding(4),
                                 tooltip::Position::Bottom
@@ -346,8 +359,25 @@ impl App {
                 };
 
             // Place a horizontal rule if there are any STIGs that have been filtered.
-            let horizontal_rule: Element<'_, Message> = if total_filtered != 0 {
-                column![rule::horizontal(2), space().height(SEPERATION)].into()
+            let user_pinned_horizontal_rule: Element<'_, Message> = if pinned_only_by_user != 0 {
+                column![
+                    space().height(SEPERATION),
+                    rule::horizontal(2),
+                    space().height(SEPERATION * 2.0)
+                ]
+                .into()
+            } else {
+                space().into()
+            };
+
+            // Place a horizontal rule if there are any STIGs that have been filtered.
+            let filter_horizontal_rule: Element<'_, Message> = if total_filtered != 0 {
+                column![
+                    space().height(SEPERATION),
+                    rule::horizontal(2),
+                    space().height(SEPERATION * 2.0)
+                ]
+                .into()
             } else {
                 space().into()
             };
@@ -358,8 +388,9 @@ impl App {
                 scrollable(column![
                     filter_user_pin_col,
                     filter_pin_col,
-                    horizontal_rule,
+                    filter_horizontal_rule,
                     user_pin_col,
+                    user_pinned_horizontal_rule,
                     not_pin_col,
                     space::vertical(), // Ensures this container is proper size.
                 ])
@@ -1007,7 +1038,7 @@ impl App {
             container("Switch Benchmark")
                 .style(background_container)
                 .padding(4),
-            tooltip::Position::Right,
+            tooltip::Position::Bottom,
         )
         .delay(Duration::from_millis(600))
         .into()
@@ -1032,7 +1063,7 @@ impl App {
                             .padding(1)
                             .style(no_button)
                             .on_press(Message::SwitchPopup(Some(Popup::Settings))),
-                            container("Customize Settings.")
+                            container("Customize Settings")
                                 .style(background_container)
                                 .padding(4),
                             tooltip::Position::Right
@@ -1044,7 +1075,7 @@ impl App {
                                 .padding(1)
                                 .style(no_button)
                                 .on_press(Message::ReturnHome),
-                            container("Return to the Start Screen.")
+                            container("Return to the Start Screen")
                                 .style(background_container)
                                 .padding(4),
                             tooltip::Position::Right
