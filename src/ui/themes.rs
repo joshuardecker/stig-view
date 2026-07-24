@@ -22,7 +22,7 @@ pub static THEME_LIGHT: LazyLock<Theme> = LazyLock::new(|| {
     Theme::Custom(Arc::new(Custom::new(
         "Custom Light".to_string(),
         Palette {
-            background: color!(0xF4F4F6),
+            background: color!(0xE8E8F0),
             text: color!(0x1E1A2E),
             primary: color!(0x5A5A8E),
             success: color!(0x0E9E6A),

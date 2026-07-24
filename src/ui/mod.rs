@@ -6,7 +6,10 @@ mod themes;
 pub use assets::*;
 pub use themes::*;
 
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::{
+    hash::{DefaultHasher, Hash, Hasher},
+    time::Duration,
+};
 
 use disa_stig::CKLStatus;
 use iced::{
@@ -181,7 +184,7 @@ impl App {
         let mut hasher = DefaultHasher::new();
 
         for (_id, rule) in benchmark.rules.iter() {
-            rule.hash(&mut hasher);
+            rule.rule_id.hash(&mut hasher);
         }
 
         for (_id, pinned) in self.pins.iter() {
@@ -383,8 +386,8 @@ impl App {
             Some(CKLStatus::NotAFinding) => row![
                 tooltip(
                     svg(CHECKED_CIRCLE.clone())
-                        .width(16)
-                        .height(16)
+                        .width(18)
+                        .height(18)
                         .style(good_svg),
                     container("Compliant.")
                         .style(background_container)
@@ -397,8 +400,8 @@ impl App {
             Some(CKLStatus::Open) => row![
                 tooltip(
                     svg(CROSS_CIRCLE.clone())
-                        .width(16)
-                        .height(16)
+                        .width(18)
+                        .height(18)
                         .style(bad_svg),
                     container("Non-Compliant.")
                         .style(background_container)
@@ -411,8 +414,8 @@ impl App {
             Some(CKLStatus::NotApplicable) => row![
                 tooltip(
                     svg(CHECKED_CIRCLE.clone())
-                        .width(16)
-                        .height(16)
+                        .width(18)
+                        .height(18)
                         .style(good_svg),
                     container("Not Applicable.")
                         .style(background_container)
@@ -425,8 +428,8 @@ impl App {
             Some(CKLStatus::NotReviewed) => row![
                 tooltip(
                     svg(MINUS_CIRCLE.clone())
-                        .width(16)
-                        .height(16)
+                        .width(18)
+                        .height(18)
                         .style(warning_svg),
                     container("Not Reviewed.")
                         .style(background_container)
@@ -461,9 +464,9 @@ impl App {
 
         let bookmark_symbol = match pin_type {
             Pinned::Not => BOOKMARK.clone(),
-            Pinned::ByUser => FILLED_BOOKMARK.clone(),
+            Pinned::ByUser => BOOKMARK_FILLED.clone(),
             Pinned::ByFilter => BOOKMARK.clone(),
-            Pinned::ByFilterAndUser => FILLED_BOOKMARK.clone(),
+            Pinned::ByFilterAndUser => BOOKMARK_FILLED.clone(),
         };
 
         button(
@@ -472,7 +475,7 @@ impl App {
                     cki_status,
                     text(button_text).center(),
                     space::horizontal(),
-                    button(svg(bookmark_symbol).width(32).height(32).style(colored_svg))
+                    button(svg(bookmark_symbol).width(22).height(22).style(colored_svg))
                         .padding(1)
                         .style(no_button)
                         .on_press(Message::Pin(name.clone()))
@@ -684,10 +687,7 @@ impl App {
             main_col = main_col.push(
                 button(
                     row![
-                        svg(FILE_ICON.clone())
-                            .style(boring_svg)
-                            .width(20)
-                            .height(20),
+                        svg(FILE.clone()).style(boring_svg).width(20).height(20),
                         space().width(SEPERATION),
                         text(time_loaded.2).center(),
                         space::horizontal(),
@@ -730,33 +730,36 @@ impl App {
             sensor(opaque(stack![
                 container(
                     row![
-                        button(svg(REFRESH.clone()).style(colored_svg).width(25).height(25))
+                        space().width(SEPERATION / 2.0),
+                        button(svg(REFRESH.clone()).style(colored_svg).width(18).height(18))
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
                             .on_press(Message::ResetFilter),
-                        space::horizontal(),
+                        space().width(SEPERATION),
                         text_input(
                             "Type keywords here, then press enter...",
                             &self.filter_text_field
                         )
                         .on_input(Message::TypeFilter)
                         .id(id.clone())
-                        .width(320),
-                        space::horizontal(),
+                        .width(320)
+                        .style(styles::transparent_text_input),
+                        space().width(SEPERATION),
                         button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
                             .style(no_button)
                             .on_press(Message::SwitchPopup(None)),
+                        space().width(SEPERATION / 2.0),
                     ]
                     .align_y(Center),
                 )
-                .width(400)
-                .height(Shrink)
-                .padding(8)
+                //.width(400)
+                //.height(Shrink)
+                .padding(SEPERATION)
                 .style(cmd_container),
                 container(space())
                     .width(Fill)
@@ -898,28 +901,31 @@ impl App {
     }
 
     /// Display to the user that an update is available.
-    fn display_update_available<'a>(&self) -> Element<'a, Message> {
-        if !self.display_update_available {
+    fn display_update_available(&self) -> Element<'_, Message> {
+        if !self.update_available {
             return space().into();
         }
 
-        container(
-            row![
-                space().width(SEPERATION * 0.5),
-                button(text("Update Available").size(12).center())
-                    .style(no_button)
-                    .padding(4)
-                    .on_press(Message::OpenURL(
-                        "https://github.com/joshuardecker/xylok-view/releases"
-                    )),
-                space().width(SEPERATION * 0.5),
-            ]
-            .align_y(Center),
+        tooltip(
+            button(
+                svg(DOWNLOAD_ARROW.clone())
+                    .style(styles::colored_svg)
+                    .width(18)
+                    .height(18),
+            )
+            .padding(1)
+            .width(Shrink)
+            .height(Shrink)
+            .style(styles::no_button)
+            .on_press(Message::OpenURL(
+                "https://github.com/joshuardecker/xylok-view/releases",
+            )),
+            container("Update Available")
+                .style(background_container)
+                .padding(4),
+            tooltip::Position::Bottom,
         )
-        .padding(4)
-        .style(update_available_container)
-        .width(Shrink)
-        .height(22)
+        .delay(Duration::from_millis(600))
         .into()
     }
 
@@ -973,21 +979,49 @@ impl App {
         .into()
     }
 
-    /// Return the window decorations container.
-    fn window_decorations(&self) -> Element<'_, Message> {
-        let benchmark_id = if let Some(benchmark) = &self.benchmark {
-            benchmark.id.clone()
-        } else {
-            "".to_string()
+    /// Get the benchmark name nicely formatted.
+    fn benchmark_name(&self) -> Element<'_, Message> {
+        let Some(benchmark) = &self.benchmark else {
+            return space().into();
         };
 
+        let fancy_name = benchmark.id.trim().replace(['-', '_'], " ");
+
+        text(fancy_name).size(15).center().into()
+    }
+
+    fn switch_benchmark_button(&self) -> Element<'_, Message> {
+        if self.benchmark.is_none() {
+            return space().into();
+        }
+
+        if self.background_benchmarks.is_empty() {
+            return space().into();
+        }
+
+        tooltip(
+            button(svg(SWITCH.clone()).style(colored_svg).width(18).height(18))
+                .padding(1)
+                .style(no_button)
+                .on_press(Message::SwitchToNextBackground),
+            container("Switch Benchmark")
+                .style(background_container)
+                .padding(4),
+            tooltip::Position::Right,
+        )
+        .delay(Duration::from_millis(600))
+        .into()
+    }
+
+    /// Return the window decorations container.
+    fn window_decorations(&self) -> Element<'_, Message> {
         // A complicated way of getting mouse_area to work.
         // Captures mouse input in the window decorations so the window can be dragged.
         container(
             mouse_area(
                 container(
                     row![
-                        space().width(15),
+                        space().width(SEPERATION * 2.0),
                         tooltip(
                             button(
                                 svg(SETTINGS.clone())
@@ -996,8 +1030,6 @@ impl App {
                                     .height(18)
                             )
                             .padding(1)
-                            .width(Shrink)
-                            .height(Shrink)
                             .style(no_button)
                             .on_press(Message::SwitchPopup(Some(Popup::Settings))),
                             container("Customize Settings.")
@@ -1005,13 +1037,11 @@ impl App {
                                 .padding(4),
                             tooltip::Position::Right
                         )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space().width(11),
+                        .delay(Duration::from_millis(600)),
+                        space().width(SEPERATION),
                         tooltip(
                             button(svg(HOME.clone()).style(colored_svg).width(18).height(18))
                                 .padding(1)
-                                .width(Shrink)
-                                .height(Shrink)
                                 .style(no_button)
                                 .on_press(Message::ReturnHome),
                             container("Return to the Start Screen.")
@@ -1019,27 +1049,23 @@ impl App {
                                 .padding(4),
                             tooltip::Position::Right
                         )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space().width(8),
+                        .delay(Duration::from_millis(600)),
+                        space().width(SEPERATION),
                         tooltip(
                             button(text("Open").center().size(15))
                                 .padding(4)
-                                .width(Shrink)
-                                .height(Shrink)
                                 .style(rounded_dark_button)
                                 .on_press(Message::OpenFile),
-                            container("Open a New File (Ctrl + I)")
+                            container("Open a New File (Ctrl + O)")
                                 .style(background_container)
                                 .padding(4),
                             tooltip::Position::Right
                         )
-                        .delay(iced::time::Duration::from_millis(600)),
-                        space().width(4),
+                        .delay(Duration::from_millis(600)),
+                        space().width(SEPERATION / 2.0),
                         tooltip(
                             button(text("Find").center().size(15))
                                 .padding(4)
-                                .width(Shrink)
-                                .height(Shrink)
                                 .style(rounded_dark_button)
                                 .on_press(Message::SwitchPopup(Some(Popup::Filter))),
                             container("Find Content Based on Keywords (Ctrl + F)")
@@ -1047,52 +1073,14 @@ impl App {
                                 .padding(4),
                             tooltip::Position::Right
                         )
-                        .delay(iced::time::Duration::from_millis(600)),
+                        .delay(Duration::from_millis(600)),
                         space::horizontal(),
-                        // Make the window title look nice.
-                        text(
-                            benchmark_id
-                                .chars()
-                                .flat_map(|c| match c {
-                                    '_' | '-' => ' '.to_lowercase(),
-                                    c => c.to_lowercase(),
-                                })
-                                .collect::<String>()
-                        )
-                        .size(16),
-                        {
-                            let switch_element: Element<Message> =
-                                if !self.background_benchmarks.is_empty() {
-                                    row![
-                                        space().width(15),
-                                        tooltip(
-                                            button(
-                                                svg(SWITCH.clone())
-                                                    .style(colored_svg)
-                                                    .width(18)
-                                                    .height(18)
-                                            )
-                                            .padding(1)
-                                            .width(Shrink)
-                                            .height(Shrink)
-                                            .style(no_button)
-                                            .on_press(Message::SwitchToNextBackground),
-                                            container("Switch Benchmark")
-                                                .style(background_container)
-                                                .padding(4),
-                                            tooltip::Position::Right
-                                        )
-                                        .delay(iced::time::Duration::from_millis(600)),
-                                    ]
-                                    .into()
-                                } else {
-                                    space().width(0).into()
-                                };
-                            switch_element
-                        },
+                        self.switch_benchmark_button(),
+                        space().width(SEPERATION * 3.0),
+                        self.benchmark_name(),
                         space::horizontal(),
                         self.display_update_available(),
-                        space().width(SEPERATION * 4.0),
+                        space().width(SEPERATION * 3.0),
                         button(
                             svg(DOWN_TICK.clone())
                                 .style(colored_svg)
@@ -1100,25 +1088,19 @@ impl App {
                                 .height(24)
                         )
                         .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
                         .style(no_button)
                         .on_press(Message::WindowMinimize),
-                        space().width(15),
+                        space().width(SEPERATION),
                         button(svg(SQUARE.clone()).style(colored_svg).width(16).height(16))
                             .padding(1)
-                            .width(Shrink)
-                            .height(Shrink)
                             .style(no_button)
                             .on_press(Message::WindowFullscreenToggle),
-                        space().width(18),
+                        space().width(SEPERATION + 4.0),
                         button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
                             .padding(1)
-                            .width(Shrink)
-                            .height(Shrink)
                             .style(no_button)
                             .on_press(Message::WindowClose),
-                        space().width(15)
+                        space().width(SEPERATION * 2.0),
                     ]
                     .align_y(Center),
                 )

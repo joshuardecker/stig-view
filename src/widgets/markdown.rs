@@ -566,8 +566,10 @@ impl<Message> SelectableRichText<Message> {
             return self;
         };
 
-        let content: String = self.spans.iter().map(|s| s.text.as_ref()).collect();
+        let content: String = self.spans.iter().map(|span| span.text.as_ref()).collect();
+
         let pattern_idx = self.highlight_patterns.len();
+
         for (line_idx, line) in content.split('\n').enumerate() {
             if self.heading_lines.contains(&line_idx) {
                 continue;
@@ -578,6 +580,7 @@ impl<Message> SelectableRichText<Message> {
                     .push((line_idx, mat.start(), mat.end(), pattern_idx));
             }
         }
+
         self.highlight_patterns.push((pattern, color));
         self
     }
@@ -976,8 +979,9 @@ where
             if matches!(it, Item::Heading(..)) {
                 let heading_line = all_spans
                     .iter()
-                    .map(|s| s.text.chars().filter(|&c| c == '\n').count())
+                    .map(|span| span.text.chars().filter(|&char| char == '\n').count())
                     .sum();
+
                 heading_lines.push(heading_line);
             }
 

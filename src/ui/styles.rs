@@ -1,8 +1,8 @@
 use iced::{
-    Border, Shadow, Theme, border,
-    border::Radius,
+    Border, Shadow, Theme,
+    border::{self, Radius},
     color,
-    widget::{button, container, svg, toggler},
+    widget::{button, container, svg, text_input, toggler},
 };
 
 const BORDER_RAD: f32 = 8.0;
@@ -214,25 +214,6 @@ pub fn rounded_boring_button_right(theme: &Theme, status: button::Status) -> but
     }
 }
 
-/// A thin accent strip indicating a filter match.
-pub fn filter_accent(theme: &Theme) -> container::Style {
-    let palette = theme.extended_palette();
-
-    container::Style {
-        background: Some(palette.primary.base.color.into()),
-        border: Border {
-            radius: Radius {
-                top_left: 0.0,
-                top_right: BORDER_RAD,
-                bottom_right: BORDER_RAD,
-                bottom_left: 0.0,
-            },
-            ..Border::default()
-        },
-        ..container::Style::default()
-    }
-}
-
 /// A svg with the primary color.
 pub fn colored_svg(theme: &Theme, status: svg::Status) -> svg::Style {
     let palette = theme.extended_palette();
@@ -291,7 +272,7 @@ pub fn background_container(theme: &Theme) -> container::Style {
         text_color: Some(palette.background.weakest.text),
         background: Some(palette.background.weakest.color.into()),
         border: Border {
-            color: palette.background.weakest.color,
+            color: palette.background.base.color,
             width: 2.0,
             radius: BORDER_RAD.into(),
         },
@@ -299,6 +280,25 @@ pub fn background_container(theme: &Theme) -> container::Style {
             ..Shadow::default()
         },
         snap: false,
+    }
+}
+
+/// A thin accent strip indicating a filter match.
+pub fn filter_accent(theme: &Theme) -> container::Style {
+    let palette = theme.extended_palette();
+
+    container::Style {
+        background: Some(palette.primary.base.color.into()),
+        border: Border {
+            radius: Radius {
+                top_left: 0.0,
+                top_right: 0.0,
+                bottom_right: 0.0,
+                bottom_left: 0.0,
+            },
+            ..Border::default()
+        },
+        ..container::Style::default()
     }
 }
 
@@ -339,26 +339,6 @@ pub fn err_container(theme: &Theme) -> container::Style {
             color: palette.background.base.color,
             offset: iced::Vector::ZERO,
             blur_radius: 8.0,
-        },
-        snap: false,
-    }
-}
-
-/// The style the display update available container uses.
-/// Looks nice in the window decorations.
-pub fn update_available_container(theme: &Theme) -> container::Style {
-    let palette = theme.extended_palette();
-
-    container::Style {
-        text_color: Some(palette.background.base.text),
-        background: Some(palette.background.base.color.into()),
-        border: Border {
-            color: palette.primary.weak.color,
-            width: 2.0,
-            radius: BORDER_RAD.into(),
-        },
-        shadow: Shadow {
-            ..Shadow::default()
         },
         snap: false,
     }
@@ -451,5 +431,29 @@ pub fn toggler_theme(theme: &Theme, status: toggler::Status) -> toggler::Style {
             border_radius: None,
             padding_ratio: 0.15,
         },
+    }
+}
+
+/// A text input with no visible background or border, but default colors elsewhere.
+pub fn transparent_text_input(theme: &Theme, status: text_input::Status) -> text_input::Style {
+    let palette = theme.extended_palette();
+
+    let active = text_input::Style {
+        background: color!(0, 0, 0, 0.0).into(),
+        border: Border::default(),
+        icon: palette.background.weak.text,
+        placeholder: palette.secondary.base.color,
+        value: palette.background.base.text,
+        selection: palette.primary.weak.color,
+    };
+
+    match status {
+        text_input::Status::Disabled => text_input::Style {
+            value: active.placeholder,
+            placeholder: palette.background.strongest.color,
+            ..active
+        },
+
+        _ => active,
     }
 }
