@@ -17,7 +17,7 @@ use crate::benchmark::version_detection::{FormatWithData, detect_format_with_pat
 pub type BenchmarkID = String;
 pub type RuleID = String;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
 pub struct Benchmark {
     /// Unique identifier for this benchmark (e.g. the STIG ID).
     pub id: String,
@@ -47,7 +47,7 @@ pub enum BenchmarkError {
     ZipError(#[from] zip::result::ZipError),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
 pub struct Rule {
     /// Group identifier for this rule (often the Vuln_Num in DISA formats).
     pub group_id: String,
@@ -84,7 +84,7 @@ pub struct Rule {
 /// The severity of each rule in a benchmark.
 /// Severity is serialized as an integer to better reflect how the other formats
 /// save this to disk.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Hash)]
 #[serde(try_from = "u64", into = "u64")]
 pub enum Severity {
     Unknown,
@@ -142,7 +142,7 @@ impl TryFrom<u64> for Severity {
 }
 
 /// The compliance status finding of a single check in a CKL or CKLB.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum CKLStatus {
     NotAFinding,
@@ -224,12 +224,6 @@ impl Benchmark {
                 Ok(compressed)
             }
         }
-    }
-}
-
-impl Hash for Rule {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.rule_id.hash(state);
     }
 }
 
