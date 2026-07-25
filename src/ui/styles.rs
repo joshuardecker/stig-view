@@ -323,27 +323,6 @@ pub fn cmd_container(theme: &Theme) -> container::Style {
     }
 }
 
-/// The container style the err notification has.
-pub fn err_container(theme: &Theme) -> container::Style {
-    let palette = theme.extended_palette();
-
-    container::Style {
-        text_color: Some(palette.danger.base.text),
-        background: Some(palette.danger.base.color.into()),
-        border: Border {
-            color: palette.danger.base.color,
-            width: 0.0,
-            radius: BORDER_RAD.into(),
-        },
-        shadow: Shadow {
-            color: palette.background.base.color,
-            offset: iced::Vector::ZERO,
-            blur_radius: 8.0,
-        },
-        snap: false,
-    }
-}
-
 /// Animations are just containers that fade their opacity on top of other containers.
 /// It makes the below container fade into view and looks nice.
 /// This is the style help function that sets the opacity of the container above what the \

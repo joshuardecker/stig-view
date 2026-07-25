@@ -51,13 +51,20 @@ impl App {
             None => space().into(),
         };
 
-        let err_notification = if let Some(error) = self.err_notifs.last() {
+        /*
+        let err_notification = if let Some(error) = self.error_msgs.last() {
             self.display_error(error)
+        } else {
+            space().into()
+        };*/
+
+        let error_details = if self.display_errors {
+            self.error_menu()
         } else {
             space().into()
         };
 
-        stack![padded_content, popup, err_notification].into()
+        stack![padded_content, popup, error_details].into()
     }
 
     /// A generic function that pads the content with window decorations
@@ -235,6 +242,7 @@ impl App {
             let mut manual_counter = 0;
             let mut noncompliant_counter = 0;
 
+            // A counter to remember how many rules are only pinned by the user.
             let mut pinned_only_by_user = 0;
 
             // The amount of filtered STIGs.
@@ -362,7 +370,7 @@ impl App {
                     space().into()
                 };
 
-            // Place a horizontal rule if there are any STIGs that have been filtered.
+            // Place a horizontal rule if there are any STIGs that have been pinned by the user.
             let user_pinned_horizontal_rule: Element<'_, Message> = if pinned_only_by_user != 0 {
                 column![
                     space().height(SEPERATION),
@@ -895,43 +903,155 @@ impl App {
         .into()
     }
 
-    /// Display of an error that occured, gets stacked on top of the main application view.
-    fn display_error<'a>(&self, err_str: &'a str) -> Element<'a, Message> {
-        container(opaque(
+    /// If its even shown, the error notification button.
+    fn error_button(&self) -> Element<'_, Message> {
+        if self.error_msgs.is_empty() {
+            return space().into();
+        }
+
+        tooltip(
+            button(
+                row![
+                    text(self.error_msgs.len())
+                        .size(14)
+                        .style(text::warning)
+                        .center(),
+                    space().width(SEPERATION / 4.0),
+                    svg(EXCLAMATION_CIRCLE.clone())
+                        .width(16)
+                        .height(16)
+                        .style(styles::warning_svg)
+                ]
+                .align_y(Center),
+            )
+            .style(styles::rounded_dark_button)
+            .padding(4)
+            .on_press(Message::ShowErrors(true)),
+            container("Errors have occured")
+                .style(background_container)
+                .padding(4),
+            tooltip::Position::Bottom,
+        )
+        .delay(Duration::from_millis(600))
+        .into()
+    }
+
+    /// A fancier error drop down menu.
+    fn error_menu(&self) -> Element<'_, Message> {
+        let title = match self.error_msgs.len() {
+            0 => "No Errors Here".to_string(),
+            1 => "Error Occured".to_string(),
+            _ => {
+                format!(
+                    "Error Occured {}/{}",
+                    self.error_index + 1,
+                    self.error_msgs.len()
+                )
+            }
+        };
+
+        let error_string = match self.error_msgs.get(self.error_index) {
+            Some(error_string) => error_string.clone(),
+            None => "No more errors to view.".to_string(),
+        };
+
+        let previous_error_button: Element<'_, Message> = if self.error_index != 0 {
+            button(
+                svg(ARROW_LEFT.clone())
+                    .style(styles::colored_svg)
+                    .width(18)
+                    .height(18),
+            )
+            .padding(1)
+            .style(no_button)
+            .on_press(Message::ShowPreviousError)
+            .into()
+        } else {
+            space().into()
+        };
+
+        let next_error_button: Element<'_, Message> =
+            if (self.error_index + 1) < self.error_msgs.len() {
+                button(
+                    svg(ARROW_RIGHT.clone())
+                        .style(styles::colored_svg)
+                        .width(18)
+                        .height(18),
+                )
+                .padding(1)
+                .style(no_button)
+                .on_press(Message::ShowNextError)
+                .into()
+            } else {
+                space().into()
+            };
+
+        let clear_error_button: Element<'_, Message> = if !self.error_msgs.is_empty() {
+            tooltip(
+                button(
+                    svg(CHECK.clone())
+                        .style(styles::colored_svg)
+                        .width(16)
+                        .height(16),
+                )
+                .padding(1)
+                .style(no_button)
+                .on_press(Message::ClearErrorNotification),
+                container("Clear this error from error history")
+                    .style(background_container)
+                    .padding(4),
+                tooltip::Position::Bottom,
+            )
+            .delay(Duration::from_millis(600))
+            .into()
+        } else {
+            space().into()
+        };
+
+        container(opaque(stack![
             container(
                 column![
                     row![
                         space::horizontal(),
-                        text("Error Occurred"),
+                        text(title).center(),
                         space::horizontal(),
-                        button(svg(CROSS.clone()).style(boring_svg).width(16).height(16))
-                            .padding(1)
-                            .width(Shrink)
-                            .height(Shrink)
-                            .style(no_button)
-                            .on_press(Message::ClearOneErrNotif),
+                        button(
+                            svg(CROSS.clone())
+                                .style(styles::colored_svg)
+                                .width(14)
+                                .height(14)
+                        )
+                        .padding(1)
+                        .style(no_button)
+                        .on_press(Message::ShowErrors(false))
                     ]
                     .align_y(Center),
-                    space::vertical(),
+                    space().height(SEPERATION),
+                    row![text(error_string)],
+                    space().height(SEPERATION),
                     row![
-                        text(err_str)
-                            .size(12)
-                            .height(Fill)
-                            .wrapping(text::Wrapping::WordOrGlyph)
+                        previous_error_button,
+                        space::horizontal(),
+                        next_error_button,
+                        space().width(SEPERATION * 2.0),
+                        clear_error_button,
                     ]
                     .align_y(Center),
-                    space::vertical(),
                 ]
-                .align_x(Center),
+                .width(Fill)
+                .align_x(Center)
             )
             .width(250)
-            .height(125)
-            .padding(8)
-            .style(err_container),
-        ))
+            .style(styles::cmd_container)
+            .padding(SEPERATION),
+            container(space())
+                .width(Fill)
+                .height(Fill)
+                .style(|theme| fade_overlay(theme, self.animations.get_opacity("error_menu")))
+        ]))
+        .align_top(Fill)
         .align_right(Fill)
-        .align_bottom(Fill)
-        .padding(SEPERATION * 4.0)
+        .padding(SEPERATION * 7.0)
         .into()
     }
 
@@ -1114,6 +1234,8 @@ impl App {
                         space().width(SEPERATION * 3.0),
                         self.benchmark_name(),
                         space::horizontal(),
+                        self.error_button(),
+                        space().width(SEPERATION * 3.0),
                         self.display_update_available(),
                         space().width(SEPERATION * 3.0),
                         button(

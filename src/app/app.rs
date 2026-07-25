@@ -15,8 +15,8 @@ use iced::{
 use image::ImageFormat;
 use rfd::AsyncFileDialog;
 
+use crate::app::search;
 use crate::app::*;
-use crate::app::{app::Message::SendErrNotif, search};
 use crate::ui::{APP_ICON, THEME_COFFEE, THEME_DARK, THEME_HIGH_CONTRAST, THEME_LIGHT};
 
 /// The overarching state of the application.
@@ -41,8 +41,14 @@ pub struct App {
 
     /// The current popup being displayed.
     pub popup: Option<Popup>,
+
     /// Error notification text to be displayed.
-    pub err_notifs: Vec<String>,
+    pub error_msgs: Vec<String>,
+    /// Which of the error messages is the user looking at.
+    pub error_index: usize,
+    /// Should the error messages be displayed to the user.
+    pub display_errors: bool,
+
     /// If true, display to the user there is an update available.
     pub update_available: bool,
 
@@ -84,9 +90,13 @@ pub enum Message {
     ResetFilter,
     Pin(String),
 
+    ShowErrors(bool),
+    SendErrorNotification(String),
+    ClearErrorNotification,
+    ShowPreviousError,
+    ShowNextError,
+
     SwitchPopup(Option<Popup>),
-    SendErrNotif(String),
-    ClearOneErrNotif,
     FetchLatestVersion,
     ShowUpdateAvailable,
     OpenURL(&'static str),
@@ -165,7 +175,9 @@ impl App {
                 displayed: None,
                 filter_text_field: String::new(),
                 popup: None,
-                err_notifs: Vec::new(),
+                error_msgs: Vec::new(),
+                error_index: 0,
+                display_errors: false,
                 update_available: false,
                 settings,
                 last_opened,
@@ -272,7 +284,7 @@ impl App {
                         let home_dir = match home_dir {
                             Some(dir) => dir,
                             None => {
-                                let _ = output.try_send(Message::SendErrNotif(
+                                let _ = output.try_send(Message::SendErrorNotification(
                                     "Error requesting the home file directory.".to_string(),
                                 ));
                                 return;
@@ -294,7 +306,7 @@ impl App {
 
                         let Ok(mut benchmarks) = Benchmark::load_from_file(file_handle.path())
                         else {
-                            let _ = output.try_send(Message::SendErrNotif(
+                            let _ = output.try_send(Message::SendErrorNotification(
                                 "Could not load requested file.".to_string(),
                             ));
                             return;
@@ -401,7 +413,7 @@ impl App {
 
                 for benchmark in benchmarks {
                     let Some(mut cache_dir) = dirs::cache_dir() else {
-                        tasks.push(Task::done(Message::SendErrNotif(
+                        tasks.push(Task::done(Message::SendErrorNotification(
                             "Error fetching cache file directory.".to_string(),
                         )));
 
@@ -411,7 +423,7 @@ impl App {
                     // Create the save directory if it does not exist.
                     cache_dir.push("xylok-view/");
                     if let Err(_) = create_dir_all(&cache_dir) {
-                        tasks.push(Task::done(Message::SendErrNotif(
+                        tasks.push(Task::done(Message::SendErrorNotification(
                             "Error creating the cache directory.".to_string(),
                         )));
 
@@ -422,7 +434,7 @@ impl App {
                     cache_dir.push(format!("{}.json.zstd", benchmark.id.clone()));
 
                     let Ok(mut file) = File::create(cache_dir) else {
-                        tasks.push(Task::done(Message::SendErrNotif(
+                        tasks.push(Task::done(Message::SendErrorNotification(
                             "Error creating benchmark file.".to_string(),
                         )));
 
@@ -430,7 +442,7 @@ impl App {
                     };
 
                     let Ok(benchmark_bytes) = benchmark.serialize(Format::InHouse) else {
-                        tasks.push(Task::done(Message::SendErrNotif(
+                        tasks.push(Task::done(Message::SendErrorNotification(
                             "Failed to serialize benchmark to a file.".to_string(),
                         )));
 
@@ -438,7 +450,7 @@ impl App {
                     };
 
                     if let Err(_) = file.write_all(&benchmark_bytes) {
-                        tasks.push(Task::done(Message::SendErrNotif(
+                        tasks.push(Task::done(Message::SendErrorNotification(
                             "Failed writing benchmark to a file.".to_string(),
                         )));
 
@@ -453,7 +465,7 @@ impl App {
                 Ok(mut benchmarks) => {
                     // Should only return one benchmark, but pop it from the vector to make it a single benchmark.
                     let Some(benchmark) = benchmarks.pop() else {
-                        return Task::done(Message::SendErrNotif(
+                        return Task::done(Message::SendErrorNotification(
                             "Error loading cached benchmark.".to_string(),
                         ));
                     };
@@ -463,7 +475,7 @@ impl App {
                         .retain(|background_benchmark| background_benchmark != &benchmark);
 
                     let Some((_name, rule)) = benchmark.rules.first_key_value() else {
-                        return Task::done(Message::SendErrNotif(
+                        return Task::done(Message::SendErrorNotification(
                             "Error loading cached benchmark.".to_string(),
                         ));
                     };
@@ -496,13 +508,15 @@ impl App {
                     Task::batch(tasks)
                 }
                 Err(error) => Task::batch(vec![
-                    Task::done(SendErrNotif("Error loading cached benchmark.".to_string())),
+                    Task::done(Message::SendErrorNotification(
+                        "Error loading cached benchmark.".to_string(),
+                    )),
                     Task::done(Message::Log(error.to_string())),
                 ]),
             },
             Message::DeleteCachedBenchmark(path) => {
                 if let Err(_error) = std::fs::remove_file(path) {
-                    Task::batch(vec![Task::done(Message::SendErrNotif(
+                    Task::batch(vec![Task::done(Message::SendErrorNotification(
                         "Couldn't delete cached benchmark.".to_string(),
                     ))])
                 } else {
@@ -613,6 +627,57 @@ impl App {
                 Task::none()
             }
 
+            Message::ShowErrors(should_show) => {
+                // Display a fade in animation for the error menu if the
+                // menu was not showing and has been requested.
+                if !self.display_errors && should_show {
+                    self.animations.start("error_menu");
+                }
+
+                self.display_errors = should_show;
+
+                Task::none()
+            }
+            Message::SendErrorNotification(error) => {
+                self.error_msgs.push(error);
+
+                Task::none()
+            }
+            Message::ClearErrorNotification => {
+                if self.error_index >= self.error_msgs.len() {
+                    return Task::none();
+                }
+
+                self.error_msgs.remove(self.error_index);
+
+                if self.error_index == 0 {
+                    return Task::none();
+                }
+
+                self.error_index -= 1;
+
+                Task::none()
+            }
+            Message::ShowPreviousError => {
+                if self.error_index <= 0 {
+                    return Task::none();
+                }
+
+                self.error_index -= 1;
+
+                Task::none()
+            }
+            Message::ShowNextError => {
+                // Dont let the error index point at an error that does not exist.
+                if (self.error_index + 1) >= self.error_msgs.len() {
+                    return Task::none();
+                }
+
+                self.error_index += 1;
+
+                Task::none()
+            }
+
             Message::SwitchPopup(popup) => {
                 let Some(popup) = popup else {
                     self.popup = None;
@@ -631,16 +696,6 @@ impl App {
                         self.popup = Some(popup);
                     }
                 }
-
-                Task::none()
-            }
-            Message::SendErrNotif(error) => {
-                self.err_notifs.push(error);
-
-                Task::none()
-            }
-            Message::ClearOneErrNotif => {
-                let _ = self.err_notifs.pop();
 
                 Task::none()
             }

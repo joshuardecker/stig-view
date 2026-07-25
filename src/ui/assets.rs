@@ -2,11 +2,17 @@ use std::sync::LazyLock;
 
 use iced::widget::svg::Handle;
 
+pub static ARROW_LEFT: LazyLock<Handle> =
+    LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/arrow-left.svg")));
+pub static ARROW_RIGHT: LazyLock<Handle> =
+    LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/arrow-right.svg")));
 pub static BOOKMARK: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/bookmark.svg")));
 pub static BOOKMARK_FILLED: LazyLock<Handle> = LazyLock::new(|| {
     Handle::from_memory(include_bytes!("../../assets/images/bookmark-filled.svg"))
 });
+pub static CHECK: LazyLock<Handle> =
+    LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/check.svg")));
 pub static CHECKED_CIRCLE: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/check-circle.svg")));
 pub static CROSS: LazyLock<Handle> =
