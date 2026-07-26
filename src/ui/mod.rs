@@ -1,3 +1,4 @@
+#[allow(unused)]
 mod assets;
 mod styles;
 mod themes;
@@ -23,7 +24,6 @@ use iced::{
 
 use crate::{
     app::{App, AppTheme, DisplayType, Message, Pinned, Popup},
-    ui::styles::*,
     widgets::{markdown, selectable_text},
 };
 
@@ -183,7 +183,7 @@ impl App {
     fn stig_list(&self) -> Element<'_, Message> {
         let Some(benchmark) = &self.benchmark else {
             return container(space::vertical())
-                .style(background_container)
+                .style(styles::background_container)
                 .width(300)
                 .into();
         };
@@ -214,17 +214,17 @@ impl App {
                 row![
                     button(text("Group ID").size(12).center())
                         .on_press(Message::SwitchDisplayType(DisplayType::GroupId))
-                        .style(rounded_primary_button)
+                        .style(styles::rounded_primary_button)
                         .width(FillPortion(1)),
                     space().width(SEPERATION),
                     button(text("Rule ID").size(12).center())
                         .on_press(Message::SwitchDisplayType(DisplayType::RuleId))
-                        .style(rounded_primary_button)
+                        .style(styles::rounded_primary_button)
                         .width(FillPortion(1)),
                     space().width(SEPERATION),
                     button(text("STIG ID").size(12).center())
                         .on_press(Message::SwitchDisplayType(DisplayType::STIGId))
-                        .style(rounded_primary_button)
+                        .style(styles::rounded_primary_button)
                         .width(FillPortion(1)),
                 ],
                 space().height(SEPERATION)
@@ -283,7 +283,7 @@ impl App {
                             container(space::horizontal())
                                 .width(SEPERATION * 0.5)
                                 .height(Fill)
-                                .style(filter_accent),
+                                .style(styles::filter_accent),
                             button
                         ]
                         .into();
@@ -300,7 +300,7 @@ impl App {
                             container(space::horizontal())
                                 .width(SEPERATION * 0.5)
                                 .height(Fill)
-                                .style(filter_accent),
+                                .style(styles::filter_accent),
                             button
                         ]
                         .into();
@@ -326,9 +326,9 @@ impl App {
                                 svg(SQUARE_FILLED.clone())
                                     .width(12)
                                     .height(12)
-                                    .style(good_svg),
+                                    .style(styles::good_svg),
                                 container("Total Compliant")
-                                    .style(background_container)
+                                    .style(styles::background_container)
                                     .padding(4),
                                 tooltip::Position::Bottom
                             ),
@@ -339,9 +339,9 @@ impl App {
                                 svg(SQUARE_FILLED.clone())
                                     .width(12)
                                     .height(12)
-                                    .style(bad_svg),
+                                    .style(styles::bad_svg),
                                 container("Total Non-Compliant")
-                                    .style(background_container)
+                                    .style(styles::background_container)
                                     .padding(4),
                                 tooltip::Position::Bottom
                             ),
@@ -352,9 +352,9 @@ impl App {
                                 svg(SQUARE_FILLED.clone())
                                     .width(12)
                                     .height(12)
-                                    .style(warning_svg),
+                                    .style(styles::warning_svg),
                                 container("Total Manual Review")
-                                    .style(background_container)
+                                    .style(styles::background_container)
                                     .padding(4),
                                 tooltip::Position::Bottom
                             ),
@@ -409,7 +409,7 @@ impl App {
                 .spacing(SEPERATION),
             ])
             .width(300)
-            .style(background_container)
+            .style(styles::background_container)
             .padding(8)
         })
         .into()
@@ -431,9 +431,9 @@ impl App {
                     svg(CHECKED_CIRCLE.clone())
                         .width(18)
                         .height(18)
-                        .style(good_svg),
+                        .style(styles::good_svg),
                     container("Compliant.")
-                        .style(background_container)
+                        .style(styles::background_container)
                         .padding(4),
                     tooltip::Position::Right
                 ),
@@ -445,9 +445,9 @@ impl App {
                     svg(CROSS_CIRCLE.clone())
                         .width(18)
                         .height(18)
-                        .style(bad_svg),
+                        .style(styles::bad_svg),
                     container("Non-Compliant.")
-                        .style(background_container)
+                        .style(styles::background_container)
                         .padding(4),
                     tooltip::Position::Right
                 ),
@@ -459,9 +459,9 @@ impl App {
                     svg(CHECKED_CIRCLE.clone())
                         .width(18)
                         .height(18)
-                        .style(good_svg),
+                        .style(styles::good_svg),
                     container("Not Applicable.")
-                        .style(background_container)
+                        .style(styles::background_container)
                         .padding(4),
                     tooltip::Position::Right
                 ),
@@ -473,9 +473,9 @@ impl App {
                     svg(MINUS_CIRCLE.clone())
                         .width(18)
                         .height(18)
-                        .style(warning_svg),
+                        .style(styles::warning_svg),
                     container("Not Reviewed.")
-                        .style(background_container)
+                        .style(styles::background_container)
                         .padding(4),
                     tooltip::Position::Right
                 ),
@@ -490,10 +490,10 @@ impl App {
         // Button theme depends on whether a filter has pinned it.
         // Make the button more obvious when its contents matches a filter.
         let theme = match pin_type {
-            Pinned::Not => rounded_boring_button,
-            Pinned::ByUser => rounded_boring_button,
-            Pinned::ByFilter => rounded_boring_button_right,
-            Pinned::ByFilterAndUser => rounded_boring_button_right,
+            Pinned::Not => styles::rounded_boring_button,
+            Pinned::ByUser => styles::rounded_boring_button,
+            Pinned::ByFilter => styles::rounded_boring_button_right,
+            Pinned::ByFilterAndUser => styles::rounded_boring_button_right,
         };
 
         // Get the button text depending on what information the user has chosen to display
@@ -518,10 +518,15 @@ impl App {
                     cki_status,
                     text(button_text).center(),
                     space::horizontal(),
-                    button(svg(bookmark_symbol).width(22).height(22).style(colored_svg))
-                        .padding(1)
-                        .style(no_button)
-                        .on_press(Message::Pin(name.clone()))
+                    button(
+                        svg(bookmark_symbol)
+                            .width(22)
+                            .height(22)
+                            .style(styles::colored_svg)
+                    )
+                    .padding(1)
+                    .style(styles::no_button)
+                    .on_press(Message::Pin(name.clone()))
                 ]
                 .align_y(Center)
                 .height(Fill),
@@ -644,7 +649,7 @@ impl App {
         let content = container(content)
             .center(Fill)
             .padding(8)
-            .style(background_container);
+            .style(styles::background_container);
 
         // Stack the content with a container that fades in and out.
         // This acts as animation, showing the user the STIG has changed when
@@ -654,7 +659,10 @@ impl App {
             container(space())
                 .width(Fill)
                 .height(Fill)
-                .style(|theme| fade_overlay(theme, self.animations.get_opacity("main_col")))
+                .style(|theme| styles::fade_overlay(
+                    theme,
+                    self.animations.get_opacity("main_col")
+                ))
         ])
         .width(Fill)
         .height(Fill)
@@ -684,7 +692,7 @@ impl App {
                 button(text("Open").center())
                     .width(SEPERATION * 10.0)
                     .height(SEPERATION * 5.0)
-                    .style(rounded_boring_button)
+                    .style(styles::rounded_boring_button)
                     .on_press(Message::OpenFile),
             )
         }
@@ -730,18 +738,26 @@ impl App {
             main_col = main_col.push(
                 button(
                     row![
-                        svg(FILE.clone()).style(boring_svg).width(20).height(20),
+                        svg(FILE.clone())
+                            .style(styles::boring_svg)
+                            .width(20)
+                            .height(20),
                         space().width(SEPERATION),
                         text(time_loaded.2).center(),
                         space::horizontal(),
-                        button(svg(TRASH.clone()).style(colored_svg).width(20).height(20))
-                            .style(no_button)
-                            .on_press(Message::DeleteCachedBenchmark(time_loaded.1.clone())),
+                        button(
+                            svg(TRASH.clone())
+                                .style(styles::colored_svg)
+                                .width(20)
+                                .height(20)
+                        )
+                        .style(styles::no_button)
+                        .on_press(Message::DeleteCachedBenchmark(time_loaded.1.clone())),
                     ]
                     .align_y(Center),
                 )
                 .width(Fill)
-                .style(rounded_boring_button)
+                .style(styles::rounded_boring_button)
                 .on_press(Message::LoadCachedBenchmark(time_loaded.1)),
             );
 
@@ -760,7 +776,7 @@ impl App {
         )
         .padding(30)
         .center(Fill)
-        .style(background_container)
+        .style(styles::background_container)
         .into()
     }
 
@@ -769,53 +785,63 @@ impl App {
         let id = Id::new("filter_text_input");
 
         // The filter popup itself.
-        let popup: Element<'_, Message> = container(
-            sensor(opaque(stack![
-                container(
-                    row![
-                        space().width(SEPERATION / 2.0),
-                        button(svg(REFRESH.clone()).style(colored_svg).width(18).height(18))
+        let popup: Element<'_, Message> =
+            container(
+                sensor(opaque(stack![
+                    container(
+                        row![
+                            space().width(SEPERATION / 2.0),
+                            button(
+                                svg(REFRESH.clone())
+                                    .style(styles::colored_svg)
+                                    .width(18)
+                                    .height(18)
+                            )
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
-                            .style(no_button)
+                            .style(styles::no_button)
                             .on_press(Message::ResetFilter),
-                        space().width(SEPERATION),
-                        text_input(
-                            "Type keywords here, then press enter...",
-                            &self.filter_text_field
-                        )
-                        .on_input(Message::TypeFilter)
-                        .id(id.clone())
-                        .width(320)
-                        .style(styles::transparent_text_input),
-                        space().width(SEPERATION),
-                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
+                            space().width(SEPERATION),
+                            text_input(
+                                "Type keywords here, then press enter...",
+                                &self.filter_text_field
+                            )
+                            .on_input(Message::TypeFilter)
+                            .id(id.clone())
+                            .width(320)
+                            .style(styles::transparent_text_input),
+                            space().width(SEPERATION),
+                            button(
+                                svg(CROSS.clone())
+                                    .style(styles::colored_svg)
+                                    .width(16)
+                                    .height(16)
+                            )
                             .padding(1)
                             .width(Shrink)
                             .height(Shrink)
-                            .style(no_button)
+                            .style(styles::no_button)
                             .on_press(Message::SwitchPopup(None)),
-                        space().width(SEPERATION / 2.0),
-                    ]
-                    .align_y(Center),
-                )
-                //.width(400)
-                //.height(Shrink)
-                .padding(SEPERATION)
-                .style(cmd_container),
-                container(space())
-                    .width(Fill)
-                    .height(Fill)
-                    .style(|theme| fade_overlay(theme, self.animations.get_opacity("popup"))),
-            ]))
-            .on_show(move |_| Message::FocusWidget(id.clone())),
-        )
-        .width(Fill)
-        .height(Fill)
-        .align_x(Center)
-        .align_y(End)
-        .into();
+                            space().width(SEPERATION / 2.0),
+                        ]
+                        .align_y(Center),
+                    )
+                    //.width(400)
+                    //.height(Shrink)
+                    .padding(SEPERATION)
+                    .style(styles::cmd_container),
+                    container(space()).width(Fill).height(Fill).style(
+                        |theme| styles::fade_overlay(theme, self.animations.get_opacity("popup"))
+                    ),
+                ]))
+                .on_show(move |_| Message::FocusWidget(id.clone())),
+            )
+            .width(Fill)
+            .height(Fill)
+            .align_x(Center)
+            .align_y(End)
+            .into();
 
         // Add some space below it, that way it is not hugging the bottom of the window.
         // Looks nicer this way.
@@ -843,12 +869,17 @@ impl App {
                         space::horizontal(),
                         text("Settings Menu"),
                         space::horizontal(),
-                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
-                            .padding(1)
-                            .width(Shrink)
-                            .height(Shrink)
-                            .style(no_button)
-                            .on_press(Message::SwitchPopup(None)),
+                        button(
+                            svg(CROSS.clone())
+                                .style(styles::colored_svg)
+                                .width(16)
+                                .height(16)
+                        )
+                        .padding(1)
+                        .width(Shrink)
+                        .height(Shrink)
+                        .style(styles::no_button)
+                        .on_press(Message::SwitchPopup(None)),
                     ]
                     .align_y(Center),
                     space().height(SEPERATION * 4.0),
@@ -875,7 +906,7 @@ impl App {
                         space::horizontal(),
                         toggler(self.settings.animate)
                             .on_toggle(Message::SaveAnimate)
-                            .style(toggler_theme),
+                            .style(styles::toggler_theme),
                     ]
                     .align_y(Center),
                     space().height(SEPERATION),
@@ -884,7 +915,7 @@ impl App {
                         space::horizontal(),
                         toggler(self.settings.notify_if_update)
                             .on_toggle(Message::SaveUpdateNotify)
-                            .style(toggler_theme),
+                            .style(styles::toggler_theme),
                     ]
                     .align_y(Center),
                 ]
@@ -893,11 +924,11 @@ impl App {
             .width(375)
             .height(200)
             .padding(8)
-            .style(cmd_container),
+            .style(styles::cmd_container),
             container(space())
                 .width(Fill)
                 .height(Fill)
-                .style(|theme| fade_overlay(theme, self.animations.get_opacity("popup"))),
+                .style(|theme| styles::fade_overlay(theme, self.animations.get_opacity("popup"))),
         ]))
         .center(Fill)
         .into()
@@ -928,7 +959,7 @@ impl App {
             .padding(4)
             .on_press(Message::ShowErrors(true)),
             container("Errors have occured")
-                .style(background_container)
+                .style(styles::background_container)
                 .padding(4),
             tooltip::Position::Bottom,
         )
@@ -963,7 +994,7 @@ impl App {
                     .height(18),
             )
             .padding(1)
-            .style(no_button)
+            .style(styles::no_button)
             .on_press(Message::ShowPreviousError)
             .into()
         } else {
@@ -979,7 +1010,7 @@ impl App {
                         .height(18),
                 )
                 .padding(1)
-                .style(no_button)
+                .style(styles::no_button)
                 .on_press(Message::ShowNextError)
                 .into()
             } else {
@@ -995,10 +1026,10 @@ impl App {
                         .height(16),
                 )
                 .padding(1)
-                .style(no_button)
+                .style(styles::no_button)
                 .on_press(Message::ClearErrorNotification),
                 container("Clear this error from error history")
-                    .style(background_container)
+                    .style(styles::background_container)
                     .padding(4),
                 tooltip::Position::Bottom,
             )
@@ -1022,7 +1053,7 @@ impl App {
                                 .height(14)
                         )
                         .padding(1)
-                        .style(no_button)
+                        .style(styles::no_button)
                         .on_press(Message::ShowErrors(false))
                     ]
                     .align_y(Center),
@@ -1047,7 +1078,10 @@ impl App {
             container(space())
                 .width(Fill)
                 .height(Fill)
-                .style(|theme| fade_overlay(theme, self.animations.get_opacity("error_menu")))
+                .style(|theme| styles::fade_overlay(
+                    theme,
+                    self.animations.get_opacity("error_menu")
+                ))
         ]))
         .align_top(Fill)
         .align_right(Fill)
@@ -1076,7 +1110,7 @@ impl App {
                 "https://github.com/joshuardecker/xylok-view/releases",
             )),
             container("Update Available")
-                .style(background_container)
+                .style(styles::background_container)
                 .padding(4),
             tooltip::Position::Bottom,
         )
@@ -1093,25 +1127,30 @@ impl App {
                         space::horizontal(),
                         text("Save Benchmark for Later?"),
                         space::horizontal(),
-                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
-                            .padding(1)
-                            .width(Shrink)
-                            .height(Shrink)
-                            .style(no_button)
-                            .on_press(Message::SwitchPopup(None)),
+                        button(
+                            svg(CROSS.clone())
+                                .style(styles::colored_svg)
+                                .width(16)
+                                .height(16)
+                        )
+                        .padding(1)
+                        .width(Shrink)
+                        .height(Shrink)
+                        .style(styles::no_button)
+                        .on_press(Message::SwitchPopup(None)),
                     ]
                     .align_y(Center),
                     space::vertical(),
                     row![
                         space::horizontal(),
                         button(text("Cancel").size(14).center())
-                            .style(rounded_danger_button)
+                            .style(styles::rounded_danger_button)
                             .width(65)
                             .height(30)
                             .on_press(Message::SwitchPopup(None)),
                         space().width(SEPERATION * 8.0),
                         button(text("Confirm").size(14).center())
-                            .style(rounded_success_button)
+                            .style(styles::rounded_success_button)
                             .width(70)
                             .height(30)
                             .on_press(Message::SaveAllBenchmarks),
@@ -1124,11 +1163,11 @@ impl App {
             .width(270)
             .height(120)
             .padding(8)
-            .style(cmd_container),
+            .style(styles::cmd_container),
             container(space())
                 .width(Fill)
                 .height(Fill)
-                .style(|theme| fade_overlay(theme, self.animations.get_opacity("popup"))),
+                .style(|theme| styles::fade_overlay(theme, self.animations.get_opacity("popup"))),
         ]))
         .center(Fill)
         .into()
@@ -1155,12 +1194,17 @@ impl App {
         }
 
         tooltip(
-            button(svg(SWITCH.clone()).style(colored_svg).width(18).height(18))
-                .padding(1)
-                .style(no_button)
-                .on_press(Message::SwitchToNextBackground),
+            button(
+                svg(SWITCH.clone())
+                    .style(styles::colored_svg)
+                    .width(18)
+                    .height(18),
+            )
+            .padding(1)
+            .style(styles::no_button)
+            .on_press(Message::SwitchToNextBackground),
             container("Switch Benchmark")
-                .style(background_container)
+                .style(styles::background_container)
                 .padding(4),
             tooltip::Position::Bottom,
         )
@@ -1180,27 +1224,32 @@ impl App {
                         tooltip(
                             button(
                                 svg(SETTINGS.clone())
-                                    .style(colored_svg)
+                                    .style(styles::colored_svg)
                                     .width(18)
                                     .height(18)
                             )
                             .padding(1)
-                            .style(no_button)
+                            .style(styles::no_button)
                             .on_press(Message::SwitchPopup(Some(Popup::Settings))),
                             container("Customize Settings")
-                                .style(background_container)
+                                .style(styles::background_container)
                                 .padding(4),
                             tooltip::Position::Right
                         )
                         .delay(Duration::from_millis(600)),
                         space().width(SEPERATION),
                         tooltip(
-                            button(svg(HOME.clone()).style(colored_svg).width(18).height(18))
-                                .padding(1)
-                                .style(no_button)
-                                .on_press(Message::ReturnHome),
+                            button(
+                                svg(HOME.clone())
+                                    .style(styles::colored_svg)
+                                    .width(18)
+                                    .height(18)
+                            )
+                            .padding(1)
+                            .style(styles::no_button)
+                            .on_press(Message::ReturnHome),
                             container("Return to the Start Screen")
-                                .style(background_container)
+                                .style(styles::background_container)
                                 .padding(4),
                             tooltip::Position::Right
                         )
@@ -1209,10 +1258,10 @@ impl App {
                         tooltip(
                             button(text("Open").center().size(15))
                                 .padding(4)
-                                .style(rounded_dark_button)
+                                .style(styles::rounded_dark_button)
                                 .on_press(Message::OpenFile),
                             container("Open a New File (Ctrl + O)")
-                                .style(background_container)
+                                .style(styles::background_container)
                                 .padding(4),
                             tooltip::Position::Right
                         )
@@ -1221,10 +1270,10 @@ impl App {
                         tooltip(
                             button(text("Find").center().size(15))
                                 .padding(4)
-                                .style(rounded_dark_button)
+                                .style(styles::rounded_dark_button)
                                 .on_press(Message::SwitchPopup(Some(Popup::Filter))),
                             container("Find Content Based on Keywords (Ctrl + F)")
-                                .style(background_container)
+                                .style(styles::background_container)
                                 .padding(4),
                             tooltip::Position::Right
                         )
@@ -1240,23 +1289,33 @@ impl App {
                         space().width(SEPERATION * 3.0),
                         button(
                             svg(DOWN_TICK.clone())
-                                .style(colored_svg)
+                                .style(styles::colored_svg)
                                 .width(24)
                                 .height(24)
                         )
                         .padding(1)
-                        .style(no_button)
+                        .style(styles::no_button)
                         .on_press(Message::WindowMinimize),
                         space().width(SEPERATION),
-                        button(svg(SQUARE.clone()).style(colored_svg).width(16).height(16))
-                            .padding(1)
-                            .style(no_button)
-                            .on_press(Message::WindowFullscreenToggle),
+                        button(
+                            svg(SQUARE.clone())
+                                .style(styles::colored_svg)
+                                .width(16)
+                                .height(16)
+                        )
+                        .padding(1)
+                        .style(styles::no_button)
+                        .on_press(Message::WindowFullscreenToggle),
                         space().width(SEPERATION + 4.0),
-                        button(svg(CROSS.clone()).style(colored_svg).width(16).height(16))
-                            .padding(1)
-                            .style(no_button)
-                            .on_press(Message::WindowClose),
+                        button(
+                            svg(CROSS.clone())
+                                .style(styles::colored_svg)
+                                .width(16)
+                                .height(16)
+                        )
+                        .padding(1)
+                        .style(styles::no_button)
+                        .on_press(Message::WindowClose),
                         space().width(SEPERATION * 2.0),
                     ]
                     .align_y(Center),
