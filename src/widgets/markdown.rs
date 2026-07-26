@@ -1,10 +1,3 @@
-use iced::font::{self, Font};
-use iced::theme::palette;
-use iced::widget::{span, text};
-use iced::{Color, Element, Length, Padding, Pixels, Theme};
-use iced::{alignment, border, color, padding};
-use iced_graphics::core;
-
 use std::cell::{Cell, RefCell};
 use std::mem;
 use std::sync::Arc;
@@ -19,8 +12,13 @@ use iced::advanced::{
     widget::tree::{self, Tree},
 };
 use iced::event::Event;
+use iced::font::{self, Font};
 use iced::keyboard;
 use iced::mouse::{self, Cursor, Interaction};
+use iced::theme::palette;
+use iced::widget::{span, text};
+use iced::{Color, Element, Length, Padding, Pixels, Theme, alignment, border, color, padding};
+use iced_graphics::core;
 use iced_graphics::text::Paragraph as ConcreteP;
 use regex::Regex;
 
@@ -173,12 +171,19 @@ where
     }
 
     let mut spans = Vec::new();
+
     let mut code = String::new();
+
     let mut strong = false;
+
     let mut emphasis = false;
+
     let mut strikethrough = false;
+
     let mut metadata = false;
+
     let mut code_block = false;
+
     let mut stack = Vec::new();
 
     let parser = pulldown_cmark::Parser::new_ext(
@@ -498,12 +503,13 @@ fn fill_run_quad<R>(
 ) where
     R: iced::advanced::text::Renderer<Paragraph = ConcreteP, Font = iced::Font>,
 {
-    let (x, width) = text_utils::highlight_run(run, from, to);
+    let (x_pos, width) = text_utils::highlight_run(run, from, to);
+
     if width > 0.0 {
         renderer.fill_quad(
             renderer::Quad {
                 bounds: iced::Rectangle {
-                    x: bounds.x + x,
+                    x: bounds.x + x_pos,
                     y: bounds.y + run.line_top,
                     width,
                     height: run.line_height,
@@ -681,7 +687,9 @@ where
         // different font sizes (e.g. headings vs body text).
         for run in buffer.layout_runs() {
             let run_top = bounds.y + run.line_top;
+
             let run_bottom = run_top + run.line_height;
+
             if run_bottom < viewport.y || run_top > viewport.y + viewport.height {
                 continue;
             }
@@ -690,6 +698,7 @@ where
             for &(line_idx, from, to, pattern_idx) in &self.computed_highlights {
                 if run.line_i == line_idx {
                     let color = self.highlight_patterns[pattern_idx].1(theme);
+
                     fill_run_quad(renderer, bounds, &run, from, to, color);
                 }
             }
@@ -708,12 +717,15 @@ where
                     } else {
                         0
                     };
+
                     let to = if run.line_i == end_line {
                         end_idx
                     } else {
                         buffer.lines[run.line_i].text().len()
                     };
+
                     let color = theme.extended_palette().primary.weak.color;
+
                     fill_run_quad(renderer, bounds, &run, from, to, color);
                 }
             }
@@ -769,6 +781,7 @@ where
                         text_utils::selection_from_click(state.paragraph.buffer(), click, mouse_pos)
                     {
                         state.selection = Some(sel);
+
                         if click.kind() == click::Kind::Single {
                             state.is_dragging = true;
                         }
@@ -780,12 +793,13 @@ where
                 } else {
                     state.selection = None;
                 }
+
                 shell.request_redraw();
             }
 
             Event::Mouse(mouse::Event::CursorMoved { .. }) => {
                 if state.is_dragging
-                    && state.last_click.map(|c| c.kind()) == Some(click::Kind::Single)
+                    && state.last_click.map(|click| click.kind()) == Some(click::Kind::Single)
                 {
                     if let Some(mouse_pos) = cursor.position_in(layout.bounds()) {
                         if let Some(((anchor_line, anchor_idx), _)) = state.selection {
@@ -807,10 +821,10 @@ where
             }
 
             Event::Keyboard(keyboard::Event::KeyPressed {
-                key: keyboard::Key::Character(c),
+                key: keyboard::Key::Character(character),
                 modifiers,
                 ..
-            }) if c.as_str() == "c" && modifiers.command() => {
+            }) if character.as_str() == "c" && modifiers.command() => {
                 if let Some(((anchor_line, anchor_idx), (focus_line, focus_idx))) = state.selection
                 {
                     if let Some(text) = text_utils::extract_selection_text(
@@ -850,8 +864,8 @@ where
     R: iced::advanced::text::Renderer<Paragraph = ConcreteP, Font = iced::Font> + 'a,
     Message: 'static + Clone,
 {
-    fn from(w: SelectableRichText<Message>) -> Self {
-        Element::new(w)
+    fn from(widget: SelectableRichText<Message>) -> Self {
+        Element::new(widget)
     }
 }
 
@@ -908,7 +922,7 @@ where
 }
 
 fn collect_item_spans<Message>(
-    it: &Item<Message>,
+    item: &Item<Message>,
     settings: Settings,
     out: &mut Vec<text::Span<'static, Message>>,
 ) where
@@ -916,8 +930,8 @@ fn collect_item_spans<Message>(
 {
     let nl = || -> text::Span<'static, Message> { span("\n") };
 
-    match it {
-        Item::Heading(level, t) => {
+    match item {
+        Item::Heading(level, heading_text) => {
             let size = match level {
                 HeadingLevel::H1 => settings.h1_size,
                 HeadingLevel::H2 => settings.h2_size,
@@ -926,27 +940,34 @@ fn collect_item_spans<Message>(
                 HeadingLevel::H5 => settings.h5_size,
                 HeadingLevel::H6 => settings.h6_size,
             };
-            for s in t.spans(settings.style).iter() {
-                out.push(s.clone().size(size));
+
+            for text_span in heading_text.spans(settings.style).iter() {
+                out.push(text_span.clone().size(size));
             }
+
             out.push(nl());
         }
-        Item::Paragraph(t) => {
-            for s in t.spans(settings.style).iter() {
-                out.push(s.clone());
+        Item::Paragraph(paragraph_text) => {
+            for text_span in paragraph_text.spans(settings.style).iter() {
+                out.push(text_span.clone());
             }
+
             out.push(nl());
         }
         Item::CodeBlock(code) => {
             out.push(span(code.clone()).font(settings.style.code_block_font));
+
             out.push(nl());
         }
         Item::List { start, bullets } => {
-            for (i, bullet) in bullets.iter().enumerate() {
+            for (bullet_idx, bullet) in bullets.iter().enumerate() {
                 match start {
                     None => out.push(span("• ")),
-                    Some(n) => out.push(span(format!("{}. ", n + i as u64))),
+                    Some(start_num) => {
+                        out.push(span(format!("{}. ", start_num + bullet_idx as u64)));
+                    }
                 }
+
                 for sub in bullet.items() {
                     collect_item_spans(sub, settings, out);
                 }
@@ -964,48 +985,70 @@ where
     Renderer: iced::advanced::text::Renderer<Paragraph = ConcreteP, Font = Font> + 'a,
     Message: 'static + Clone,
 {
-    fn from(md: SelectableMarkdown<Message, Renderer>) -> Self {
-        let settings = md.settings;
+    fn from(markdown: SelectableMarkdown<Message, Renderer>) -> Self {
+        let settings = markdown.settings;
+
         let mut all_spans: Vec<text::Span<'static, Message>> = Vec::new();
+
         let mut rule_lines: Vec<usize> = Vec::new();
+
         let mut heading_lines: Vec<usize> = Vec::new();
 
         let mut prev_was_heading = false;
-        for (i, it) in md.items.iter().enumerate() {
-            if i > 0 && !prev_was_heading {
+
+        for (item_idx, item) in markdown.items.iter().enumerate() {
+            if item_idx > 0 && !prev_was_heading {
                 all_spans.push(span("\n"));
             }
 
-            if matches!(it, Item::Heading(..)) {
+            if matches!(item, Item::Heading(..)) {
                 let heading_line = all_spans
                     .iter()
-                    .map(|span| span.text.chars().filter(|&char| char == '\n').count())
+                    .map(|span| {
+                        span.text
+                            .chars()
+                            .filter(|&character| character == '\n')
+                            .count()
+                    })
                     .sum();
 
                 heading_lines.push(heading_line);
             }
 
-            collect_item_spans(it, settings, &mut all_spans);
-            prev_was_heading = matches!(it, Item::Heading(..));
+            collect_item_spans(item, settings, &mut all_spans);
+
+            prev_was_heading = matches!(item, Item::Heading(..));
+
             if prev_was_heading {
                 // The next line index = number of '\n' chars pushed so far.
                 // Insert an empty line for the rule to occupy.
                 let rule_line: usize = all_spans
                     .iter()
-                    .map(|s| s.text.chars().filter(|&c| c == '\n').count())
+                    .map(|span| {
+                        span.text
+                            .chars()
+                            .filter(|&character| character == '\n')
+                            .count()
+                    })
                     .sum();
+
                 rule_lines.push(rule_line);
+
                 all_spans.push(span("\n"));
             }
         }
 
         let spans_arc: Arc<[text::Span<'static, Message>]> = all_spans.into();
-        let mut srt = SelectableRichText::new(spans_arc, settings.text_size, settings.style.font)
-            .with_rule_lines(rule_lines)
-            .with_heading_lines(heading_lines);
-        for (pattern, color_fn) in md.highlights {
-            srt = srt.highlight_str_arc(pattern, color_fn);
+
+        let mut rich_text =
+            SelectableRichText::new(spans_arc, settings.text_size, settings.style.font)
+                .with_rule_lines(rule_lines)
+                .with_heading_lines(heading_lines);
+
+        for (pattern, color_fn) in markdown.highlights {
+            rich_text = rich_text.highlight_str_arc(pattern, color_fn);
         }
-        Element::from(srt)
+
+        Element::from(rich_text)
     }
 }

@@ -108,7 +108,12 @@ impl<'a> SelectableText<'a> {
 fn visual_lines_before(buffer: &cosmic_text::Buffer, line_idx: usize) -> usize {
     buffer.lines[..line_idx]
         .iter()
-        .map(|l| l.layout_opt().map(|v| v.len()).unwrap_or(1).max(1))
+        .map(|line| {
+            line.layout_opt()
+                .map(|layout| layout.len())
+                .unwrap_or(1)
+                .max(1)
+        })
         .sum()
 }
 
@@ -128,17 +133,19 @@ where
     R: iced::advanced::text::Renderer<Paragraph = ConcreteP, Font = iced::Font>,
 {
     let spans = text_utils::highlight_line(buffer_line, from, to);
+
     let count = buffer_line
         .layout_opt()
-        .map(|v| v.len())
+        .map(|layout| layout.len())
         .unwrap_or(1)
         .max(1);
-    for (sub, (x, width)) in spans.into_iter().enumerate() {
+
+    for (sub, (x_pos, width)) in spans.into_iter().enumerate() {
         if width > 0.0 {
             renderer.fill_quad(
                 renderer::Quad {
                     bounds: Rectangle {
-                        x: bounds.x + x,
+                        x: bounds.x + x_pos,
                         y: bounds.y + (visual_line_start + sub) as f32 * line_height,
                         width,
                         height: line_height,
@@ -149,6 +156,7 @@ where
             );
         }
     }
+
     count
 }
 
@@ -220,12 +228,16 @@ where
 
         if !self.computed_highlights.is_empty() {
             let buffer = state.paragraph.raw().buffer();
+
             let line_height = buffer.metrics().line_height;
 
             for &(line_idx, from, to, pattern_idx) in &self.computed_highlights {
                 let buffer_line = &buffer.lines[line_idx];
+
                 let visual_offset = visual_lines_before(buffer, line_idx);
+
                 let color = self.highlight_patterns[pattern_idx].1(theme);
+
                 draw_highlight_span(
                     renderer,
                     bounds,
@@ -245,21 +257,25 @@ where
 
             if (start_line, start_idx) < (end_line, end_idx) {
                 let buffer = state.paragraph.raw().buffer();
+
                 let line_height = buffer.metrics().line_height;
+
                 let selection_color = theme.extended_palette().primary.weak.color;
+
                 let selected_logical_lines = end_line - start_line + 1;
 
                 let mut visual_offset = visual_lines_before(buffer, start_line);
 
-                for (i, buffer_line) in buffer
+                for (line_idx, buffer_line) in buffer
                     .lines
                     .iter()
                     .skip(start_line)
                     .take(selected_logical_lines)
                     .enumerate()
                 {
-                    let from = if i == 0 { start_idx } else { 0 };
-                    let to = if i == selected_logical_lines - 1 {
+                    let from = if line_idx == 0 { start_idx } else { 0 };
+
+                    let to = if line_idx == selected_logical_lines - 1 {
                         end_idx
                     } else {
                         buffer_line.text().len()
@@ -334,7 +350,7 @@ where
 
                 mouse::Event::CursorMoved { .. } => {
                     if state.is_dragging
-                        && state.last_click.map(|c| c.kind()) == Some(click::Kind::Single)
+                        && state.last_click.map(|click| click.kind()) == Some(click::Kind::Single)
                     {
                         if let Some(mouse_pos) = cursor.position_in(layout.bounds()) {
                             if let Some(((anchor_line, anchor_idx), _)) = state.selection {
@@ -359,10 +375,10 @@ where
             },
 
             Event::Keyboard(keyboard::Event::KeyPressed {
-                key: keyboard::Key::Character(c),
+                key: keyboard::Key::Character(character),
                 modifiers,
                 ..
-            }) if c.as_str() == "c" && modifiers.command() => {
+            }) if character.as_str() == "c" && modifiers.command() => {
                 if let Some(((anchor_line, anchor_idx), (focus_line, focus_idx))) = state.selection
                 {
                     if let Some(text) = text_utils::extract_selection_text(
