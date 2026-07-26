@@ -47,7 +47,6 @@ impl App {
         let popup = match self.popup {
             Some(Popup::Filter) => self.filter_menu(),
             Some(Popup::Settings) => self.settings_menu(),
-            Some(Popup::Save) => self.save_menu(),
             None => space().into(),
         };
 
@@ -940,30 +939,33 @@ impl App {
             return space().into();
         }
 
-        tooltip(
-            button(
-                row![
-                    text(self.error_msgs.len())
-                        .size(14)
-                        .style(text::warning)
-                        .center(),
-                    space().width(SEPERATION / 4.0),
-                    svg(EXCLAMATION_CIRCLE.clone())
-                        .width(16)
-                        .height(16)
-                        .style(styles::warning_svg)
-                ]
-                .align_y(Center),
+        row![
+            tooltip(
+                button(
+                    row![
+                        text(self.error_msgs.len())
+                            .size(14)
+                            .style(text::warning)
+                            .center(),
+                        space().width(SEPERATION / 4.0),
+                        svg(EXCLAMATION_CIRCLE.clone())
+                            .width(16)
+                            .height(16)
+                            .style(styles::warning_svg)
+                    ]
+                    .align_y(Center),
+                )
+                .style(styles::rounded_dark_button)
+                .padding(4)
+                .on_press(Message::ShowErrors(true)),
+                container("Errors have occured")
+                    .style(styles::background_container)
+                    .padding(4),
+                tooltip::Position::Bottom,
             )
-            .style(styles::rounded_dark_button)
-            .padding(4)
-            .on_press(Message::ShowErrors(true)),
-            container("Errors have occured")
-                .style(styles::background_container)
-                .padding(4),
-            tooltip::Position::Bottom,
-        )
-        .delay(Duration::from_millis(600))
+            .delay(Duration::from_millis(600)),
+            space().width(SEPERATION * 2.0)
+        ]
         .into()
     }
 
@@ -1095,81 +1097,29 @@ impl App {
             return space().into();
         }
 
-        tooltip(
-            button(
-                svg(GLOBE.clone())
-                    .style(styles::good_svg)
-                    .width(18)
-                    .height(18),
+        row![
+            tooltip(
+                button(
+                    svg(DOWNLOAD_ARROW.clone())
+                        .style(styles::good_svg)
+                        .width(18)
+                        .height(18),
+                )
+                .padding(1)
+                .width(Shrink)
+                .height(Shrink)
+                .style(styles::no_button)
+                .on_press(Message::OpenURL(
+                    "https://github.com/joshuardecker/xylok-view/releases",
+                )),
+                container("Update Available")
+                    .style(styles::background_container)
+                    .padding(4),
+                tooltip::Position::Bottom,
             )
-            .padding(1)
-            .width(Shrink)
-            .height(Shrink)
-            .style(styles::no_button)
-            .on_press(Message::OpenURL(
-                "https://github.com/joshuardecker/xylok-view/releases",
-            )),
-            container("Update Available")
-                .style(styles::background_container)
-                .padding(4),
-            tooltip::Position::Bottom,
-        )
-        .delay(Duration::from_millis(600))
-        .into()
-    }
-
-    /// A menu prompting the user to save the benchmark to the cache.
-    fn save_menu(&self) -> Element<'_, Message> {
-        container(opaque(stack![
-            container(
-                column![
-                    row![
-                        space::horizontal(),
-                        text("Save Benchmark for Later?"),
-                        space::horizontal(),
-                        button(
-                            svg(CROSS.clone())
-                                .style(styles::colored_svg)
-                                .width(16)
-                                .height(16)
-                        )
-                        .padding(1)
-                        .width(Shrink)
-                        .height(Shrink)
-                        .style(styles::no_button)
-                        .on_press(Message::SwitchPopup(None)),
-                    ]
-                    .align_y(Center),
-                    space::vertical(),
-                    row![
-                        space::horizontal(),
-                        button(text("Cancel").size(14).center())
-                            .style(styles::rounded_danger_button)
-                            .width(65)
-                            .height(30)
-                            .on_press(Message::SwitchPopup(None)),
-                        space().width(SEPERATION * 8.0),
-                        button(text("Confirm").size(14).center())
-                            .style(styles::rounded_success_button)
-                            .width(70)
-                            .height(30)
-                            .on_press(Message::SaveAllBenchmarks),
-                        space::horizontal()
-                    ]
-                    .align_y(Center),
-                ]
-                .align_x(Center),
-            )
-            .width(270)
-            .height(120)
-            .padding(8)
-            .style(styles::cmd_container),
-            container(space())
-                .width(Fill)
-                .height(Fill)
-                .style(|theme| styles::fade_overlay(theme, self.animations.get_opacity("popup"))),
-        ]))
-        .center(Fill)
+            .delay(Duration::from_millis(600)),
+            space().width(SEPERATION * 3.0)
+        ]
         .into()
     }
 
@@ -1193,22 +1143,55 @@ impl App {
             return space().into();
         }
 
-        tooltip(
-            button(
-                svg(SWITCH.clone())
-                    .style(styles::colored_svg)
-                    .width(18)
-                    .height(18),
+        row![
+            tooltip(
+                button(
+                    svg(SWITCH.clone())
+                        .style(styles::colored_svg)
+                        .width(18)
+                        .height(18),
+                )
+                .padding(1)
+                .style(styles::no_button)
+                .on_press(Message::SwitchToNextBackground),
+                container("Switch Benchmark")
+                    .style(styles::background_container)
+                    .padding(4),
+                tooltip::Position::Bottom,
             )
-            .padding(1)
-            .style(styles::no_button)
-            .on_press(Message::SwitchToNextBackground),
-            container("Switch Benchmark")
-                .style(styles::background_container)
-                .padding(4),
-            tooltip::Position::Bottom,
-        )
-        .delay(Duration::from_millis(600))
+            .delay(Duration::from_millis(600)),
+            space().width(SEPERATION * 3.0)
+        ]
+        .into()
+    }
+
+    /// A button the user can click to save the benchmark as quick access for later sessions.
+    fn save_benchmarks_button(&self) -> Element<'_, Message> {
+        if !self.save_available {
+            return space().into();
+        }
+
+        row![
+            tooltip(
+                button(
+                    svg(SAVE_FILE.clone())
+                        .style(styles::good_svg)
+                        .width(18)
+                        .height(18),
+                )
+                .padding(1)
+                .width(Shrink)
+                .height(Shrink)
+                .style(styles::no_button)
+                .on_press(Message::SaveAllBenchmarks),
+                container("Save Benchmarks for Quick Access")
+                    .style(styles::background_container)
+                    .padding(4),
+                tooltip::Position::Bottom,
+            )
+            .delay(Duration::from_millis(600)),
+            space().width(SEPERATION * 3.0)
+        ]
         .into()
     }
 
@@ -1280,13 +1263,11 @@ impl App {
                         .delay(Duration::from_millis(600)),
                         space::horizontal(),
                         self.switch_benchmark_button(),
-                        space().width(SEPERATION * 3.0),
                         self.benchmark_name(),
                         space::horizontal(),
                         self.error_button(),
-                        space().width(SEPERATION * 3.0),
                         self.display_update_available(),
-                        space().width(SEPERATION * 3.0),
+                        self.save_benchmarks_button(),
                         button(
                             svg(DOWN_TICK.clone())
                                 .style(styles::colored_svg)

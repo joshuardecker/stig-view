@@ -52,6 +52,9 @@ pub struct App {
     /// If true, display to the user there is an update available.
     pub update_available: bool,
 
+    /// New unsaved benchmarks are pending to be saved to disk.
+    pub save_available: bool,
+
     /// Settings applied to the app.
     pub settings: AppSettings,
     /// When benchmarks were last opened by the user.
@@ -101,6 +104,8 @@ pub enum Message {
     ShowUpdateAvailable,
     OpenURL(&'static str),
 
+    ChangeSaveAvailable(bool),
+
     SwitchTheme(AppTheme),
     SaveAnimate(bool),
     SaveUpdateNotify(bool),
@@ -117,7 +122,6 @@ pub enum Message {
 pub enum Popup {
     Filter,
     Settings,
-    Save,
 }
 
 /// The color theme of the app.
@@ -179,6 +183,7 @@ impl App {
                 error_index: 0,
                 display_errors: false,
                 update_available: false,
+                save_available: false,
                 settings,
                 last_opened,
                 animations: Animations::new(),
@@ -319,6 +324,9 @@ impl App {
                         for benchmark in benchmarks {
                             let _ = output.try_send(Message::PushBenchmarkToBackground(benchmark));
                         }
+
+                        // It is now possible to save these new benchmarks to disk.
+                        let _ = output.try_send(Message::ChangeSaveAvailable(true));
                     },
                 ))
             }
@@ -348,10 +356,7 @@ impl App {
                         };
                     }
 
-                    tasks.append(&mut vec![
-                        Task::done(Message::SwitchRule(name)),
-                        Task::done(Message::SwitchPopup(Some(Popup::Save))),
-                    ]);
+                    tasks.push(Task::done(Message::SwitchRule(name)));
 
                     Task::batch(tasks)
                 } else {
@@ -458,8 +463,8 @@ impl App {
                     };
                 }
 
-                // After saving, turn off the save menu.
-                Task::done(Message::SwitchPopup(None))
+                // No longer need to save.
+                Task::done(Message::ChangeSaveAvailable(false))
             }
             Message::LoadCachedBenchmark(path) => match Benchmark::load_from_file(&path) {
                 Ok(mut benchmarks) => {
@@ -724,6 +729,12 @@ impl App {
             }
             Message::OpenURL(url) => {
                 let _ = open::that(url);
+
+                Task::none()
+            }
+
+            Message::ChangeSaveAvailable(availability) => {
+                self.save_available = availability;
 
                 Task::none()
             }
