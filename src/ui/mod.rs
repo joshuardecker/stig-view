@@ -1097,8 +1097,8 @@ impl App {
 
         tooltip(
             button(
-                svg(DOWNLOAD_ARROW.clone())
-                    .style(styles::colored_svg)
+                svg(GLOBE.clone())
+                    .style(styles::good_svg)
                     .width(18)
                     .height(18),
             )
