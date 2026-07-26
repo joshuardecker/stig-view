@@ -7,8 +7,8 @@ use unicode_segmentation::UnicodeSegmentation as _;
 /// `None`. This handles blank lines, which have no glyphs and thus can't be hit directly.
 /// Returns `(logical_line_index, byte_offset)`.
 pub fn hit_or_nearest(buffer: &Buffer, x: f32, y: f32) -> Option<(usize, usize)> {
-    if let Some(c) = buffer.hit(x, y) {
-        return Some((c.line, c.index));
+    if let Some(cursor) = buffer.hit(x, y) {
+        return Some((cursor.line, cursor.index));
     }
 
     if buffer.lines.is_empty() {
@@ -16,22 +16,31 @@ pub fn hit_or_nearest(buffer: &Buffer, x: f32, y: f32) -> Option<(usize, usize)>
     }
 
     let line_height = buffer.metrics().line_height;
+
     if line_height <= 0.0 {
         return None;
     }
 
     let target_visual = (y / line_height).max(0.0) as usize;
+
     let mut visual_start = 0usize;
 
-    for (i, line) in buffer.lines.iter().enumerate() {
-        let visual_count = line.layout_opt().map(|v| v.len()).unwrap_or(1).max(1);
-        if target_visual < visual_start + visual_count || i + 1 == buffer.lines.len() {
-            return Some((i, line.text().len()));
+    for (line_idx, buffer_line) in buffer.lines.iter().enumerate() {
+        let visual_count = buffer_line
+            .layout_opt()
+            .map(|layout| layout.len())
+            .unwrap_or(1)
+            .max(1);
+
+        if target_visual < visual_start + visual_count || line_idx + 1 == buffer.lines.len() {
+            return Some((line_idx, buffer_line.text().len()));
         }
+
         visual_start += visual_count;
     }
 
     let last = buffer.lines.len() - 1;
+
     Some((last, buffer.lines[last].text().len()))
 }
 
@@ -44,27 +53,39 @@ pub(crate) fn highlight_glyphs(
     if glyphs.is_empty() {
         return (0.0, 0.0);
     }
-    let line_start = glyphs.first().map(|g| g.start).unwrap_or(0);
-    let line_end = glyphs.last().map(|g| g.end).unwrap_or(0);
+
+    let line_start = glyphs.first().map(|glyph| glyph.start).unwrap_or(0);
+
+    let line_end = glyphs.last().map(|glyph| glyph.end).unwrap_or(0);
+
     let range = line_start.max(from)..line_end.min(to);
+
     if range.is_empty() {
         return (0.0, 0.0);
     }
+
     let first = glyphs
         .iter()
-        .position(|g| range.start <= g.start)
+        .position(|glyph| range.start <= glyph.start)
         .unwrap_or(0);
-    let mut it = glyphs.iter();
-    let x: f32 = it.by_ref().take(first).map(|g| g.w).sum();
-    let width: f32 = it.take_while(|g| range.end > g.start).map(|g| g.w).sum();
-    (x, width)
+
+    let mut glyphs_iter = glyphs.iter();
+
+    let x_pos: f32 = glyphs_iter.by_ref().take(first).map(|glyph| glyph.w).sum();
+
+    let width: f32 = glyphs_iter
+        .take_while(|glyph| range.end > glyph.start)
+        .map(|glyph| glyph.w)
+        .sum();
+
+    (x_pos, width)
 }
 
 /// Returns `(x, width)` for each visual sub-line within a `BufferLine`.
 pub fn highlight_line(buffer_line: &BufferLine, from: usize, to: usize) -> Vec<(f32, f32)> {
     let layout = buffer_line
         .layout_opt()
-        .map(|v| v.as_slice())
+        .map(|layout_vec| layout_vec.as_slice())
         .unwrap_or(&[]);
 
     layout
@@ -108,25 +129,30 @@ pub fn extract_selection_text(
     }
 
     let mut selected_text = String::new();
+
     let selected_logical_lines = end_line - start_line + 1;
 
-    for (i, buffer_line) in buffer
+    for (line_idx, buffer_line) in buffer
         .lines
         .iter()
         .skip(start_line)
         .take(selected_logical_lines)
         .enumerate()
     {
-        if i > 0 {
+        if line_idx > 0 {
             selected_text.push('\n');
         }
+
         let text = buffer_line.text();
-        let from = if i == 0 { start_idx } else { 0 };
-        let to = if i == selected_logical_lines - 1 {
+
+        let from = if line_idx == 0 { start_idx } else { 0 };
+
+        let to = if line_idx == selected_logical_lines - 1 {
             end_idx
         } else {
             text.len()
         };
+
         selected_text.push_str(&text[from.min(text.len())..to.min(text.len())]);
     }
 
@@ -145,26 +171,31 @@ pub fn selection_from_click(
     click: Click,
     mouse_pos: Point,
 ) -> Option<((usize, usize), (usize, usize))> {
-    let c = buffer.hit(mouse_pos.x, mouse_pos.y)?;
-    let line_text = buffer.lines[c.line].text();
+    let cursor = buffer.hit(mouse_pos.x, mouse_pos.y)?;
+
+    let line_text = buffer.lines[cursor.line].text();
 
     Some(match click.kind() {
-        click::Kind::Single => ((c.line, c.index), (c.line, c.index)),
+        click::Kind::Single => ((cursor.line, cursor.index), (cursor.line, cursor.index)),
+
         click::Kind::Double => {
             let start = line_text
                 .unicode_word_indices()
                 .rev()
-                .map(|(i, _)| i)
-                .find(|&i| i < c.index)
+                .map(|(byte_idx, _)| byte_idx)
+                .find(|&byte_idx| byte_idx < cursor.index)
                 .unwrap_or(0);
+
             let end = line_text
                 .unicode_word_indices()
-                .map(|(i, word)| i + word.len())
-                .find(|&i| i > c.index)
+                .map(|(byte_idx, word)| byte_idx + word.len())
+                .find(|&byte_idx| byte_idx > cursor.index)
                 .unwrap_or(line_text.len());
-            ((c.line, start), (c.line, end))
+
+            ((cursor.line, start), (cursor.line, end))
         }
-        click::Kind::Triple => ((c.line, 0), (c.line, line_text.len())),
+
+        click::Kind::Triple => ((cursor.line, 0), (cursor.line, line_text.len())),
     })
 }
 
@@ -177,5 +208,6 @@ pub fn selection_from_drag(
     mouse_pos: Point,
 ) -> Option<((usize, usize), (usize, usize))> {
     let focus = hit_or_nearest(buffer, mouse_pos.x, mouse_pos.y)?;
+
     Some((anchor, focus))
 }
