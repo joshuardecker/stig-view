@@ -41,6 +41,8 @@ pub static QUESTION_CIRCLE: LazyLock<Handle> = LazyLock::new(|| {
 });
 pub static REFRESH: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/refresh.svg")));
+pub static SAVE_FILE: LazyLock<Handle> =
+    LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/save-file.svg")));
 pub static SETTINGS: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/settings.svg")));
 pub static SQUARE: LazyLock<Handle> =
