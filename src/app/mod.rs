@@ -17,6 +17,6 @@ use disa_stig::Rule;
 use iced::{Task, widget::Id, window, window::Direction};
 use serde::{Deserialize, Serialize};
 
-use crate::app::{animation::Animations, last_opened::LastOpened, settings::AppSettings};
+use crate::app::{animation::Animations, last_opened::LastOpened, settings::Settings};
 
 pub use crate::app::app::{App, AppTheme, DisplayType, Message, Pinned, Popup};

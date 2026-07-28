@@ -56,7 +56,7 @@ pub struct App {
     pub save_available: bool,
 
     /// Settings applied to the app.
-    pub settings: AppSettings,
+    pub settings: Settings,
     /// When benchmarks were last opened by the user.
     pub last_opened: LastOpened,
     /// An animation manager.
@@ -91,11 +91,11 @@ pub enum Message {
 
     TypeFilter(String),
     ResetFilter,
-    Pin(String),
+    Pin(RuleID),
 
     ShowErrors(bool),
     SendErrorNotification(String),
-    ClearErrorNotification,
+    ClearCurrentDisplayedError,
     ShowPreviousError,
     ShowNextError,
 
@@ -154,7 +154,7 @@ impl App {
     pub fn new() -> (Self, Task<Message>) {
         let mut tasks = vec![window::oldest().map(Message::NewWindow)];
 
-        let settings = AppSettings::load().unwrap_or(AppSettings::default());
+        let settings = Settings::load().unwrap_or(Settings::default());
 
         let last_opened = match LastOpened::load() {
             Ok(time_opened) => time_opened,
@@ -350,10 +350,10 @@ impl App {
                     self.background_benchmarks = Vec::new();
 
                     // Remember when this was opened.
-                    if let Some(benchmark) = &self.benchmark {
-                        if let Err(error) = self.last_opened.insert(benchmark.id.clone()) {
-                            tasks.push(Task::done(Message::Log(error.to_string())));
-                        };
+                    if let Some(benchmark) = &self.benchmark
+                        && let Err(error) = self.last_opened.insert(benchmark.id.clone())
+                    {
+                        tasks.push(Task::done(Message::Log(error.to_string())));
                     }
 
                     tasks.push(Task::done(Message::SwitchRule(name)));
@@ -387,9 +387,7 @@ impl App {
                 // the longest.
                 let new_benchmark = self.background_benchmarks.remove(0);
 
-                if let Some(old_benchmark) =
-                    std::mem::replace(&mut self.benchmark, Some(new_benchmark))
-                {
+                if let Some(old_benchmark) = self.benchmark.replace(new_benchmark) {
                     self.background_benchmarks.push(old_benchmark);
                 }
 
@@ -397,10 +395,10 @@ impl App {
                 self.pins = HashMap::new();
 
                 // Remember when this was opened.
-                if let Some(benchmark) = &self.benchmark {
-                    if let Err(error) = self.last_opened.insert(benchmark.id.clone()) {
-                        return Task::done(Message::Log(error.to_string()));
-                    };
+                if let Some(benchmark) = &self.benchmark
+                    && let Err(error) = self.last_opened.insert(benchmark.id.clone())
+                {
+                    return Task::done(Message::Log(error.to_string()));
                 }
 
                 Task::none()
@@ -427,7 +425,7 @@ impl App {
 
                     // Create the save directory if it does not exist.
                     cache_dir.push("xylok-view/");
-                    if let Err(_) = create_dir_all(&cache_dir) {
+                    if create_dir_all(&cache_dir).is_err() {
                         tasks.push(Task::done(Message::SendErrorNotification(
                             "Error creating the cache directory.".to_string(),
                         )));
@@ -454,7 +452,7 @@ impl App {
                         continue;
                     };
 
-                    if let Err(_) = file.write_all(&benchmark_bytes) {
+                    if file.write_all(&benchmark_bytes).is_err() {
                         tasks.push(Task::done(Message::SendErrorNotification(
                             "Failed writing benchmark to a file.".to_string(),
                         )));
@@ -502,10 +500,10 @@ impl App {
                     self.pins = HashMap::new();
 
                     // Remember when this was opened.
-                    if let Some(benchmark) = &self.benchmark {
-                        if let Err(error) = self.last_opened.insert(benchmark.id.clone()) {
-                            tasks.push(Task::done(Message::Log(error.to_string())));
-                        };
+                    if let Some(benchmark) = &self.benchmark
+                        && let Err(error) = self.last_opened.insert(benchmark.id.clone())
+                    {
+                        tasks.push(Task::done(Message::Log(error.to_string())));
                     }
 
                     tasks.push(Task::done(Message::Display(rule.clone())));
@@ -536,10 +534,10 @@ impl App {
 
             Message::SwitchRule(id) => {
                 // If the rule already displayed is being switched to, do nothing.
-                if let Some(rule) = &self.displayed {
-                    if rule.group_id == id {
-                        return Task::none();
-                    }
+                if let Some(rule) = &self.displayed
+                    && rule.group_id == id
+                {
+                    return Task::none();
                 }
 
                 let Some(benchmark) = &self.benchmark else {
@@ -648,7 +646,7 @@ impl App {
 
                 Task::none()
             }
-            Message::ClearErrorNotification => {
+            Message::ClearCurrentDisplayedError => {
                 if self.error_index >= self.error_msgs.len() {
                     return Task::none();
                 }
@@ -664,7 +662,7 @@ impl App {
                 Task::none()
             }
             Message::ShowPreviousError => {
-                if self.error_index <= 0 {
+                if self.error_index == 0 {
                     return Task::none();
                 }
 
@@ -711,13 +709,12 @@ impl App {
                         use crate::app::latest_release::is_latest_version;
 
                         match is_latest_version() {
-                            Some(true) => return,
+                            Some(true) => {}
                             Some(false) => {
                                 let _ = output.try_send(Message::ShowUpdateAvailable);
-                                return;
                             }
                             // Silently fail.
-                            None => return,
+                            None => {}
                         }
                     },
                 ))

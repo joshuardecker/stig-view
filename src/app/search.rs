@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::app::app::Pinned;
 
 /// Look for the given keyword in every field in every rule in the provided benchmark.
-/// Pins rules that have thos keyword.
+/// Pins rules that have those keywords.
 pub fn run_search_cmd(keyword: &str, benchmark: &Benchmark, pins: &mut HashMap<RuleID, Pinned>) {
     let Ok(re) = Regex::new(&format!("(?i){}", keyword)) else {
         return;

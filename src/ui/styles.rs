@@ -204,7 +204,7 @@ pub fn warning_svg(theme: &Theme, _status: svg::Status) -> svg::Style {
     }
 }
 
-/// A rounded container to place elements into, lives in the backgound.
+/// A rounded container to place elements into, lives in the background.
 pub fn background_container(theme: &Theme) -> container::Style {
     let palette = theme.extended_palette();
 

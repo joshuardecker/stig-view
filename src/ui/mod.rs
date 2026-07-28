@@ -27,7 +27,7 @@ use crate::{
     widgets::{markdown, selectable_text},
 };
 
-/// The default seperation between elements.
+/// The default separation between elements.
 /// I use magic values around because they look better.
 const SEPERATION: f32 = 8.0;
 
@@ -50,13 +50,6 @@ impl App {
             None => space().into(),
         };
 
-        /*
-        let err_notification = if let Some(error) = self.error_msgs.last() {
-            self.display_error(error)
-        } else {
-            space().into()
-        };*/
-
         let error_details = if self.display_errors {
             self.error_menu()
         } else {
@@ -66,8 +59,6 @@ impl App {
         stack![padded_content, popup, error_details].into()
     }
 
-    /// A generic function that pads the content with window decorations
-    /// and resize regions the user can click and drag to resize the window.
     /// A generic function that pads the content with window decorations
     /// and resize regions the user can click and drag to resize the window.
     fn padding<'a>(
@@ -84,7 +75,7 @@ impl App {
         };
 
         // There are a few mouse areas here.
-        // Without window decorations, we need to handle windoe drag and click resizing ourselves.
+        // Without window decorations, we need to handle window drag and click resizing ourselves.
         // So we surround the gui on every edge with a mouse area to detect window resizing.
 
         container(column![
@@ -264,7 +255,7 @@ impl App {
                 let button = self.stig_button(
                     pin_type.to_owned(),
                     name.to_owned(),
-                    rule.ckl_status.clone(),
+                    rule.ckl_status,
                     rule.rule_id.clone(),
                     rule.stig_id.clone(),
                 );
@@ -606,7 +597,7 @@ impl App {
                     space().height(SEPERATION),
                     selectable_text(match stig_rule.documentable {
                         Some(true) => "True",
-                        _ => "False,",
+                        _ => "False",
                     })
                     .highlight_str(
                         self.filter_text_field.trim(),
@@ -958,7 +949,7 @@ impl App {
                 .style(styles::rounded_dark_button)
                 .padding(4)
                 .on_press(Message::ShowErrors(true)),
-                container("Errors have occured")
+                container("Errors have occurred")
                     .style(styles::background_container)
                     .padding(4),
                 tooltip::Position::Bottom,
@@ -1029,7 +1020,7 @@ impl App {
                 )
                 .padding(1)
                 .style(styles::no_button)
-                .on_press(Message::ClearErrorNotification),
+                .on_press(Message::ClearCurrentDisplayedError),
                 container("Clear this error from error history")
                     .style(styles::background_container)
                     .padding(4),
