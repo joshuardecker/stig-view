@@ -4,7 +4,7 @@ use thiserror::Error;
 use crate::app::app::{AppTheme, DisplayType};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
-pub struct AppSettings {
+pub struct Settings {
     pub theme: AppTheme,
     pub default_display_type: DisplayType,
     pub animate: bool,
@@ -12,13 +12,19 @@ pub struct AppSettings {
 }
 
 #[derive(Debug, Error)]
-pub enum AppSettingsErr {
-    #[error("{0}")]
-    CantSave(&'static str),
+pub enum SettingsError {
+    #[error("Could not access save directory")]
+    DirError,
+    #[error("Error accessing or creating the benchmark time file")]
+    FileError(#[from] std::io::Error),
+    #[error("Error serializing the benchmark time file")]
+    SerializationError(#[from] toml::ser::Error),
+    #[error("Error deserializing the benchmark time file")]
+    DeserializationError(#[from] toml::de::Error),
 }
 
-impl AppSettings {
-    pub fn default() -> Self {
+impl Default for Settings {
+    fn default() -> Self {
         Self {
             theme: AppTheme::Dark,
             default_display_type: DisplayType::GroupId,
@@ -26,31 +32,23 @@ impl AppSettings {
             notify_if_update: true,
         }
     }
+}
 
+impl Settings {
     /// Save app settings in the users config directory.
-    pub fn save(&self) -> Result<(), AppSettingsErr> {
+    pub fn save(&self) -> Result<(), SettingsError> {
         use std::fs::File;
         use std::io::Write;
 
-        let mut save_dir = dirs::config_local_dir().ok_or(AppSettingsErr::CantSave(
-            "Couldn't locate config directory.",
-        ))?;
+        let mut save_dir = dirs::config_local_dir().ok_or(SettingsError::DirError)?;
 
         save_dir.push("xylok-view-settings.toml");
 
-        let settings_str = toml::to_string(self)
-            .map_err(|_| AppSettingsErr::CantSave("Couldn't save user settings."))?;
+        let settings_str = toml::to_string(self)?;
 
-        let mut file = File::create(save_dir)
-            .map_err(|_| AppSettingsErr::CantSave("Error creating settings.toml save file."))?;
+        let mut file = File::create(save_dir)?;
 
-        let err = write!(file, "{}", settings_str);
-
-        if err.is_err() {
-            return Err(AppSettingsErr::CantSave(
-                "Error writing settings to settings.toml",
-            ));
-        }
+        file.write_all(settings_str.as_bytes())?;
 
         Ok(())
     }
@@ -65,7 +63,7 @@ impl AppSettings {
 
         let settings_str = read_to_string(save_dir).ok()?;
 
-        let settings: AppSettings = toml::from_str(&settings_str).ok()?;
+        let settings: Settings = toml::from_str(&settings_str).ok()?;
 
         Some(settings)
     }

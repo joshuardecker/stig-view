@@ -66,12 +66,12 @@ fn scan_zip_archive<R: Read + Seek>(
             }
 
             // Try XCCDF v1.1 (standalone benchmark).
-            if let Ok(benchmark) = quick_xml::de::from_str::<xccdf_v1_1::Benchmark>(&entry_string) {
-                if !benchmark.groups.is_empty() {
-                    formats.push(FormatWithData::XccdfV1_1(benchmark));
+            if let Ok(benchmark) = quick_xml::de::from_str::<xccdf_v1_1::Benchmark>(&entry_string)
+                && !benchmark.groups.is_empty()
+            {
+                formats.push(FormatWithData::XccdfV1_1(benchmark));
 
-                    continue;
-                }
+                continue;
             }
 
             // Try CKL checklist.
@@ -156,10 +156,10 @@ pub fn detect_format_with_path(
             }
 
             // Try XCCDF v1.1 (standalone benchmark).
-            if let Ok(benchmark) = quick_xml::de::from_str::<xccdf_v1_1::Benchmark>(&file_string) {
-                if !benchmark.groups.is_empty() {
-                    return Ok(vec![FormatWithData::XccdfV1_1(benchmark)]);
-                }
+            if let Ok(benchmark) = quick_xml::de::from_str::<xccdf_v1_1::Benchmark>(&file_string)
+                && !benchmark.groups.is_empty()
+            {
+                return Ok(vec![FormatWithData::XccdfV1_1(benchmark)]);
             }
 
             // Try CKL checklist.
@@ -176,9 +176,9 @@ pub fn detect_format_with_path(
             file.read_to_string(&mut file_string)?;
 
             if let Ok(ckl) = quick_xml::de::from_str::<Checklist>(&file_string) {
-                return Ok(vec![FormatWithData::CKL(ckl)]);
+                Ok(vec![FormatWithData::CKL(ckl)])
             } else {
-                return Err(BenchmarkError::CorruptFile);
+                Err(BenchmarkError::CorruptFile)
             }
         }
 
@@ -188,9 +188,9 @@ pub fn detect_format_with_path(
             file.read_to_string(&mut file_string)?;
 
             if let Ok(cklb) = serde_json::from_str::<CKLB>(&file_string) {
-                return Ok(vec![FormatWithData::CKLB(cklb)]);
+                Ok(vec![FormatWithData::CKLB(cklb)])
             } else {
-                return Err(BenchmarkError::CorruptFile);
+                Err(BenchmarkError::CorruptFile)
             }
         }
 
@@ -200,9 +200,9 @@ pub fn detect_format_with_path(
             file.read_to_string(&mut file_string)?;
 
             if let Ok(xylok_toml) = toml::from_str::<XylokToml>(&file_string) {
-                return Ok(vec![FormatWithData::Xylok(xylok_toml)]);
+                Ok(vec![FormatWithData::Xylok(xylok_toml)])
             } else {
-                return Err(BenchmarkError::CorruptFile);
+                Err(BenchmarkError::CorruptFile)
             }
         }
 
@@ -214,9 +214,9 @@ pub fn detect_format_with_path(
             let decoded = zstd::decode_all(buffer.as_slice())?;
 
             if let Ok(benchmark) = serde_json::from_slice::<Benchmark>(&decoded) {
-                return Ok(vec![FormatWithData::InHouse(benchmark)]);
+                Ok(vec![FormatWithData::InHouse(benchmark)])
             } else {
-                return Err(BenchmarkError::CorruptFile);
+                Err(BenchmarkError::CorruptFile)
             }
         }
 

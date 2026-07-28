@@ -30,8 +30,6 @@ pub static FILE: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/file.svg")));
 pub static FILE_COPY: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/file-copy.svg")));
-pub static GLOBE: LazyLock<Handle> =
-    LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/globe.svg")));
 pub static HOME: LazyLock<Handle> =
     LazyLock::new(|| Handle::from_memory(include_bytes!("../../assets/images/home.svg")));
 pub static MINUS_CIRCLE: LazyLock<Handle> =

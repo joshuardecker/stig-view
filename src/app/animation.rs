@@ -30,7 +30,7 @@ impl Animations {
         for (time, opacity) in self.animations.values_mut() {
             let delta_t = now.duration_since(*time).as_secs_f32();
 
-            *opacity = *opacity - (delta_t / ANIMATION_SPEED);
+            *opacity -= delta_t / ANIMATION_SPEED;
 
             // Makes sure opacity does not go under 0.
             *opacity = opacity.max(0.0);

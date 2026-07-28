@@ -351,19 +351,16 @@ where
                 mouse::Event::CursorMoved { .. } => {
                     if state.is_dragging
                         && state.last_click.map(|click| click.kind()) == Some(click::Kind::Single)
+                        && let Some(mouse_pos) = cursor.position_in(layout.bounds())
+                        && let Some(((anchor_line, anchor_idx), _)) = state.selection
+                        && let Some(new_sel) = text_utils::selection_from_drag(
+                            state.paragraph.raw().buffer(),
+                            (anchor_line, anchor_idx),
+                            mouse_pos,
+                        )
                     {
-                        if let Some(mouse_pos) = cursor.position_in(layout.bounds()) {
-                            if let Some(((anchor_line, anchor_idx), _)) = state.selection {
-                                if let Some(new_sel) = text_utils::selection_from_drag(
-                                    state.paragraph.raw().buffer(),
-                                    (anchor_line, anchor_idx),
-                                    mouse_pos,
-                                ) {
-                                    state.selection = Some(new_sel);
-                                    shell.request_redraw();
-                                }
-                            }
-                        }
+                        state.selection = Some(new_sel);
+                        shell.request_redraw();
                     }
                 }
 
@@ -380,16 +377,15 @@ where
                 ..
             }) if character.as_str() == "c" && modifiers.command() => {
                 if let Some(((anchor_line, anchor_idx), (focus_line, focus_idx))) = state.selection
-                {
-                    if let Some(text) = text_utils::extract_selection_text(
+                    && let Some(text) = text_utils::extract_selection_text(
                         state.paragraph.raw().buffer(),
                         anchor_line,
                         anchor_idx,
                         focus_line,
                         focus_idx,
-                    ) {
-                        clipboard.write(ClipboardKind::Standard, text);
-                    }
+                    )
+                {
+                    clipboard.write(ClipboardKind::Standard, text);
                 }
             }
 
