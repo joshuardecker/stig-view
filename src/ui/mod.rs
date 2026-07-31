@@ -852,6 +852,9 @@ impl App {
             DisplayType::STIGId,
         ];
 
+        // Get the version of the app from the Cargo.toml file.
+        let version = env!("CARGO_PKG_VERSION");
+
         container(opaque(stack![
             container(
                 column![
@@ -873,6 +876,13 @@ impl App {
                     ]
                     .align_y(Center),
                     space().height(SEPERATION * 4.0),
+                    row![
+                        text("Version"),
+                        space::horizontal(),
+                        text(format!("v{}", version)),
+                    ]
+                    .align_y(Center),
+                    space().height(SEPERATION),
                     row![
                         text("Theme"),
                         space::horizontal(),
@@ -912,7 +922,6 @@ impl App {
                 .align_x(Center),
             )
             .width(375)
-            .height(200)
             .padding(8)
             .style(styles::cmd_container),
             container(space())
@@ -1084,9 +1093,9 @@ impl App {
 
     /// Display to the user that an update is available.
     fn display_update_available(&self) -> Element<'_, Message> {
-        if !self.update_available {
+        let Some(version_available) = &self.update_available else {
             return space().into();
-        }
+        };
 
         row![
             tooltip(
@@ -1103,7 +1112,7 @@ impl App {
                 .on_press(Message::OpenURL(
                     "https://github.com/joshuardecker/xylok-view/releases",
                 )),
-                container("Update Available")
+                container(text(format!("Update Available: {}", version_available)).center())
                     .style(styles::background_container)
                     .padding(4),
                 tooltip::Position::Bottom,

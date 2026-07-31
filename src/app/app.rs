@@ -49,8 +49,8 @@ pub struct App {
     /// Should the error messages be displayed to the user.
     pub display_errors: bool,
 
-    /// If true, display to the user there is an update available.
-    pub update_available: bool,
+    /// If an update is available, store the available version here.
+    pub update_available: Option<String>,
 
     /// New unsaved benchmarks are pending to be saved to disk.
     pub save_available: bool,
@@ -101,7 +101,7 @@ pub enum Message {
 
     SwitchPopup(Option<Popup>),
     FetchLatestVersion,
-    ShowUpdateAvailable,
+    ShowUpdateAvailable(String),
     OpenURL(&'static str),
 
     ChangeSaveAvailable(bool),
@@ -182,7 +182,7 @@ impl App {
                 error_msgs: Vec::new(),
                 error_index: 0,
                 display_errors: false,
-                update_available: false,
+                update_available: None,
                 save_available: false,
                 settings,
                 last_opened,
@@ -702,25 +702,18 @@ impl App {
 
                 Task::none()
             }
-            Message::FetchLatestVersion => {
-                Task::stream(stream::channel(
-                    1,
-                    |mut output: Sender<Message>| async move {
-                        use crate::app::latest_release::is_latest_version;
+            Message::FetchLatestVersion => Task::stream(stream::channel(
+                1,
+                |mut output: Sender<Message>| async move {
+                    use crate::app::latest_release::is_latest_version;
 
-                        match is_latest_version() {
-                            Some(true) => {}
-                            Some(false) => {
-                                let _ = output.try_send(Message::ShowUpdateAvailable);
-                            }
-                            // Silently fail.
-                            None => {}
-                        }
-                    },
-                ))
-            }
-            Message::ShowUpdateAvailable => {
-                self.update_available = true;
+                    if let Some(version_number) = is_latest_version() {
+                        let _ = output.try_send(Message::ShowUpdateAvailable(version_number));
+                    }
+                },
+            )),
+            Message::ShowUpdateAvailable(available_version) => {
+                self.update_available = Some(available_version);
 
                 Task::none()
             }
