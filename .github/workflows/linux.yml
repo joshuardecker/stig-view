@@ -57,11 +57,61 @@ jobs:
           mv /tmp/squashfs-root /opt/appimagetool
           ln -sf /opt/appimagetool/AppRun /usr/local/bin/appimagetool
 
+      - name: Install cargo-generate-rpm
+        run: cargo install cargo-generate-rpm --locked
+
       - name: Build
         run: bash scripts/linux.sh
 
-      - name: Upload
+      - name: Upload AppImage
         uses: actions/upload-artifact@v4
         with:
           name: xylok-view-appimage
           path: xylok-view.AppImage
+
+      - name: Upload RPM
+        uses: actions/upload-artifact@v4
+        with:
+          name: xylok-view-rpm
+          path: target/generate-rpm/*.rpm
+
+  build-linux-deb:
+    runs-on: ubuntu-22.04
+    # glibc 2.35 gives compatibility with Ubuntu 22.04+ and Debian 12+.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc curl pkg-config file \
+            libwayland-dev libxkbcommon-dev libfontconfig-dev \
+            libx11-dev libxcursor-dev libxrandr-dev libxi-dev \
+            libgl-dev libegl-dev
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: deb-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb --locked
+
+      - name: Build
+        run: bash scripts/linux.sh
+
+      - name: Upload Deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: xylok-view-deb
+          path: target/debian/*.deb
