@@ -62,3 +62,33 @@ APPRUN
 
     echo "==> Done: $APPIMAGE"
 fi
+
+# ---------------------------------------------------------------------------
+# Debian package (.deb)
+# Requires: cargo-deb (`cargo install cargo-deb`).
+# Built against the host glibc — run on ubuntu-22.04 (glibc 2.35) for
+# compatibility with Ubuntu 22.04+ and Debian 12+.
+# ---------------------------------------------------------------------------
+if command -v cargo-deb &>/dev/null; then
+    echo "==> Building .deb..."
+    cargo deb --strip
+
+    echo "==> Done: target/debian/*.deb"
+fi
+
+# ---------------------------------------------------------------------------
+# RPM package (.rpm)
+# Requires: cargo-generate-rpm (`cargo install cargo-generate-rpm`).
+# Built against the host glibc — run inside an old-glibc container (e.g.
+# AlmaLinux 8 / glibc 2.28) for RHEL 8+ and Fedora compatibility.
+# cargo-generate-rpm does not strip the binary, so we strip it first.
+# ---------------------------------------------------------------------------
+if command -v cargo-generate-rpm &>/dev/null; then
+    echo "==> Stripping binary..."
+    strip -s target/release/xylok-view
+
+    echo "==> Building .rpm..."
+    cargo generate-rpm
+
+    echo "==> Done: target/generate-rpm/*.rpm"
+fi
