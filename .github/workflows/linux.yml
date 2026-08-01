@@ -24,7 +24,7 @@ jobs:
           name: xylok-view-flatpak
           path: xylok-view.flatpak
 
-  build-linux-appimage:
+  build-linux-appimage-and-rpm:
     runs-on: ubuntu-latest
     # AlmaLinux 8 provides glibc 2.28, giving compatibility with RHEL 8+
     # and Ubuntu 18.04+. The binary links against this older glibc at build
