@@ -30,6 +30,24 @@ jobs:
         shell: bash
         run: bash scripts/windows.sh
 
+      - name: Verify static CRT
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products '*' -property installationPath
+          $dumpbin = Get-ChildItem -Path (Join-Path $vs 'VC\Tools\MSVC') -Recurse -Filter 'dumpbin.exe' -ErrorAction SilentlyContinue |
+            Where-Object { $_.DirectoryName -match '\\x64$' } |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $dumpbin) { throw 'dumpbin.exe not found' }
+          $out = & $dumpbin /dependents target\release\xylok-view.exe
+          $joined = ($out -join "`n")
+          Write-Host $joined
+          if ($joined -match '(?i)vcruntime140\.dll|vcruntime140_1\.dll|msvcp140\.dll') {
+            throw 'Dynamic VC Runtime DLLs detected in exe; static CRT linking did not take effect.'
+          }
+          Write-Host 'Static CRT verified: no VC Runtime DLL imports.'
+
       - name: Sign MSI
         uses: azure/trusted-signing-action@v0
         with:
@@ -45,8 +63,29 @@ jobs:
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
 
-      - name: Upload
+      - name: Sign portable exe
+        uses: azure/trusted-signing-action@v0
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_CODE_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE }}
+          files-folder: target/wix
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Upload MSI
         uses: actions/upload-artifact@v4
         with:
-          name: xylok-view-windows
+          name: xylok-view-windows-msi
           path: target/wix/*.msi
+
+      - name: Upload portable exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: xylok-view-windows-exe
+          path: target/wix/*.exe

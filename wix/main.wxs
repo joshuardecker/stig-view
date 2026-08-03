@@ -56,19 +56,11 @@
             KeyPath='yes' />
         </Component>
       </Directory>
-      <Merge Id='VCRedist'
-             SourceFile='$(env.VCToolsRedistMSM)'
-             DiskId='1'
-             Language='0' />
     </Directory>
 
     <Feature Id='MainFeature' Title='Application' Level='1'>
       <ComponentRef Id='MainExecutable' />
       <ComponentRef Id='StartMenuShortcut' />
-    </Feature>
-
-    <Feature Id='VCRedist' Title='Visual C++ Runtime' AllowAdvertise='no' Display='hidden' Level='1'>
-      <MergeRef Id='VCRedist' />
     </Feature>
 
     <Property Id='WIXUI_INSTALLDIR' Value='APPLICATIONROOTDIRECTORY' />
