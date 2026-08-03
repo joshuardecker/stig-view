@@ -18,7 +18,7 @@ cargo build --release
 # Package (MSI)
 # ---------------------------------------------------------------------------
 echo "==> Building MSI installer..."
-cargo wix --no-build --nocapture
+cargo wix --no-build --nocapture --package xylok-view
 
 mkdir -p target/wix
 cp target/release/xylok-view.exe target/wix/xylok-view.exe
